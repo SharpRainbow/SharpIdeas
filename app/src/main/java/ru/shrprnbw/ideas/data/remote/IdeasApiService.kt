@@ -1,0 +1,31 @@
+package ru.shrprnbw.ideas.data.remote
+
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.PATCH
+import retrofit2.http.POST
+import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
+import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
+import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
+import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
+
+interface IdeasApiService {
+
+    @POST("users/login")
+    suspend fun login(
+        @Body request: LoginRequestDto
+    ): LoginResponseDto
+
+    @GET("users/personal_info")
+    suspend fun getUserInfo(
+        @Header("Authorization") token: String,
+    ): UserInfoDto
+
+    @PATCH("users/personal_info")
+    suspend fun updateUserInfo(
+        @Header("Authorization") token: String,
+        @Body request: UpdatePersonalInfoRequest
+    )
+
+}

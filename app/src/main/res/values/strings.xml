@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">SharpIdeas</string>
+    <string name="back">Go back</string>
+
+    <string name="error_network">Unknown network error occurred</string>
+    <string name="error_unknown">Unknown error occurred</string>
+    <string name="login_error_user_not_found">User not found</string>
+    <string name="login_error_invalid_credentials">Wrong password</string>
+    <string name="profile_invalid_data">Wrong email</string>
+    <string name="profile_data_conflict">Duplicate profile info</string>
+</resources>
