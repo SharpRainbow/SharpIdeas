@@ -8,16 +8,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,13 +45,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.shrprnbw.ideas.R
-import ru.shrprnbw.ideas.presentation.components.PasswordInputField
+import ru.shrprnbw.ideas.presentation.screens.PasswordInputField
+import ru.shrprnbw.ideas.presentation.screens.UserInfoFieldNextFocus
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoggedIn: () -> Unit = {}
+    onLoggedIn: () -> Unit = {},
+    onRegisterClicked: () -> Unit = {}
 ) {
 
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -69,7 +73,9 @@ fun LoginScreen(
             ) { paddingValues ->
                 Column(
                     modifier = Modifier
+                        .imePadding()
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                         .padding(paddingValues)
                 ) {
                     Box(
@@ -119,19 +125,18 @@ fun LoginScreen(
                     )
 
                     Column(
-                        modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        OutlinedTextField(
-                            modifier = Modifier.fillMaxWidth(),
+                        UserInfoFieldNextFocus(
                             value = currentState.email,
                             onValueChange = { text ->
                                 viewModel.processCommand(
                                     LoginCommand.InputEmail(text)
                                 )
                             },
-                            label = { Text("Электронная почта") },
-                            leadingIcon = {
+                            label = "Электронная почта",
+                            icon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Email,
@@ -148,18 +153,6 @@ fun LoginScreen(
                                 LoginCommand.InputPassword(text)
                             )
                         }
-//                        Text(
-//                            modifier = Modifier
-//                                .padding(top = 4.dp, bottom = 0.dp),
-//                            text = "Нет аккаунта?",
-//                            fontSize = 12.sp
-//                        )
-//                        Text(
-//                            modifier = Modifier.padding(top = 0.dp),
-//                            text = "Зарегистрироваться",
-//                            fontWeight = FontWeight.Bold,
-//                            color = MaterialTheme.colorScheme.primary
-//                        )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = buildAnnotatedString {
@@ -177,7 +170,7 @@ fun LoginScreen(
                                             )
                                         ),
                                         linkInteractionListener = {
-
+                                            onRegisterClicked()
                                         }
                                     )
                                 ) {
@@ -188,6 +181,8 @@ fun LoginScreen(
                             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
                         )
                     }
+                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                         enabled = currentState.isLoginEnabled,

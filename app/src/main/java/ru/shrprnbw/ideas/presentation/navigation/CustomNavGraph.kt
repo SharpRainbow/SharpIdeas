@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import ru.shrprnbw.ideas.presentation.screens.login.LoginScreen
 import ru.shrprnbw.ideas.presentation.screens.profile.ProfileScreen
 import ru.shrprnbw.ideas.presentation.screens.profile_edit.ProfileEditScreen
+import ru.shrprnbw.ideas.presentation.screens.register.RegisterScreen
 
 @Composable
 fun NavGraph() {
@@ -21,13 +22,18 @@ fun NavGraph() {
         composable(
             route = Screen.Login.route
         ) {
-            LoginScreen {
-                navController.navigate(Screen.UserInfo.route) {
-                    popUpTo(Screen.Login.route) {
-                        inclusive = true
+            LoginScreen(
+                onLoggedIn = {
+                    navController.navigate(Screen.UserInfo.route) {
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
                     }
+                },
+                onRegisterClicked = {
+                    navController.navigate(Screen.Register.route)
                 }
-            }
+            )
         }
         composable(
             route = Screen.UserInfo.route
@@ -52,10 +58,28 @@ fun NavGraph() {
                 navController.popBackStack()
             }
         }
+        composable(
+            route = Screen.Register.route
+        ) {
+            RegisterScreen(
+                onBackClicked = {
+                    navController.popBackStack()
+                },
+                onRegisterSuccess = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Register.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
     }
 }
 
 sealed class Screen(val route: String) {
+
+    data object Register : Screen("register")
 
     data object Login : Screen("login")
 

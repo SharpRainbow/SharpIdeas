@@ -6,6 +6,7 @@ import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
+import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
 import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
@@ -16,6 +17,11 @@ interface IdeasApiService {
     suspend fun login(
         @Body request: LoginRequestDto
     ): LoginResponseDto
+
+    @POST("users/register")
+    suspend fun register(
+        @Body request: RegisterRequest
+    )
 
     @GET("users/personal_info")
     suspend fun getUserInfo(
