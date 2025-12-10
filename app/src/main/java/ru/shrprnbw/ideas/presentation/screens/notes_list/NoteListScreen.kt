@@ -109,6 +109,8 @@ import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.presentation.navigation.Screen
 import ru.shrprnbw.ideas.presentation.ui.theme.SharpIdeasTheme
 import ru.shrprnbw.ideas.utils.Utils
+import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
+import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 
 @Composable
 fun NoteListScreen(
@@ -337,19 +339,19 @@ private fun NoteItem(
                         Icon(
                             modifier = Modifier
                                 .background(
-                                    Color(0xFF388E3C).copy(alpha = 0.2f),
+                                    AudioGreen.copy(alpha = 0.2f),
                                     CircleShape
                                 )
                                 .padding(4.dp),
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = null,
-                            tint = Color(0xFF388E3C)
+                            tint = AudioGreen
                         )
                         Spacer(Modifier.width(8.dp))
                         Column(
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Аудиозапись", color = Color(0xFF388E3C), fontSize = 12.sp)
+                            Text("Аудиозапись", color = AudioGreen, fontSize = 12.sp)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
@@ -359,7 +361,7 @@ private fun NoteItem(
                                 ) {
                                     LinearWavyProgressIndicator(
                                         progress = { 0.35f },
-                                        color = Color(0xFF388E3C)
+                                        color = AudioGreen
                                     )
                                 }
                                 Spacer(Modifier.width(8.dp))
@@ -387,13 +389,13 @@ private fun NoteItem(
                         if (type == NoteType.Text) {
                             NoteLabel(
                                 label = "Текст",
-                                color = Color(0xFF0061A4),
+                                color = TextBlue,
                                 imageVector = Icons.Rounded.TextFields
                             )
                         } else {
                             NoteLabel(
                                 label = "Аудио",
-                                color = Color(0xFF388E3C),
+                                color = AudioGreen,
                                 imageVector = Icons.Rounded.AudioFile
                             )
                         }

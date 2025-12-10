@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.utils.Utils
 
 @Composable
 fun ProfileEditScreen(
@@ -91,18 +92,11 @@ fun ProfileEditScreen(
                         .padding(innerPadding),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val bgColor = run {
-                        val hash = currentState.firstName.hashCode()
-                        val r = ((hash shr 16) and 0xFF).coerceIn(64, 192)
-                        val g = ((hash shr 8) and 0xFF).coerceIn(64, 192)
-                        val b = (hash and 0xFF).coerceIn(64, 192)
-                        Color(r / 255f, g / 255f, b / 255f)
-                    }
                     Box(
                         modifier = Modifier
                             .size(96.dp)
                             .clip(CircleShape)
-                            .background(bgColor),
+                            .background(Utils.generateColor(currentState.firstName)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

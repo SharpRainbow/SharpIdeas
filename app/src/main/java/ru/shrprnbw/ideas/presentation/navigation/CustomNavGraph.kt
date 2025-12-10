@@ -1,8 +1,12 @@
 package ru.shrprnbw.ideas.presentation.navigation
 
 import android.os.Bundle
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -23,7 +27,37 @@ fun NavGraph() {
     SharedTransitionLayout {
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route
+            startDestination = Screen.Login.route,
+            enterTransition = {
+                when (targetState.destination.route) {
+                    Screen.Search.route -> fadeIn(animationSpec = tween(300))
+                    else -> slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        animationSpec = tween(300)
+                    )
+                }
+            },
+            exitTransition = {
+                when (targetState.destination.route) {
+                    Screen.Search.route -> fadeOut(animationSpec = tween(300))
+                    else -> fadeOut(animationSpec = tween(300))
+                }
+            },
+            popEnterTransition = {
+                when (initialState.destination.route) {
+                    Screen.Search.route -> fadeIn(animationSpec = tween(300))
+                    else -> fadeIn(animationSpec = tween(300))
+                }
+            },
+            popExitTransition = {
+                when (initialState.destination.route) {
+                    Screen.Search.route -> fadeOut(animationSpec = tween(300))
+                    else -> slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = tween(300)
+                    )
+                }
+            }
         ) {
             composable(
                 route = Screen.Login.route

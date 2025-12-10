@@ -17,6 +17,10 @@ val GradientStart = Color(0xFFA855F7)
 val GradientEnd = Color(0xFFDB2777)
 val GradientEndAlt = Color(0xFFEC4899)
 
+val AudioGreen = Color(0xFF388E3C)
+
+val TextBlue = Color(0xFF0061A4)
+
 val primaryLight = Color(0xFF63568F)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFE7DEFF)
