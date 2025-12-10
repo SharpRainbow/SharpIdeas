@@ -79,11 +79,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.key.Key
@@ -105,12 +103,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.presentation.navigation.Screen
 import ru.shrprnbw.ideas.presentation.ui.theme.SharpIdeasTheme
 import ru.shrprnbw.ideas.utils.Utils
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
+import ru.shrprnbw.ideas.utils.DateFormatter
 
 @Composable
 fun NoteListScreen(
@@ -253,7 +252,7 @@ private fun NotesList(
     modifier: Modifier = Modifier,
     onNoteClicked: (String) -> Unit,
     notesListState: LazyListState = rememberLazyListState(),
-    lazyItems: LazyPagingItems<Note>
+    lazyItems: LazyPagingItems<NotePreview>
 ) {
     LazyColumn(
         modifier = modifier,
@@ -270,8 +269,8 @@ private fun NotesList(
                     noteId = item.id,
                     title = item.title,
                     preview = item.preview,
-                    time = "",
-                    type = NoteType.Text,
+                    time = DateFormatter.formatDateToString(item.updatedAt),
+                    type = if (item.hasAudio) NoteType.Audio else NoteType.Text,
                     duration = "",
                     tags = item.tags,
                     onNoteClicked = onNoteClicked

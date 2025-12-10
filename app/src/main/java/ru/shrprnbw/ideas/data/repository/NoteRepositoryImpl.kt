@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NoteSearchPagingSource
-import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.NoteRepository
 
@@ -17,7 +17,7 @@ class NoteRepositoryImpl @Inject constructor(
     private val authRepository: AuthRepository
 ) : NoteRepository {
 
-    override fun getUserNotes(): Flow<PagingData<Note>> {
+    override fun getUserNotes(): Flow<PagingData<NotePreview>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 10,
@@ -37,7 +37,7 @@ class NoteRepositoryImpl @Inject constructor(
         title: String,
         content: String,
         tagIds: List<Long>
-    ): Flow<PagingData<Note>> {
+    ): Flow<PagingData<NotePreview>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 10,

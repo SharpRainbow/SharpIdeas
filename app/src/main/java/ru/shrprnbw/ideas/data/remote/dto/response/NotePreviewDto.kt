@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NoteDto(
+data class NotePreviewDto(
     @SerialName("id")
     val id: String,
     @SerialName("owner")
@@ -18,5 +18,9 @@ data class NoteDto(
     @SerialName("noteTags")
     val tags: List<String>,
     @SerialName("accessType")
-    val accessType: String
+    val accessType: String,
+    @SerialName("updatedAt")
+    val updatedAt: Long,
+    @SerialName("hasAudio")
+    val hasAudio: Boolean
 )

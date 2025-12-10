@@ -6,10 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import ru.shrprnbw.ideas.domain.entity.Note
-import ru.shrprnbw.ideas.domain.entity.Tag
+import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.domain.usecase.LoadPersonalNotesUseCase
 import javax.inject.Inject
 
@@ -20,7 +17,7 @@ class NoteListViewModel @Inject constructor(
 //    private val _state = MutableStateFlow(NoteListState())
 //    val state = _state.asStateFlow()
 
-    val notesFlow: Flow<PagingData<Note>> = getPersonalNotesUseCase().cachedIn(viewModelScope)
+    val notesFlow: Flow<PagingData<NotePreview>> = getPersonalNotesUseCase().cachedIn(viewModelScope)
 
 }
 

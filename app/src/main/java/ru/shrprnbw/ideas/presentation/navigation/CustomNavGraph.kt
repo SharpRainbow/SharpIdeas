@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package ru.shrprnbw.ideas.presentation.navigation
 
 import android.os.Bundle
@@ -21,7 +23,6 @@ import ru.shrprnbw.ideas.presentation.screens.register.RegisterScreen
 import ru.shrprnbw.ideas.presentation.screens.search.SearchScreen
 
 @Composable
-@OptIn(ExperimentalSharedTransitionApi::class)
 fun NavGraph() {
     val navController = rememberNavController()
     SharedTransitionLayout {
@@ -30,31 +31,31 @@ fun NavGraph() {
             startDestination = Screen.Login.route,
             enterTransition = {
                 when (targetState.destination.route) {
-                    Screen.Search.route -> fadeIn(animationSpec = tween(300))
+                    Screen.Search.route -> fadeIn(animationSpec = tween(Screen.Search.ANIMATION_DUR))
                     else -> slideIntoContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                        animationSpec = tween(300)
+                        animationSpec = tween(Screen.Search.ANIMATION_DUR)
                     )
                 }
             },
             exitTransition = {
                 when (targetState.destination.route) {
-                    Screen.Search.route -> fadeOut(animationSpec = tween(300))
-                    else -> fadeOut(animationSpec = tween(300))
+                    Screen.Search.route -> fadeOut(animationSpec = tween(Screen.Search.ANIMATION_DUR))
+                    else -> fadeOut(animationSpec = tween(Screen.Search.ANIMATION_DUR))
                 }
             },
             popEnterTransition = {
                 when (initialState.destination.route) {
-                    Screen.Search.route -> fadeIn(animationSpec = tween(300))
-                    else -> fadeIn(animationSpec = tween(300))
+                    Screen.Search.route -> fadeIn(animationSpec = tween(Screen.Search.ANIMATION_DUR))
+                    else -> fadeIn(animationSpec = tween(Screen.Search.ANIMATION_DUR))
                 }
             },
             popExitTransition = {
                 when (initialState.destination.route) {
-                    Screen.Search.route -> fadeOut(animationSpec = tween(300))
+                    Screen.Search.route -> fadeOut(animationSpec = tween(Screen.Search.ANIMATION_DUR))
                     else -> slideOutOfContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                        animationSpec = tween(300)
+                        animationSpec = tween(Screen.Search.ANIMATION_DUR)
                     )
                 }
             }
@@ -79,6 +80,9 @@ fun NavGraph() {
                 route = Screen.UserInfo.route
             ) {
                 ProfileScreen(
+                    onBackClicked = {
+                        navController.popBackStack()
+                    },
                     onLogOut = {
                         navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.UserInfo.route) {

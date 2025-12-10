@@ -10,7 +10,7 @@ import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
 import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
-import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
+import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TagDto
 import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
 
@@ -47,7 +47,7 @@ interface IdeasApiService {
         @Header("Authorization") token: String,
         @Query("page") page: Int,
         @Query("size") limit: Int,
-    ): List<NoteDto>
+    ): List<NotePreviewDto>
 
     @GET("notes/search")
     suspend fun searchNotes(
@@ -58,6 +58,6 @@ interface IdeasApiService {
         @Query("tagIds") tagIds: List<Long>?,
         @Query("page") page: Int,
         @Query("size") limit: Int,
-    ): List<NoteDto>
+    ): List<NotePreviewDto>
 
 }

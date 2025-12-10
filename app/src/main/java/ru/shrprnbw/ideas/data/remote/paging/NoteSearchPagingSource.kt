@@ -1,12 +1,11 @@
 package ru.shrprnbw.ideas.data.remote.paging
 
-import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
-import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
-import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
+import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 
 class NoteSearchPagingSource(
@@ -16,16 +15,16 @@ class NoteSearchPagingSource(
     private val title: String,
     private val content: String,
     private val tagIds: List<Long>
-): PagingSource<Int, Note>() {
+): PagingSource<Int, NotePreview>() {
 
-    override fun getRefreshKey(state: PagingState<Int, Note>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, NotePreview>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
                 ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
         }
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Note> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, NotePreview> {
         val position = params.key ?: FIRST_PAGE_INDEX
         return try {
             val token = authRepository.getValidToken()
@@ -45,7 +44,7 @@ class NoteSearchPagingSource(
                     position + (params.loadSize / NETWORK_PAGE_SIZE)
                 }
             LoadResult.Page(
-                data = contentList.map(NoteDto::toEntity),
+                data = contentList.map(NotePreviewDto::toEntity),
                 prevKey = if (position == FIRST_PAGE_INDEX) null else position - 1,
                 nextKey = nextKey
             )

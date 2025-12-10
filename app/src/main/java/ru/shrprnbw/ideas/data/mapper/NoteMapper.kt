@@ -1,10 +1,10 @@
 package ru.shrprnbw.ideas.data.mapper
 
-import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
-import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
+import ru.shrprnbw.ideas.domain.entity.NotePreview
 
-fun NoteDto.toEntity(): Note {
-    return Note(
+fun NotePreviewDto.toEntity(): NotePreview {
+    return NotePreview(
         id = this.id,
         owner = this.owner.toEntity(),
         groupName = this.groupName,
@@ -12,5 +12,7 @@ fun NoteDto.toEntity(): Note {
         preview = this.preview,
         tags = this.tags,
         accessType = this.accessType,
+        updatedAt = this.updatedAt,
+        hasAudio = this.hasAudio
     )
 }

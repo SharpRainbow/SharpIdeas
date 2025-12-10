@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Abc
@@ -77,6 +78,7 @@ fun ProfileEditScreen(
                             Icon(
                                 modifier = Modifier
                                     .padding(start = 8.dp, end = 8.dp)
+                                    .clip(RoundedCornerShape(4.dp))
                                     .clickable(onClick = onEditFinished),
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = stringResource(R.string.back)
@@ -92,6 +94,7 @@ fun ProfileEditScreen(
                         .padding(innerPadding),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(Modifier.height(24.dp))
                     Box(
                         modifier = Modifier
                             .size(96.dp)

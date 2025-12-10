@@ -43,6 +43,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -66,10 +67,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.domain.entity.Tag
 import ru.shrprnbw.ideas.presentation.navigation.Screen
 import ru.shrprnbw.ideas.presentation.screens.notes_list.NoteType
+import ru.shrprnbw.ideas.utils.DateFormatter
 import ru.shrprnbw.ideas.utils.Utils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,7 +111,8 @@ fun SearchScreen(
                             animatedVisibilityScope = animatedVisibilityScope ?: return@Scaffold,
                             boundsTransform = { _, _ ->
                                 tween(durationMillis = Screen.Search.ANIMATION_DUR)
-                            }
+                            },
+                            clipInOverlayDuringTransition = OverlayClip(SearchBarDefaults.inputFieldShape)
                         )
                         .focusRequester(focusRequester),
                     value = state.query,
@@ -125,11 +128,13 @@ fun SearchScreen(
                     },
                     leadingIcon = {
                         Icon(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable(
+                                    onClick = onBackClicked
+                                ),
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back",
-                            modifier = Modifier.clickable(
-                                onClick = onBackClicked
-                            )
+                            contentDescription = "Back"
                         )
                     },
                     colors = TextFieldDefaults.colors(
@@ -147,23 +152,22 @@ fun SearchScreen(
                 thickness = 1.dp
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            FilterOptions(
-                availableTags = state.tags,
-                onTagToggle = {
-                    viewModel.processCommand(
-                        SearchCommand.ToggleTag(it)
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp
-            )
+            if (state.tags.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                FilterOptions(
+                    availableTags = state.tags,
+                    onTagToggle = {
+                        viewModel.processCommand(
+                            SearchCommand.ToggleTag(it)
+                        )
+                    }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.dp
+                )
+            }
 
             NotesList(
                 modifier = Modifier.weight(1f),
@@ -238,7 +242,7 @@ private fun TagChip(
 private fun NotesList(
     modifier: Modifier = Modifier,
     onNoteClicked: (String) -> Unit,
-    lazyItems: LazyPagingItems<Note>
+    lazyItems: LazyPagingItems<NotePreview>
 ) {
     LazyColumn(
         modifier = modifier,
@@ -254,8 +258,8 @@ private fun NotesList(
                     noteId = item.id,
                     title = item.title,
                     preview = item.preview,
-                    time = "",
-                    type = NoteType.Text,
+                    time = DateFormatter.formatDateToString(item.updatedAt),
+                    type = if (item.hasAudio) NoteType.Audio else NoteType.Text,
                     tags = item.tags,
                     onNoteClicked = onNoteClicked
                 )
@@ -339,7 +343,7 @@ private fun NoteItem(
                 }
                 Text(
                     modifier = Modifier.wrapContentWidth(),
-                    text = "yesterday",
+                    text = time,
                     color = Color.Gray,
                     fontSize = 13.sp
                 )
