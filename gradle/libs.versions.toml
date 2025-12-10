@@ -14,6 +14,7 @@ ksp = "2.1.10-1.0.29"
 hiltAndroid = "2.57"
 kotlinxSerializationJson = "1.9.0"
 hiltNavigationCompose = "1.3.0"
+paging = "3.3.6"
 retrofit = "3.0.0"
 tinkAndroid = "1.18.0"
 coilKtCoilCompose = "3.3.0"
@@ -26,6 +27,8 @@ material3 = "1.5.0-alpha10"
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

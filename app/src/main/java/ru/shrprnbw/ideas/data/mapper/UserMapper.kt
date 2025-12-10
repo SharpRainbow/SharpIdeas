@@ -1,6 +1,8 @@
 package ru.shrprnbw.ideas.data.mapper
 
+import ru.shrprnbw.ideas.data.remote.dto.response.UserDto
 import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
+import ru.shrprnbw.ideas.domain.entity.User
 import ru.shrprnbw.ideas.domain.entity.UserInfo
 
 fun UserInfoDto.toEntity(): UserInfo {
@@ -9,6 +11,16 @@ fun UserInfoDto.toEntity(): UserInfo {
         username = this.username,
         name = this.name,
         surname = this.surname,
+        email = this.email,
+    )
+}
+
+fun UserDto.toEntity(): User {
+    return User(
+        id = this.id,
+        username = this.username,
+        firstName = this.firstName,
+        lastName = this.lastName,
         email = this.email,
     )
 }
