@@ -79,9 +79,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.key.Key
@@ -179,6 +181,11 @@ private fun SearchBar(
         horizontalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Icon(
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(
+                    onClick = {}
+                ),
             imageVector = Icons.Rounded.Menu,
             contentDescription = "Menu Icon",
             tint = SearchBarDefaults.appBarWithSearchColors().appBarNavigationIconColor
@@ -227,9 +234,11 @@ private fun SearchBar(
             )
         }
         Icon(
-            modifier = Modifier.clickable(
-                onClick = onProfileClicked
-            ),
+            modifier = Modifier
+                .clip(CircleShape)
+                .clickable(
+                    onClick = onProfileClicked
+                ),
             imageVector = Icons.Rounded.AccountCircle,
             contentDescription = "Account Icon",
             tint = SearchBarDefaults.appBarWithSearchColors().appBarActionIconColor

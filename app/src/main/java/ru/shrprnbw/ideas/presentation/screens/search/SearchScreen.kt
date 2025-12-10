@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -47,6 +48,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +63,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.Tag
 import ru.shrprnbw.ideas.presentation.navigation.Screen
 import ru.shrprnbw.ideas.presentation.screens.notes_list.NoteType
@@ -69,10 +76,15 @@ import ru.shrprnbw.ideas.utils.Utils
 @Composable
 fun SearchScreen(
     modifier: Modifier = Modifier,
+    viewModel: SearchViewModel = hiltViewModel(),
     onBackClicked: () -> Unit,
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?
 ) {
+
+    val state by viewModel.state.collectAsState()
+    val tagsList = viewModel.pagedNoteList.collectAsLazyPagingItems()
+
     Scaffold(
         modifier = modifier.fillMaxWidth(),
     ) { innerPadding ->
@@ -100,8 +112,12 @@ fun SearchScreen(
                             }
                         )
                         .focusRequester(focusRequester),
-                    value = "",
-                    onValueChange = { },
+                    value = state.query,
+                    onValueChange = {
+                        viewModel.processCommand(
+                            SearchCommand.InputQuery(it)
+                        )
+                    },
                     placeholder = {
                         Text(
                             text = "Поиск заметок",
@@ -131,7 +147,31 @@ fun SearchScreen(
                 thickness = 1.dp
             )
 
-            // Search results would go here
+            Spacer(modifier = Modifier.height(12.dp))
+
+            FilterOptions(
+                availableTags = state.tags,
+                onTagToggle = {
+                    viewModel.processCommand(
+                        SearchCommand.ToggleTag(it)
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 1.dp
+            )
+
+            NotesList(
+                modifier = Modifier.weight(1f),
+                onNoteClicked = { noteId ->
+
+                },
+                lazyItems = tagsList
+            )
         }
     }
 }
@@ -140,17 +180,17 @@ fun SearchScreen(
 fun FilterOptions(
     modifier: Modifier = Modifier,
     availableTags: Map<Tag, Boolean>,
-    onTagToggle: (Long) -> Unit
+    onTagToggle: (Tag) -> Unit
 ) {
     LazyRow(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         availableTags.forEach { tag ->
             item(
-                key = tag.key
+                key = tag.key.id
             ) {
                 TagChip(
                     tag = tag.key,
@@ -167,13 +207,13 @@ private fun TagChip(
     modifier: Modifier = Modifier,
     tag: Tag,
     isSelected: Boolean,
-    onTagToggle: (Long) -> Unit,
+    onTagToggle: (Tag) -> Unit,
 ) {
     FilterChip(
         modifier = modifier,
         selected = isSelected,
         onClick = {
-            onTagToggle(tag.id)
+            onTagToggle(tag)
         },
         label = {
             Text(text = tag.name)
@@ -195,6 +235,36 @@ private fun TagChip(
 }
 
 @Composable
+private fun NotesList(
+    modifier: Modifier = Modifier,
+    onNoteClicked: (String) -> Unit,
+    lazyItems: LazyPagingItems<Note>
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(top = 12.dp)
+    ) {
+        items(
+            count = lazyItems.itemCount,
+            key = { index -> lazyItems[index]?.id ?: index }
+        ) { index ->
+            val item = lazyItems[index]
+            if (item != null) {
+                NoteItem(
+                    noteId = item.id,
+                    title = item.title,
+                    preview = item.preview,
+                    time = "",
+                    type = NoteType.Text,
+                    tags = item.tags,
+                    onNoteClicked = onNoteClicked
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun NoteItem(
     modifier: Modifier = Modifier,
     noteId: String = "",
@@ -203,7 +273,7 @@ private fun NoteItem(
     time: String,
     type: NoteType,
     duration: String? = null,
-    transformations: List<String>,
+    tags: List<String>,
     onNoteClicked: (String) -> Unit
 ) {
     Card(
@@ -258,7 +328,7 @@ private fun NoteItem(
                                 imageVector = Icons.Rounded.AudioFile
                             )
                         }
-                        for (t in transformations) {
+                        for (t in tags) {
                             NoteLabel(
                                 label = t,
                                 color = Utils.generateColorContrast(t),
@@ -269,7 +339,7 @@ private fun NoteItem(
                 }
                 Text(
                     modifier = Modifier.wrapContentWidth(),
-                    text = time,
+                    text = "yesterday",
                     color = Color.Gray,
                     fontSize = 13.sp
                 )

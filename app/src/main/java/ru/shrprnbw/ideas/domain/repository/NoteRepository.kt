@@ -8,4 +8,11 @@ interface NoteRepository {
 
     fun getUserNotes(): Flow<PagingData<Note>>
 
+    fun searchNotes(
+        globalSearch: Boolean,
+        title: String,
+        content: String,
+        tagIds: List<Long>,
+    ): Flow<PagingData<Note>>
+
 }

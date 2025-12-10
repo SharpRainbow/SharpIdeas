@@ -1,5 +1,6 @@
 package ru.shrprnbw.ideas.data.remote.paging
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import ru.shrprnbw.ideas.data.mapper.toEntity
@@ -8,9 +9,13 @@ import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 
-class NotePagingSource(
+class NoteSearchPagingSource(
     private val apiService: IdeasApiService,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val globalSearch: Boolean,
+    private val title: String,
+    private val content: String,
+    private val tagIds: List<Long>
 ): PagingSource<Int, Note>() {
 
     override fun getRefreshKey(state: PagingState<Int, Note>): Int? {
@@ -24,8 +29,12 @@ class NotePagingSource(
         val position = params.key ?: FIRST_PAGE_INDEX
         return try {
             val token = authRepository.getValidToken()
-            val contentList = apiService.getUserNotes(
+            val contentList = apiService.searchNotes(
                 token = token,
+                globalSearch = globalSearch,
+                title = title.ifBlank { null },
+                content = content.ifBlank { null },
+                tagIds = tagIds.ifEmpty { null },
                 page = position,
                 limit = params.loadSize
             )
