@@ -36,4 +36,17 @@ class JwtManager @Inject constructor() {
         }
     }
 
+    fun isRefreshTokenValid(token: String): Boolean {
+        return try {
+            val payload = String(
+                Base64.withPadding(
+                    Base64.PaddingOption.PRESENT_OPTIONAL
+                ).decode(token.split('.')[1])
+            )
+            payload.toLong() > System.currentTimeMillis() / 1000
+        } catch (e: Exception) {
+            false
+        }
+    }
+
 }

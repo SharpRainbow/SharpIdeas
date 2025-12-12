@@ -2,9 +2,13 @@ package ru.shrprnbw.ideas.data.repository
 
 import kotlinx.coroutines.flow.first
 import ru.shrprnbw.ideas.data.JwtManager
+import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
+import ru.shrprnbw.ideas.data.remote.dto.request.GoogleTokenAuthRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
+import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
+import ru.shrprnbw.ideas.domain.entity.TokenPair
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.CredentialsRepository
 import javax.inject.Inject
@@ -33,10 +37,14 @@ class AuthRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun login(login: String, password: String): String {
-        return apiService.login(
-            LoginRequestDto(login, password)
-        ).token
+    override suspend fun login(login: String, password: String): TokenPair {
+        val response = apiService.loginV2(
+            LoginRequestDto(
+                email = login,
+                password = password
+            )
+        )
+        return response.body()!!.toEntity()
     }
 
     override suspend fun logout() {
@@ -44,19 +52,47 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getValidToken(): String {
-        var token = credentialsRepository.getToken().first()
-        if (jwtManager.isTokenValid(token)) {
-            token = "Bearer $token"
+        val token = credentialsRepository.getAccessToken().first()
+        return if (jwtManager.isTokenValid(token)) {
+            "Bearer $token"
         } else {
-            val login = credentialsRepository.getSavedLogin().first()
-            val password = credentialsRepository.getSavedPassword().first()
-            if (login.isNotBlank() && password.isNotBlank()) {
-                val newToken = login(login, password)
-                credentialsRepository.saveToken(newToken)
+            val refreshToken = credentialsRepository.getRefreshToken().first()
+            if (refreshToken.isNotBlank() && jwtManager.isRefreshTokenValid(refreshToken)) {
+                refreshAccessToken(refreshToken)
+            } else {
+                loginWithCredentials()
             }
-            return "Bearer ${credentialsRepository.getToken().first()}"
+            "Bearer ${credentialsRepository.getAccessToken().first()}"
         }
-        return token
+    }
+
+    override suspend fun loginWithGoogle(idToken: String): TokenPair {
+        return apiService.loginWithGoogle(
+            GoogleTokenAuthRequest(
+                idToken = idToken
+            )
+        ).toEntity()
+    }
+
+    private suspend fun refreshAccessToken(refreshToken: String) {
+        val refreshResponse = apiService.refreshAccessToken(
+            RefreshRequest(
+                refreshToken = refreshToken
+            )
+        )
+        val login = credentialsRepository.getSavedLogin().first()
+        credentialsRepository.saveRefreshToken(refreshResponse.refreshToken, login)
+        credentialsRepository.saveAccessToken(refreshResponse.accessToken)
+    }
+
+    private suspend fun loginWithCredentials() {
+        val login = credentialsRepository.getSavedLogin().first()
+        val password = credentialsRepository.getSavedPassword().first()
+        if (login.isNotBlank() && password.isNotBlank()) {
+            val loginResponse = login(login, password)
+            credentialsRepository.saveAccessToken(loginResponse.accessToken)
+            credentialsRepository.saveRefreshToken(loginResponse.refreshToken, login)
+        }
     }
 
 }

@@ -29,9 +29,17 @@ class CredentialsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveToken(token: String) {
+    override suspend fun saveAccessToken(token: String) {
         context.dataStore.edit { preferences ->
-            preferences[TOKEN_KEY] = token
+            preferences[ACCESS_TOKEN_KEY] = token
+        }
+    }
+
+    override suspend fun saveRefreshToken(token: String, login: String) {
+        val encryptedToken = encryptionManager.encryptData(token, login)
+        context.dataStore.edit { preferences ->
+            preferences[LOGIN_KEY] = login
+            preferences[REFRESH_TOKEN_KEY] = encryptedToken
         }
     }
 
@@ -41,9 +49,19 @@ class CredentialsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getToken(): Flow<String> {
+    override fun getAccessToken(): Flow<String> {
         return context.dataStore.data.map { preferences ->
-            preferences[TOKEN_KEY] ?: ""
+            preferences[ACCESS_TOKEN_KEY] ?: ""
+        }
+    }
+
+    override fun getRefreshToken(): Flow<String> {
+        return context.dataStore.data.map { preferences ->
+            preferences[LOGIN_KEY]?.let { login ->
+                preferences[REFRESH_TOKEN_KEY]?.let { password ->
+                    encryptionManager.decryptData(password, login)
+                }
+            } ?: ""
         }
     }
 
@@ -66,7 +84,9 @@ class CredentialsRepositoryImpl @Inject constructor(
     companion object {
         private val LOGIN_KEY = stringPreferencesKey("LOGIN")
         private val PASSWORD_KEY = stringPreferencesKey("PASS")
-        private val TOKEN_KEY = stringPreferencesKey("TOKEN")
+        private val ACCESS_TOKEN_KEY = stringPreferencesKey("TOKEN_ACCESS")
+
+        private val REFRESH_TOKEN_KEY = stringPreferencesKey("TOKEN_REFRESH")
 
     }
 }

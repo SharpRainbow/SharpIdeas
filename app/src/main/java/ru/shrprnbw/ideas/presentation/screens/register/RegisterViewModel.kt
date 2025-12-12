@@ -44,7 +44,10 @@ class RegisterViewModel @Inject constructor(
             is RegisterCommand.InputPassword -> {
                 _state.update { previousState ->
                     if (previousState is RegisterScreenState.Editing) {
-                        previousState.copy(password = command.password)
+                        previousState.copy(
+                            password = command.password,
+                            errorInputPassword = command.password.trim().length < 8
+                        )
                     } else {
                         previousState
                     }
@@ -74,17 +77,23 @@ class RegisterViewModel @Inject constructor(
             RegisterCommand.Submit -> {
                 val currentState = _state.value
                 if (currentState is RegisterScreenState.Editing && currentState.isSubmitEnabled) {
+                    if (currentState.password.trim().length < 8) {
+                        _state.update {
+                            currentState.copy(errorInputPassword = true)
+                        }
+                        return
+                    }
                     _state.update {
                         currentState.copy(isLoading = true, error = null)
                     }
                     viewModelScope.launch {
                         try {
                             registerUseCase(
-                                username = currentState.username,
-                                email = currentState.email,
-                                password = currentState.password,
-                                firstName = currentState.firstName,
-                                lastName = currentState.lastName
+                                username = currentState.username.trim(),
+                                email = currentState.email.trim(),
+                                password = currentState.password.trim(),
+                                firstName = currentState.firstName.trim(),
+                                lastName = currentState.lastName.trim()
                             )
                             _state.update {
                                 RegisterScreenState.Registered
@@ -135,6 +144,7 @@ sealed interface RegisterScreenState {
         val password: String = "",
         val firstName: String = "",
         val lastName: String = "",
+        val errorInputPassword: Boolean = false,
         val error: Int? = null,
         val isLoading: Boolean = false
     ) : RegisterScreenState {

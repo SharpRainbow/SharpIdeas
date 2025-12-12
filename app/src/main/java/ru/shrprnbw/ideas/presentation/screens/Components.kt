@@ -30,6 +30,8 @@ fun PasswordInputField(
     modifier: Modifier = Modifier,
     value: String,
     placeHolderText: String = "Password",
+    insufficientChars: Boolean = false,
+    wrongPassword: Boolean = false,
     onValueChange: (String) -> Unit,
 ) {
 
@@ -63,7 +65,12 @@ fun PasswordInputField(
                 )
             }
         },
-        singleLine = true
+        singleLine = true,
+        isError = insufficientChars || wrongPassword,
+        supportingText = {
+            if (insufficientChars) Text(text = "Password must be at least 8 characters long")
+            else if (wrongPassword) Text(text = "Wrong password")
+        }
     )
 }
 

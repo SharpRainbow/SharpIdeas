@@ -6,11 +6,15 @@ interface CredentialsRepository {
 
     suspend fun saveCredentials(login: String, password: String)
 
-    suspend fun saveToken(token: String)
+    suspend fun saveAccessToken(token: String)
+
+    suspend fun saveRefreshToken(token: String, login: String)
 
     suspend fun clearCredentials()
 
-    fun getToken(): Flow<String>
+    fun getAccessToken(): Flow<String>
+
+    fun getRefreshToken(): Flow<String>
 
     fun getSavedLogin(): Flow<String>
 

@@ -10,6 +10,6 @@ class IsLoggedInUseCase @Inject constructor(
 ) {
 
     operator fun invoke(): Flow<Boolean> {
-        return authRepository.getToken().map { it.isNotBlank() }
+        return authRepository.getAccessToken().map { it.isNotBlank() }
     }
 }

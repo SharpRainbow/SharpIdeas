@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.presentation.screens.PasswordInputField
 import ru.shrprnbw.ideas.presentation.screens.UserInfoFieldNextFocus
+import ru.shrprnbw.ideas.presentation.ui.theme.CustomIcons
 
 @Composable
 fun LoginScreen(
@@ -66,6 +68,9 @@ fun LoginScreen(
             ) {
                 currentState.errorMessage?.let {
                     Toast.makeText(context, currentState.errorMessage, Toast.LENGTH_SHORT).show()
+                    viewModel.processCommand(
+                        LoginCommand.ResetErrorMessage
+                    )
                 }
             }
             Scaffold(
@@ -191,6 +196,24 @@ fun LoginScreen(
                         }
                     ) {
                         Text("Войти")
+                    }
+                    Button(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        onClick = {
+                            viewModel.processCommand(
+                                LoginCommand.LoginWithGoogle(
+                                    context
+                                )
+                            )
+                        }
+                    ) {
+                        Icon(
+                            imageVector = CustomIcons.Google,
+                            contentDescription = "Google Icon",
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
+                        Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                        Text("Войти c Google")
                     }
                 }
             }

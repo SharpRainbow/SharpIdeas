@@ -1,5 +1,7 @@
 package ru.shrprnbw.ideas.domain.repository
 
+import ru.shrprnbw.ideas.domain.entity.TokenPair
+
 interface AuthRepository {
 
     suspend fun register(
@@ -10,10 +12,12 @@ interface AuthRepository {
         lastName: String
     )
 
-    suspend fun login(login: String, password: String): String
+    suspend fun login(login: String, password: String): TokenPair
 
     suspend fun logout()
 
     suspend fun getValidToken(): String
+
+    suspend fun loginWithGoogle(idToken: String): TokenPair
 
 }

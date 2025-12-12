@@ -59,7 +59,6 @@ class ProfileViewModel @Inject constructor(
             try {
                 val userInfo = getProfileInfoUseCase()
                 _state.update {
-                    Log.d("ProfileViewModel", "Loaded profile info: $userInfo")
                     ProfileScreenState.Displaying(
                         username = userInfo.username,
                         firstName = userInfo.name,

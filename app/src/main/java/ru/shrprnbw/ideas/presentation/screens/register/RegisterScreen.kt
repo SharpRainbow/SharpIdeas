@@ -210,7 +210,8 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         PasswordInputField(
                             value = currentState.password,
-                            placeHolderText = "Пароль"
+                            placeHolderText = "Пароль",
+                            insufficientChars = currentState.errorInputPassword
                         ) { text ->
                             viewModel.processCommand(
                                 RegisterCommand.InputPassword(text)
