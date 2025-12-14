@@ -51,7 +51,7 @@ class AuthRepositoryImpl @Inject constructor(
         credentialsRepository.clearCredentials()
     }
 
-    override suspend fun getValidToken(): String {
+    override suspend fun getValidToken(): String { // TODO: check server time vs local time
         val token = credentialsRepository.getAccessToken().first()
         return if (jwtManager.isTokenValid(token)) {
             "Bearer $token"

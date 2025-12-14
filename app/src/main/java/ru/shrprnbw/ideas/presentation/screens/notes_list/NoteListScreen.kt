@@ -270,7 +270,7 @@ private fun NotesList(
                     title = item.title,
                     preview = item.preview,
                     time = DateFormatter.formatDateToString(item.updatedAt),
-                    type = if (item.hasAudio) NoteType.Audio else NoteType.Text,
+                    type = if (item.audioNote) NoteType.Audio else NoteType.Text,
                     duration = "",
                     tags = item.tags,
                     onNoteClicked = onNoteClicked

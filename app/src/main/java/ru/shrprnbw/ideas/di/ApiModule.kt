@@ -9,6 +9,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.create
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import javax.inject.Singleton
@@ -41,6 +42,7 @@ object ApiModule {
     fun provideRetrofit(converterFactory: Converter.Factory): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(converterFactory)
             .build()
     }

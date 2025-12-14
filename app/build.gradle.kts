@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.converter.scalars)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)

@@ -10,4 +10,9 @@ object DateFormatter {
     fun formatDateToString(timestamp: Long): String {
         return formatter.format(timestamp)
     }
+
+    fun formatCurrentDate(): String {
+        return formatter.format(System.currentTimeMillis())
+    }
+
 }

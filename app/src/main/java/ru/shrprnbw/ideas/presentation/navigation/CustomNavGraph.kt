@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import ru.shrprnbw.ideas.presentation.screens.login.LoginScreen
+import ru.shrprnbw.ideas.presentation.screens.note_editor.NoteEditorScreen
 import ru.shrprnbw.ideas.presentation.screens.notes_list.NoteListScreen
 import ru.shrprnbw.ideas.presentation.screens.profile.ProfileScreen
 import ru.shrprnbw.ideas.presentation.screens.profile_edit.ProfileEditScreen
@@ -129,6 +130,11 @@ fun NavGraph() {
                     },
                     onProfileClicked = {
                         navController.navigate(Screen.UserInfo.route)
+                    },
+                    onNoteClicked = {
+                        navController.navigate(
+                            Screen.EditNote.createRoute(it)
+                        )
                     }
                 )
             }
@@ -138,6 +144,18 @@ fun NavGraph() {
                 SearchScreen(
                     animatedVisibilityScope = this@composable,
                     sharedTransitionScope = this@SharedTransitionLayout,
+                    onBackClicked = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+            composable(
+                route = Screen.EditNote.route,
+                arguments = Screen.EditNote.arguments
+            ) { navBackStackEntry ->
+                val noteId = Screen.EditNote.getNoteId(navBackStackEntry.arguments)
+                NoteEditorScreen(
+                    noteId = noteId,
                     onBackClicked = {
                         navController.popBackStack()
                     }
@@ -164,21 +182,21 @@ sealed class Screen(val route: String) {
 
     data object Notes : Screen("notes")
 
-    data object CreateNote : Screen("create_note")
+//    data object CreateNote : Screen("create_note")
 
     data object EditNote : Screen("edit_note/{note_id}") {
 
         private const val noteIdArg = "note_id"
         val arguments = listOf(
-            navArgument(noteIdArg) { type = NavType.IntType }
+            navArgument(noteIdArg) { type = NavType.StringType }
         )
 
-        fun createRoute(noteId: Int): String {
+        fun createRoute(noteId: String): String {
             return "edit_note/$noteId"
         }
 
-        fun getNoteId(arguments: Bundle?): Int {
-            return arguments?.getInt(noteIdArg) ?: 0
+        fun getNoteId(arguments: Bundle?): String {
+            return arguments?.getString(noteIdArg) ?: ""
         }
     }
 }

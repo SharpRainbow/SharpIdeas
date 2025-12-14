@@ -12,4 +12,15 @@
     <string name="registration_error_invalid_data">Invalid registration data</string>
     <string name="registration_error_google_error">Google sign in failed, check email confirmation</string>
     <string name="google_mobile_client_id">972869100739-2rqvqodr2a7ckifre80c8etv8spi6rig.apps.googleusercontent.com</string>
+    <string name="create_note">Create note</string>
+    <string name="add_photo">Add photo from gallery</string>
+    <string name="add_audio">Add audio file</string>
+    <string name="note_title">Title</string>
+    <string name="save_note">Save Note</string>
+    <string name="add_text_hint">Note something down</string>
+    <string name="edit_note">Edit note</string>
+    <string name="edit_note_error">Unable to save note</string>
+    <string name="remove_image">Remove image</string>
+    <string name="edit_note_image_upload_error">Unable to upload image</string>
+    <string name="edit_note_content_delete_error">Unable to delete content</string>
 </resources>

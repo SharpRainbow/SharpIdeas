@@ -21,6 +21,6 @@ data class NotePreviewDto(
     val accessType: String,
     @SerialName("updatedAt")
     val updatedAt: Long,
-    @SerialName("hasAudio")
-    val hasAudio: Boolean
+    @SerialName("audioNote")
+    val audioNote: Boolean
 )
