@@ -9,13 +9,7 @@ class UpdateNoteContentUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(note: Note) {
-        val createdText = note.contents.filter { it.id == -1L }
-        val existedText = note.contents - createdText.toSet()
-        val updatedText = existedText.filter { it.edited && it.data.isNotBlank() }
-        val deletedText = existedText.filter { it.data.isBlank() }
-        for (c in createdText) {
-            noteRepository.addNoteText(note.id, c.data)
-        }
+        val updatedText = note.contents.filter { it.edited && it.data.isNotBlank() }
         if (updatedText.isNotEmpty()) {
             noteRepository.updateNoteContent(note.id, updatedText)
         }

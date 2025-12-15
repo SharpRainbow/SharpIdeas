@@ -1,4 +1,8 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@file:OptIn(
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalSharedTransitionApi::class
+)
 
 package ru.shrprnbw.ideas.presentation.screens.notes_list
 
@@ -31,21 +35,17 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Label
-import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Contacts
-import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Snooze
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.AudioFile
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.TextFields
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,10 +56,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ToggleFloatingActionButton
@@ -70,6 +72,7 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -105,17 +108,16 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.presentation.navigation.Screen
-import ru.shrprnbw.ideas.presentation.ui.theme.SharpIdeasTheme
-import ru.shrprnbw.ideas.utils.Utils
-import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
+import ru.shrprnbw.ideas.presentation.ui.theme.SharpIdeasTheme
+import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.DateFormatter
+import ru.shrprnbw.ideas.utils.Utils
 
 @Composable
 fun NoteListScreen(
     modifier: Modifier = Modifier,
     viewModel: NoteListViewModel = hiltViewModel(),
-    onFabClicked: () -> Unit = {},
     onNoteClicked: (String) -> Unit = {},
     onSearchTriggered: () -> Unit = {},
     onProfileClicked: () -> Unit = {},
@@ -123,6 +125,7 @@ fun NoteListScreen(
     animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     val noteItems = viewModel.notesFlow.collectAsLazyPagingItems()
+    val state = viewModel.state.collectAsState()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -159,7 +162,44 @@ fun NoteListScreen(
                 )
             }
             FloatingActionButtonWithMenu(
-                listState = listState
+                listState = listState,
+                onTextNoteClicked = {
+                    viewModel.processCommand(
+                        NoteListCommand.ShowAddTextNoteDialog(true)
+                    )
+                },
+                onAudioNoteClicked = {
+                    viewModel.processCommand(
+                        NoteListCommand.ShowAddAudioNoteDialog(true)
+                    )
+                }
+            )
+        }
+        if (state.value.showAddTextNoteDialog || state.value.showAddAudioNoteDialog) {
+            CreateNoteDialog(
+                dialogTitle = if (state.value.showAddTextNoteDialog) "Создать текстовую заметку" else "Создать аудиозаметку",
+                noteName = state.value.newNoteTitle,
+                onNoteNameChange = { title ->
+                    viewModel.processCommand(
+                        NoteListCommand.InputNewNoteTitle(title)
+                    )
+                },
+                onDismissRequest = {
+                    viewModel.processCommand(
+                        if (state.value.showAddTextNoteDialog)
+                            NoteListCommand.ShowAddTextNoteDialog(false)
+                        else
+                            NoteListCommand.ShowAddAudioNoteDialog(false)
+                    )
+                },
+                onCreateNoteRequest = {
+                    viewModel.processCommand(
+                        if (state.value.showAddTextNoteDialog)
+                            NoteListCommand.CreateTextNote(state.value.newNoteTitle)
+                        else
+                            NoteListCommand.CreateAudioNote(state.value.newNoteTitle)
+                    )
+                }
             )
         }
     }
@@ -451,7 +491,7 @@ fun BoxScope.FloatingActionButtonWithMenu(
     onTextNoteClicked: () -> Unit = {},
     onAudioNoteClicked: () -> Unit = {},
     listState: LazyListState = rememberLazyListState()
-) { // TODO: replace with actual menu
+) {
     val fabVisible by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex == 0 || !listState.canScrollForward
@@ -460,12 +500,8 @@ fun BoxScope.FloatingActionButtonWithMenu(
     val focusRequester = remember { FocusRequester() }
     val items =
         listOf(
-            Icons.AutoMirrored.Filled.Message to "Reply",
-            Icons.Filled.People to "Reply all",
-            Icons.Filled.Contacts to "Forward",
-            Icons.Filled.Snooze to "Snooze",
-            Icons.Filled.Archive to "Archive",
-            Icons.AutoMirrored.Filled.Label to "Label",
+            Icons.Filled.TextFields to "Text note",
+            Icons.Rounded.AudioFile to "Audio note"
         )
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
     BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
@@ -542,12 +578,53 @@ fun BoxScope.FloatingActionButtonWithMenu(
                                 Modifier
                             }
                         ),
-                onClick = { fabMenuExpanded = false },
+                onClick = {
+                    if (item.first == Icons.Filled.TextFields) {
+                        onTextNoteClicked()
+                    } else if (item.first == Icons.Rounded.AudioFile) {
+                        onAudioNoteClicked()
+                    }
+                    fabMenuExpanded = false
+                },
                 icon = { Icon(item.first, contentDescription = null) },
                 text = { Text(text = item.second) },
             )
         }
     }
+}
+
+@Composable
+private fun CreateNoteDialog(
+    modifier: Modifier = Modifier,
+    dialogTitle: String,
+    noteName: String,
+    onNoteNameChange: (String) -> Unit,
+    onDismissRequest: () -> Unit,
+    onCreateNoteRequest: () -> Unit
+) {
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismissRequest,
+        title = { Text(dialogTitle) },
+        text = {
+            OutlinedTextField(
+                value = noteName,
+                onValueChange = onNoteNameChange,
+                label = { Text("Note Name") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onCreateNoteRequest) {
+                Text("Create")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)

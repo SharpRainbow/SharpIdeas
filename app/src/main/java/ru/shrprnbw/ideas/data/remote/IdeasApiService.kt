@@ -13,6 +13,7 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteTextRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.GoogleTokenAuthRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
@@ -95,7 +96,8 @@ interface IdeasApiService {
 
     @POST("$VERSION_1/notes")
     suspend fun createNote(
-        @Header("Authorization") token: String
+        @Header("Authorization") token: String,
+        @Body createRequest: CreateNoteRequest
     )
 
     @POST("$VERSION_1/notes/{noteId}/contents/text")

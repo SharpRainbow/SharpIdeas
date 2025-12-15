@@ -22,9 +22,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
-import ru.shrprnbw.ideas.domain.entity.ContentItem
-import ru.shrprnbw.ideas.domain.entity.ContentType
 import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.usecase.AddNoteTextBlockUseCase
 import ru.shrprnbw.ideas.domain.usecase.DeleteNoteContentUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetNoteInfoUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteContentUseCase
@@ -39,6 +38,7 @@ class NoteEditorViewModel @AssistedInject constructor(
     private val updateNoteUseCase: UpdateNoteUseCase,
     private val uploadImageUseCase: UploadImageUseCase,
     private val deleteNoteContentUseCase: DeleteNoteContentUseCase,
+    private val addNoteTextBlockUseCase: AddNoteTextBlockUseCase,
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
@@ -46,37 +46,24 @@ class NoteEditorViewModel @AssistedInject constructor(
     val state = _state.asStateFlow()
 
     init {
-        loadNote(noteId)
+        viewModelScope.launch {
+            loadNote(noteId)
+        }
         autoSaveNote()
     }
 
     fun processCommand(command: NoteEditorCommand) {
         when (command) {
             is NoteEditorCommand.LoadNote -> {
-                loadNote(noteId)
+                viewModelScope.launch {
+                    loadNote(noteId)
+                }
             }
 
             NoteEditorCommand.AddNoteTextItem -> {
-                _state.update { previousState ->
-                    if (previousState is NoteEditorState.Editing) {
-                        val newContents = previousState.note.contents.toMutableList()
-                        newContents.add(
-                            ContentItem(
-                                id = -1,
-                                position = newContents.size.toLong(),
-                                data = "",
-                                type = ContentType.TEXT,
-                                version = 0
-                            )
-                        )
-                        previousState.copy(
-                            note = previousState.note.copy(
-                                contents = newContents
-                            )
-                        )
-                    } else {
-                        previousState
-                    }
+                viewModelScope.launch {
+                    addNoteTextBlockUseCase(noteId, "")
+                    loadNote(noteId)
                 }
             }
 
@@ -157,14 +144,13 @@ class NoteEditorViewModel @AssistedInject constructor(
         }
     }
 
-    private fun loadNote(noteId: String) {
-        viewModelScope.launch {
-            val note = getNoteInfoUseCase(noteId)
-            _state.update {
-                NoteEditorState.Editing(
-                    note = note
-                )
-            }
+    private suspend fun loadNote(noteId: String) {
+        val note = getNoteInfoUseCase(noteId)
+        val contentItems = note.contents.toMutableList()
+        _state.update {
+            NoteEditorState.Editing(
+                note = note.copy(contents = contentItems)
+            )
         }
     }
 

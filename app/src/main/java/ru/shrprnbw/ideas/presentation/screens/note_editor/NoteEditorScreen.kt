@@ -2,6 +2,7 @@
 
 package ru.shrprnbw.ideas.presentation.screens.note_editor
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AudioFile
+import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Discount
 import androidx.compose.material.icons.rounded.GraphicEq
@@ -51,6 +53,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -145,6 +153,20 @@ fun NoteEditorScreen(
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                             } else {
+                                Icon(
+                                    modifier = Modifier
+                                        .padding(end = 8.dp)
+                                        .clickable(
+                                            onClick = {
+                                                viewModel.processCommand(
+                                                    NoteEditorCommand.AddNoteTextItem
+                                                )
+                                            }
+                                        ),
+                                    imageVector = Icons.Outlined.TextFields,
+                                    contentDescription = stringResource(R.string.add_photo),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
                                 Icon(
                                     modifier = Modifier
                                         .padding(end = 8.dp)
@@ -247,6 +269,11 @@ fun NoteEditorScreen(
                             viewModel.processCommand(
                                 NoteEditorCommand.DeleteContentItem(id)
                             )
+                        },
+                        onDeleteTextRequested = { idx ->
+                            viewModel.processCommand(
+                                NoteEditorCommand.DeleteContentItem(idx)
+                            )
                         }
                     )
                 }
@@ -268,7 +295,8 @@ fun Content(
     modifier: Modifier = Modifier,
     contentList: List<ContentItem>,
     onTextChanged: (Int, String) -> Unit,
-    onDeleteImageClick: (Int) -> Unit
+    onDeleteImageClick: (Int) -> Unit,
+    onDeleteTextRequested: (Int) -> Unit
 ) {
     LazyColumn(
         modifier = modifier
@@ -337,6 +365,9 @@ fun Content(
                         text = contentItem.data,
                         onTextInput = { input ->
                             onTextChanged(itemIndex, input)
+                        },
+                        onDeleteRequest = {
+                            onDeleteTextRequested(contentItem.id.toInt())
                         }
                     )
                 }
@@ -419,12 +450,25 @@ fun ImageContent(
 fun TextContent(
     modifier: Modifier = Modifier,
     text: String,
-    onTextInput: (String) -> Unit
+    onTextInput: (String) -> Unit,
+    onDeleteRequest: () -> Unit = {}
 ) {
     TextField(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 8.dp)
+            .onKeyEvent { event ->
+                if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
+                    if (text.isEmpty()) {
+                        onDeleteRequest()
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            },
         value = text,
         onValueChange = onTextInput,
         colors = TextFieldDefaults.colors(

@@ -23,6 +23,7 @@ import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.mapper.toUpdateRequest
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteTextRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NoteSearchPagingSource
@@ -147,6 +148,30 @@ class NoteRepositoryImpl @Inject constructor(
             token,
             noteId,
             contentId
+        )
+        notesRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun createTextNote(title: String) {
+        val token = authRepository.getValidToken()
+        apiService.createNote(
+            token,
+            CreateNoteRequest(
+                title = title,
+                audioNote = false
+            )
+        )
+        notesRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun createAudioNote(title: String) {
+        val token = authRepository.getValidToken()
+        apiService.createNote(
+            token,
+            CreateNoteRequest(
+                title = title,
+                audioNote = true
+            )
         )
         notesRefreshTrigger.emit(Unit)
     }

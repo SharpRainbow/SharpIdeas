@@ -30,4 +30,8 @@ interface NoteRepository {
 
     suspend fun deleteNoteContent(noteId: String, contentId: Long)
 
+    suspend fun createTextNote(title: String)
+
+    suspend fun createAudioNote(title: String)
+
 }
