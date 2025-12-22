@@ -2,21 +2,38 @@
 
 package ru.shrprnbw.ideas.presentation.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.rounded.AudioFile
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.TextFields
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -31,15 +48,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
+import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
+import ru.shrprnbw.ideas.utils.Utils
 
 @Composable
 fun PasswordInputField(
@@ -136,10 +162,14 @@ fun <T : Any> PagedItemsTemplate(
     items: LazyPagingItems<T>,
     paddingValues: PaddingValues,
     errorText: String,
-    screenContent: @Composable () -> Unit
+    showLoading: Boolean = true,
+    keyProducer: ((Int) -> Any)? = null,
+    listState: LazyListState = rememberLazyListState(),
+    screenContent: @Composable () -> Unit,
+    itemContent: @Composable (item: T) -> Unit
 ) {
-    when (items.loadState.refresh) {
-        is LoadState.Loading -> {
+    when {
+        items.loadState.refresh is LoadState.Loading && showLoading -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -150,7 +180,7 @@ fun <T : Any> PagedItemsTemplate(
             }
         }
 
-        is LoadState.Error -> {
+        items.loadState.refresh is LoadState.Error -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -166,7 +196,146 @@ fun <T : Any> PagedItemsTemplate(
         }
 
         else -> {
-            screenContent()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                screenContent()
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    state = listState
+                ) {
+                    items(items.itemCount, keyProducer) { index ->
+                        items[index]?.let { item ->
+                            itemContent(item)
+                        }
+                    }
+
+                    if (items.loadState.append is LoadState.Loading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ContainedLoadingIndicator()
+                            }
+                        }
+                    }
+                }
+            }
         }
+    }
+}
+
+enum class NoteType { Text, Audio }
+
+@Composable
+fun NoteItem(
+    modifier: Modifier = Modifier,
+    title: String,
+    preview: String,
+    time: String,
+    type: NoteType,
+    tags: List<String> = emptyList<String>(),
+    onNoteClicked: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onNoteClicked),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
+        border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Column {
+                Text(text = title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                if (preview.isNotBlank()) {
+                    Text(
+                        text = preview,
+                        fontSize = 14.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (type == NoteType.Text) {
+                            NoteLabel(
+                                label = "Текст",
+                                color = TextBlue,
+                                imageVector = Icons.Rounded.TextFields
+                            )
+                        } else {
+                            NoteLabel(
+                                label = "Аудио",
+                                color = AudioGreen,
+                                imageVector = Icons.Rounded.AudioFile
+                            )
+                        }
+                        for (t in tags) {
+                            NoteLabel(
+                                label = t,
+                                color = Utils.generateColorContrast(t),
+                                imageVector = Icons.Rounded.GraphicEq
+                            )
+                        }
+                    }
+                }
+                Text(
+                    modifier = Modifier.wrapContentWidth(),
+                    text = time,
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NoteLabel(
+    modifier: Modifier = Modifier,
+    label: String,
+    color: Color,
+    imageVector: ImageVector
+) {
+    Row(
+        modifier = modifier
+            .background(
+                color = color.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(label, color = color, fontSize = 12.sp)
     }
 }

@@ -11,14 +11,11 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,10 +23,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -37,26 +30,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.AudioFile
-import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearWavyProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -86,7 +71,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -99,23 +83,17 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.paging.LoadState
-import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
-import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.presentation.navigation.Screen
+import ru.shrprnbw.ideas.presentation.screens.NoteItem
+import ru.shrprnbw.ideas.presentation.screens.NoteType
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
-import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.SharpIdeasTheme
-import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.DateFormatter
 import ru.shrprnbw.ideas.utils.Utils
 
@@ -135,85 +113,93 @@ fun NoteListScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) { paddingValues ->
-        PagedItemsTemplate(
-            items = noteItems,
-            paddingValues = paddingValues,
-            errorText = stringResource(R.string.note_list_error_load),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                val listState = rememberLazyListState()
-                Column {
-                    Spacer(
-                        modifier = Modifier.height(12.dp)
-                    )
-                    SearchBar(
-                        onSearchTriggered = onSearchTriggered,
-                        onProfileClicked = onProfileClicked,
-                        animatedVisibilityScope = animatedVisibilityScope,
-                        sharedTransitionScope = sharedTransitionScope
-                    )
-                    Spacer(
-                        modifier = Modifier.height(16.dp)
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        thickness = 1.dp
-                    )
-                    NotesList(
-                        onNoteClicked = onNoteClicked,
-                        notesListState = listState,
-                        lazyItems = noteItems
+            val listState = rememberLazyListState()
+            Column {
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+                SearchBar(
+                    onSearchTriggered = onSearchTriggered,
+                    onProfileClicked = onProfileClicked,
+                    animatedVisibilityScope = animatedVisibilityScope,
+                    sharedTransitionScope = sharedTransitionScope
+                )
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    thickness = 1.dp
+                )
+                PagedItemsTemplate(
+                    items = noteItems,
+                    paddingValues = PaddingValues(),
+                    errorText = stringResource(R.string.note_list_error_load),
+                    keyProducer = { index -> noteItems[index]?.id ?: index },
+                    listState = listState,
+                    screenContent = {}
+                ) { item ->
+                    NoteItem(
+                        title = item.title,
+                        preview = if (item.audioNote) Utils.extractFileName(item.preview) else item.preview,
+                        time = DateFormatter.formatDateToString(item.updatedAt),
+                        type = if (item.audioNote) NoteType.Audio else NoteType.Text,
+                        tags = item.tags,
+                        onNoteClicked = {
+                            onNoteClicked(item.id)
+                        }
                     )
                 }
-                FloatingActionButtonWithMenu(
-                    listState = listState,
-                    onTextNoteClicked = {
-                        viewModel.processCommand(
-                            NoteListCommand.ShowAddTextNoteDialog(true)
-                        )
-                    },
-                    onAudioNoteClicked = {
-                        viewModel.processCommand(
-                            NoteListCommand.ShowAddAudioNoteDialog(true)
-                        )
-                    }
-                )
             }
-            if (state.value.showAddTextNoteDialog || state.value.showAddAudioNoteDialog) {
-                CreateNoteDialog(
-                    dialogTitle = if (state.value.showAddTextNoteDialog) stringResource(R.string.note_list_add_note) else stringResource(
-                        R.string.note_list_add_audio
-                    ),
-                    noteName = state.value.newNoteTitle,
-                    onNoteNameChange = { title ->
-                        viewModel.processCommand(
-                            NoteListCommand.InputNewNoteTitle(title)
-                        )
-                    },
-                    onDismissRequest = {
-                        viewModel.processCommand(
-                            if (state.value.showAddTextNoteDialog)
-                                NoteListCommand.ShowAddTextNoteDialog(false)
-                            else
-                                NoteListCommand.ShowAddAudioNoteDialog(false)
-                        )
-                    },
-                    onCreateNoteRequest = {
-                        viewModel.processCommand(
-                            if (state.value.showAddTextNoteDialog)
-                                NoteListCommand.CreateTextNote(state.value.newNoteTitle)
-                            else
-                                NoteListCommand.CreateAudioNote(state.value.newNoteTitle)
-                        )
-                    }
-                )
-            }
+            FloatingActionButtonWithMenu(
+                listState = listState,
+                onTextNoteClicked = {
+                    viewModel.processCommand(
+                        NoteListCommand.ShowAddTextNoteDialog(true)
+                    )
+                },
+                onAudioNoteClicked = {
+                    viewModel.processCommand(
+                        NoteListCommand.ShowAddAudioNoteDialog(true)
+                    )
+                }
+            )
+        }
+        if (state.value.showAddTextNoteDialog || state.value.showAddAudioNoteDialog) {
+            CreateNoteDialog(
+                dialogTitle = if (state.value.showAddTextNoteDialog) stringResource(R.string.note_list_add_note) else stringResource(
+                    R.string.note_list_add_audio
+                ),
+                noteName = state.value.newNoteTitle,
+                onNoteNameChange = { title ->
+                    viewModel.processCommand(
+                        NoteListCommand.InputNewNoteTitle(title)
+                    )
+                },
+                onDismissRequest = {
+                    viewModel.processCommand(
+                        if (state.value.showAddTextNoteDialog)
+                            NoteListCommand.ShowAddTextNoteDialog(false)
+                        else
+                            NoteListCommand.ShowAddAudioNoteDialog(false)
+                    )
+                },
+                onCreateNoteRequest = {
+                    viewModel.processCommand(
+                        if (state.value.showAddTextNoteDialog)
+                            NoteListCommand.CreateTextNote(state.value.newNoteTitle)
+                        else
+                            NoteListCommand.CreateAudioNote(state.value.newNoteTitle)
+                    )
+                }
+            )
         }
     }
 }
@@ -297,151 +283,6 @@ private fun SearchBar(
             contentDescription = "Account Icon",
             tint = SearchBarDefaults.appBarWithSearchColors().appBarActionIconColor
         )
-    }
-}
-
-@Composable
-private fun NotesList(
-    modifier: Modifier = Modifier,
-    onNoteClicked: (String) -> Unit,
-    notesListState: LazyListState = rememberLazyListState(),
-    lazyItems: LazyPagingItems<NotePreview>
-) {
-    LazyColumn(
-        modifier = modifier.padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        state = notesListState
-    ) {
-        items(
-            count = lazyItems.itemCount,
-            key = { index -> lazyItems[index]?.id ?: index }
-        ) { index ->
-            val item = lazyItems[index]
-            if (item != null) {
-                NoteItem(
-                    title = item.title,
-                    preview = item.preview,
-                    time = DateFormatter.formatDateToString(item.updatedAt),
-                    type = if (item.audioNote) NoteType.Audio else NoteType.Text,
-                    tags = item.tags,
-                    onNoteClicked = {
-                        onNoteClicked(item.id)
-                    }
-                )
-            }
-        }
-    }
-}
-
-enum class NoteType { Text, Audio }
-
-@Composable
-private fun NoteItem(
-    modifier: Modifier = Modifier,
-    title: String,
-    preview: String,
-    time: String,
-    type: NoteType,
-    tags: List<String> = emptyList<String>(),
-    onNoteClicked: () -> Unit
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onNoteClicked),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.surfaceVariant),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Column {
-                Text(text = title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                if (preview.isNotBlank()) {
-                    Text(
-                        text = if (type == NoteType.Audio)
-                            Utils.extractFileName(preview)
-                        else
-                            preview,
-                        fontSize = 14.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        if (type == NoteType.Text) {
-                            NoteLabel(
-                                label = "Текст",
-                                color = TextBlue,
-                                imageVector = Icons.Rounded.TextFields
-                            )
-                        } else {
-                            NoteLabel(
-                                label = "Аудио",
-                                color = AudioGreen,
-                                imageVector = Icons.Rounded.AudioFile
-                            )
-                        }
-                        for (t in tags) {
-                            NoteLabel(
-                                label = t,
-                                color = Utils.generateColorContrast(t),
-                                imageVector = Icons.Rounded.GraphicEq
-                            )
-                        }
-                    }
-                }
-                Text(
-                    modifier = Modifier.wrapContentWidth(),
-                    text = time,
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun NoteLabel(
-    modifier: Modifier = Modifier,
-    label: String,
-    color: Color,
-    imageVector: ImageVector
-) {
-    Row(
-        modifier = modifier
-            .background(
-                color = color.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(label, color = color, fontSize = 12.sp)
     }
 }
 

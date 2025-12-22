@@ -35,4 +35,5 @@
     <string name="note_list_error_load">Ошибка загрузки заметок. Пожалуйста, попробуйте еще раз позже.</string>
     <string name="note_list_add_note">Создать текстовую заметку</string>
     <string name="note_list_add_audio">Создать аудиозаметку</string>
+    <string name="search_screen_hint_search">Поиск заметок</string>
 </resources>
