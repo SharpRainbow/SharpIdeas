@@ -25,6 +25,7 @@ import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTextBlockUseCase
 import ru.shrprnbw.ideas.domain.usecase.DeleteNoteContentUseCase
+import ru.shrprnbw.ideas.domain.usecase.DeleteNoteUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetNoteInfoUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteContentUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteUseCase
@@ -39,6 +40,7 @@ class NoteEditorViewModel @AssistedInject constructor(
     private val uploadImageUseCase: UploadImageUseCase,
     private val deleteNoteContentUseCase: DeleteNoteContentUseCase,
     private val addNoteTextBlockUseCase: AddNoteTextBlockUseCase,
+    private val deleteNoteUseCase: DeleteNoteUseCase,
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
@@ -141,16 +143,47 @@ class NoteEditorViewModel @AssistedInject constructor(
                     }
                 }
             }
+
+            is NoteEditorCommand.DeleteNote -> {
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            try {
+                                deleteNoteUseCase(noteId)
+                                NoteEditorState.Finished
+                            } catch (e: Exception) {
+                                Log.d("NoteEditorViewModel", "Note delete error: ${e.message}")
+                                previousState.copy(
+                                    error = R.string.edit_note_delete_error
+                                )
+                            }
+                        } else {
+                            previousState
+                        }
+                    }
+                }
+            }
         }
     }
 
     private suspend fun loadNote(noteId: String) {
-        val note = getNoteInfoUseCase(noteId)
-        val contentItems = note.contents.toMutableList()
-        _state.update {
-            NoteEditorState.Editing(
-                note = note.copy(contents = contentItems)
-            )
+        _state.update { previousState ->
+            try {
+                val note = getNoteInfoUseCase(noteId)
+                val contentItems = note.contents.toMutableList()
+                NoteEditorState.Editing(
+                    note = note.copy(contents = contentItems)
+                )
+            } catch (e: Exception) {
+                Log.d("NoteEditorViewModel", "Load note error: ${e.message}")
+                if (previousState is NoteEditorState.Editing) {
+                    previousState.copy(
+                        error = R.string.edit_note_error
+                    )
+                } else {
+                    NoteEditorState.Finished
+                }
+            }
         }
     }
 
@@ -213,6 +246,8 @@ sealed interface NoteEditorCommand {
     data class UploadImage(val uri: Uri) : NoteEditorCommand
 
     data class DeleteContentItem(val contentId: Int) : NoteEditorCommand
+
+    data object DeleteNote : NoteEditorCommand
 
 }
 

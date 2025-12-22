@@ -34,4 +34,6 @@ interface NoteRepository {
 
     suspend fun createAudioNote(title: String)
 
+    suspend fun deleteNote(noteId: String)
+
 }

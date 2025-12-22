@@ -41,6 +41,7 @@ class NoteRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : NoteRepository {
 
+    // TODO: Add flow for single note updates
     private val notesRefreshTrigger = MutableSharedFlow<Unit>()
 
     override fun getUserNotes(): Flow<PagingData<NotePreview>> {
@@ -174,6 +175,12 @@ class NoteRepositoryImpl @Inject constructor(
                 audioNote = true
             )
         )
+        notesRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun deleteNote(noteId: String) {
+        val token = authRepository.getValidToken()
+        apiService.deleteNote(token, noteId)
         notesRefreshTrigger.emit(Unit)
     }
 

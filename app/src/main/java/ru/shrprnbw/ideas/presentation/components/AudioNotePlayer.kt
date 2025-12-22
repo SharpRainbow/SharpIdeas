@@ -49,6 +49,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
+import ru.shrprnbw.ideas.utils.Utils
 
 @Composable
 fun AudioNotePlayer(
@@ -141,7 +142,7 @@ fun AudioNotePlayer(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = extractFileName(audioUrl),
+                    text = Utils.extractFileName(audioUrl),
                     color = accentColor,
                     fontSize = 12.sp,
                     maxLines = 1,
@@ -214,7 +215,7 @@ fun AudioNotePlayer(
                     Spacer(Modifier.width(8.dp))
 
                     Text(
-                        text = formatTime(
+                        text = Utils.formatTime(
                             when {
                                 isDragging -> dragPosition
                                 isPlaying -> currentPosition
@@ -227,32 +228,5 @@ fun AudioNotePlayer(
                 }
             }
         }
-    }
-}
-
-private fun formatTime(ms: Long): String {
-    if (ms <= 0L) return "00:00"
-    val totalSeconds = ms / 1000
-    val seconds = (totalSeconds % 60).toInt()
-    val minutes = ((totalSeconds / 60) % 60).toInt()
-    val hours = (totalSeconds / 3600).toInt()
-    return if (hours > 0) {
-        String.format("%d:%02d:%02d", hours, minutes, seconds)
-    } else {
-        String.format("%02d:%02d", minutes, seconds)
-    }
-}
-
-private fun extractFileName(s3Url: String): String {
-    return try {
-        val lastSegment = s3Url.split('/').lastOrNull() ?: return "Аудиозапись"
-        val fileNameWithUuid = lastSegment.split('?').firstOrNull() ?: return "Аудиозапись"
-
-        val uuidPattern = """^[a-fA-F0-9-]{36}_(.+)$""".toRegex()
-        val matchResult = uuidPattern.find(fileNameWithUuid)
-
-        matchResult?.groupValues?.getOrNull(1) ?: fileNameWithUuid
-    } catch (e: Exception) {
-        "Аудиозапись"
     }
 }

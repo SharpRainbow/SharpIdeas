@@ -25,12 +25,14 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AudioFile
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Discount
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -64,6 +66,7 @@ import coil3.compose.AsyncImage
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
+import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.presentation.components.AudioNotePlayer
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
@@ -81,7 +84,6 @@ fun NoteEditorScreen(
     ),
     onBackClicked: () -> Unit = { }
 ) { // TODO: Add instrument bottom bar for text formatting (bold, italic, underline, etc.) + image and audio insertion
-    // TODO: Add fab with available transformations
 
     val state = viewModel.state.collectAsState()
     val imagePicker = rememberLauncherForActivityResult(
@@ -104,175 +106,133 @@ fun NoteEditorScreen(
                     .fillMaxWidth()
                     .imePadding(),
                 topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = stringResource(R.string.create_note),
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        navigationIcon = {
-                            Icon(
-                                modifier = Modifier
-                                    .padding(start = 8.dp, end = 8.dp)
-                                    .clickable(
-                                        onClick = onBackClicked
-                                    ),
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = stringResource(R.string.back)
-                            )
-                        },
-                        actions = {
-                            if (currentState.note.audioNote) {
+                    Column {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = stringResource(R.string.create_note),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                                navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            navigationIcon = {
                                 Icon(
                                     modifier = Modifier
-                                        .padding(end = 8.dp)
+                                        .padding(start = 8.dp, end = 8.dp)
                                         .clickable(
-                                            onClick = {
+                                            onClick = onBackClicked
+                                        ),
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                    contentDescription = stringResource(R.string.back)
+                                )
+                            },
+                            actions = {
+                                if (currentState.note.audioNote && currentState.note.contents.isEmpty()) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .clickable(
+                                                onClick = {
 //                                            imagePicker.launch(
 //                                                PickVisualMediaRequest(
 //                                                    mediaType = ActivityResultContracts
 //                                                )
 //                                            )
-                                            }
-                                        ),
-                                    imageVector = Icons.Outlined.AudioFile,
-                                    contentDescription = stringResource(R.string.add_audio),
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            } else {
+                                                }
+                                            ),
+                                        imageVector = Icons.Outlined.AudioFile,
+                                        contentDescription = stringResource(R.string.add_audio),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                } else if (!currentState.note.audioNote) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .clickable(
+                                                onClick = {
+                                                    viewModel.processCommand(
+                                                        NoteEditorCommand.AddNoteTextItem
+                                                    )
+                                                }
+                                            ),
+                                        imageVector = Icons.Outlined.TextFields,
+                                        contentDescription = stringResource(R.string.add_photo),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Icon(
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .clickable(
+                                                onClick = {
+                                                    imagePicker.launch(
+                                                        PickVisualMediaRequest(
+                                                            mediaType = ActivityResultContracts
+                                                                .PickVisualMedia
+                                                                .ImageOnly
+                                                        )
+                                                    )
+                                                }
+                                            ),
+                                        imageVector = Icons.Outlined.AddPhotoAlternate,
+                                        contentDescription = stringResource(R.string.add_photo),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                                 Icon(
                                     modifier = Modifier
                                         .padding(end = 8.dp)
                                         .clickable(
                                             onClick = {
                                                 viewModel.processCommand(
-                                                    NoteEditorCommand.AddNoteTextItem
+                                                    NoteEditorCommand.DeleteNote
                                                 )
                                             }
                                         ),
-                                    imageVector = Icons.Outlined.TextFields,
-                                    contentDescription = stringResource(R.string.add_photo),
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                                Icon(
-                                    modifier = Modifier
-                                        .padding(end = 8.dp)
-                                        .clickable(
-                                            onClick = {
-                                                imagePicker.launch(
-                                                    PickVisualMediaRequest(
-                                                        mediaType = ActivityResultContracts
-                                                            .PickVisualMedia
-                                                            .ImageOnly
-                                                    )
-                                                )
-                                            }
-                                        ),
-                                    imageVector = Icons.Outlined.AddPhotoAlternate,
-                                    contentDescription = stringResource(R.string.add_photo),
+                                    imageVector = Icons.Outlined.DeleteOutline,
+                                    contentDescription = stringResource(R.string.delete_note),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
-                        }
-                    )
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            thickness = 1.dp
+                        )
+                    }
                 }
             ) { innerPadding ->
-                Column(
-                    modifier = Modifier.padding(innerPadding)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        if (currentState.note.audioNote) {
-                            NoteTransformation(
-                                modifier = Modifier.weight(1f),
-                                actionName = "Transcriptions",
-                                color = AudioGreen,
-                                imageVector = Icons.Rounded.GraphicEq
+                Content(
+                    modifier = Modifier.padding(innerPadding),
+                    note = currentState.note,
+                    onTitleChanged = { title ->
+                        viewModel.processCommand(
+                            NoteEditorCommand.InputTitle(title)
+                        )
+                    },
+                    onTextChanged = { idx, input ->
+                        viewModel.processCommand(
+                            NoteEditorCommand.InputContent(
+                                input,
+                                idx
                             )
-                        } else {
-                            NoteTransformation(
-                                modifier = Modifier.weight(1f),
-                                actionName = "Keywords",
-                                color = Color(0xFF7B1FA2),
-                                imageVector = Icons.Rounded.Discount
-                            )
-                            NoteTransformation(
-                                modifier = Modifier.weight(1f),
-                                actionName = "Summary",
-                                color = TextBlue,
-                                imageVector = Icons.Rounded.AutoFixHigh
-                            )
-                        }
+                        )
+                    },
+                    onDeleteImageClick = { id ->
+                        viewModel.processCommand(
+                            NoteEditorCommand.DeleteContentItem(id)
+                        )
+                    },
+                    onDeleteTextRequested = { idx ->
+                        viewModel.processCommand(
+                            NoteEditorCommand.DeleteContentItem(idx)
+                        )
                     }
-                    TextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        value = currentState.note.title,
-                        onValueChange = { title ->
-                            viewModel.processCommand(
-                                NoteEditorCommand.InputTitle(title)
-                            )
-                        },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        textStyle = TextStyle(
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
-                        placeholder = {
-                            Text(
-                                text = stringResource(R.string.note_title),
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                            )
-                        }
-                    )
-                    Text(
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        text = DateFormatter.formatCurrentDate(),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Content(
-                        modifier = Modifier.weight(1f),
-                        contentList = currentState.note.contents,
-                        onTextChanged = { idx, input ->
-                            viewModel.processCommand(
-                                NoteEditorCommand.InputContent(
-                                    input,
-                                    idx
-                                )
-                            )
-                        },
-                        onDeleteImageClick = { id ->
-                            viewModel.processCommand(
-                                NoteEditorCommand.DeleteContentItem(id)
-                            )
-                        },
-                        onDeleteTextRequested = { idx ->
-                            viewModel.processCommand(
-                                NoteEditorCommand.DeleteContentItem(idx)
-                            )
-                        }
-                    )
-                }
+                )
             }
         }
 
@@ -289,7 +249,8 @@ fun NoteEditorScreen(
 @Composable
 fun Content(
     modifier: Modifier = Modifier,
-    contentList: List<ContentItem>,
+    note: Note,
+    onTitleChanged: (String) -> Unit,
     onTextChanged: (Int, String) -> Unit,
     onDeleteImageClick: (Int) -> Unit,
     onDeleteTextRequested: (Int) -> Unit
@@ -297,8 +258,77 @@ fun Content(
     LazyColumn(
         modifier = modifier
     ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (note.audioNote) {
+                    NoteTransformation(
+                        modifier = Modifier.weight(1f),
+                        actionName = "Transcriptions",
+                        color = AudioGreen,
+                        imageVector = Icons.Rounded.GraphicEq
+                    )
+                } else {
+                    NoteTransformation(
+                        modifier = Modifier.weight(1f),
+                        actionName = "Keywords",
+                        color = Color(0xFF7B1FA2),
+                        imageVector = Icons.Rounded.Discount
+                    )
+                    NoteTransformation(
+                        modifier = Modifier.weight(1f),
+                        actionName = "Summary",
+                        color = TextBlue,
+                        imageVector = Icons.Rounded.AutoFixHigh
+                    )
+                }
+            }
+        }
+
+        item {
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                value = note.title,
+                onValueChange = onTitleChanged,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                textStyle = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.note_title),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                    )
+                }
+            )
+        }
+
+        item {
+            Text(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                text = DateFormatter.formatCurrentDate(),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         itemsIndexed(
-            contentList,
+            note.contents,
             key = { _, contentItem ->
                 contentItem.id
             }
@@ -324,9 +354,9 @@ fun Content(
                 }
 
                 ContentType.IMAGE -> {
-                    val previousItem = contentList.getOrNull(itemIndex - 1)
+                    val previousItem = note.contents.getOrNull(itemIndex - 1)
                     if (previousItem?.type != ContentType.IMAGE) {
-                        contentList.drop(itemIndex).takeWhile { item ->
+                        note.contents.drop(itemIndex).takeWhile { item ->
                             item.type == ContentType.IMAGE
                         }.let { images ->
                             ImageGroup(
@@ -450,14 +480,17 @@ private fun NoteTransformation(
     color: Color = Utils.generateColorContrast(actionName)
 ) {
     Column(
-        modifier = modifier.background(
-            color = color.copy(alpha = 0.1f),
-            shape = RoundedCornerShape(8.dp)
-        ).border(
-            width = 1.dp,
-            color = color,
-            shape = RoundedCornerShape(8.dp)
-        ).padding(12.dp),
+        modifier = modifier
+            .background(
+                color = color.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = color,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(

@@ -352,64 +352,15 @@ private fun NoteItem(
                 Text(text = title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 if (preview.isNotBlank()) {
                     Text(
-                        text = preview,
+                        text = if (type == NoteType.Audio)
+                            Utils.extractFileName(preview)
+                        else
+                            preview,
                         fontSize = 14.sp,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 4.dp)
                     )
-                }
-            }
-            if (type == NoteType.Audio) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                MaterialTheme.colorScheme.surfaceVariant,
-                                RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .background(
-                                    AudioGreen.copy(alpha = 0.2f),
-                                    CircleShape
-                                )
-                                .padding(4.dp),
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            tint = AudioGreen
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Аудиозапись", color = AudioGreen, fontSize = 12.sp)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    LinearWavyProgressIndicator(
-                                        progress = { 0.35f },
-                                        color = AudioGreen
-                                    )
-                                }
-                                Spacer(Modifier.width(8.dp))
-                                if (duration != null) {
-                                    Text(duration, color = Color.Gray, fontSize = 12.sp)
-                                }
-                            }
-                        }
-                    }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))

@@ -102,6 +102,12 @@ interface IdeasApiService {
         @Body createRequest: CreateNoteRequest
     )
 
+    @DELETE("$VERSION_1/notes/{noteId}")
+    suspend fun deleteNote(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String
+    )
+
     @POST("$VERSION_1/notes/{noteId}/contents/text")
     suspend fun addNoteText(
         @Header("Authorization") token: String,

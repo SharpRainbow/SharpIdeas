@@ -20,4 +20,31 @@ object Utils {
         return Color.hsl(hue, saturation, lightness)
     }
 
+    fun formatTime(ms: Long): String {
+        if (ms <= 0L) return "00:00"
+        val totalSeconds = ms / 1000
+        val seconds = (totalSeconds % 60).toInt()
+        val minutes = ((totalSeconds / 60) % 60).toInt()
+        val hours = (totalSeconds / 3600).toInt()
+        return if (hours > 0) {
+            String.format("%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format("%02d:%02d", minutes, seconds)
+        }
+    }
+
+    fun extractFileName(s3Url: String): String {
+        return try {
+            val lastSegment = s3Url.split('/').lastOrNull() ?: return "Аудиозапись"
+            val fileNameWithUuid = lastSegment.split('?').firstOrNull() ?: return "Аудиозапись"
+
+            val uuidPattern = """^[a-fA-F0-9-]{36}_(.+)$""".toRegex()
+            val matchResult = uuidPattern.find(fileNameWithUuid)
+
+            matchResult?.groupValues?.getOrNull(1) ?: fileNameWithUuid
+        } catch (e: Exception) {
+            "Аудиозапись"
+        }
+    }
+
 }
