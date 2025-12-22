@@ -255,13 +255,14 @@ private fun NotesList(
             val item = lazyItems[index]
             if (item != null) {
                 NoteItem(
-                    noteId = item.id,
                     title = item.title,
                     preview = item.preview,
                     time = DateFormatter.formatDateToString(item.updatedAt),
                     type = if (item.audioNote) NoteType.Audio else NoteType.Text,
                     tags = item.tags,
-                    onNoteClicked = onNoteClicked
+                    onNoteClicked = {
+                        onNoteClicked(item.id)
+                    }
                 )
             }
         }
@@ -271,14 +272,12 @@ private fun NotesList(
 @Composable
 private fun NoteItem(
     modifier: Modifier = Modifier,
-    noteId: String = "",
     title: String,
     preview: String,
     time: String,
     type: NoteType,
-    duration: String? = null,
     tags: List<String>,
-    onNoteClicked: (String) -> Unit
+    onNoteClicked: () -> Unit
 ) {
     Card(
         modifier = modifier
@@ -286,7 +285,7 @@ private fun NoteItem(
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(
-                onClick = { onNoteClicked(noteId) }
+                onClick = onNoteClicked
             ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer

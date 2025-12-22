@@ -26,4 +26,13 @@
     <string name="delete_note">Delete note</string>
     <string name="edit_note_delete_error">Unable to delete note</string>
     <string name="edit_note_load_error">Unable to load note. Maybe it was deleted or server experiencing troubles</string>
+    <string name="transcriptions">Transcriptions</string>
+    <string name="transcription">Transcription</string>
+    <string name="no_transcriptions">No transcriptions available</string>
+    <string name="auto_generated_transcription">Auto-generated transcription</string>
+    <string name="manual_transcription">Manual transcription</string>
+    <string name="status">Status</string>
+    <string name="note_list_error_load">Ошибка загрузки заметок. Пожалуйста, попробуйте еще раз позже.</string>
+    <string name="note_list_add_note">Создать текстовую заметку</string>
+    <string name="note_list_add_audio">Создать аудиозаметку</string>
 </resources>

@@ -5,7 +5,6 @@ package ru.shrprnbw.ideas.data.repository
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -28,9 +27,11 @@ import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NoteSearchPagingSource
+import ru.shrprnbw.ideas.data.remote.paging.TranscriptionPagingSource
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
+import ru.shrprnbw.ideas.domain.entity.Transcription
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.NoteRepository
 import java.io.IOException
@@ -182,6 +183,27 @@ class NoteRepositoryImpl @Inject constructor(
         val token = authRepository.getValidToken()
         apiService.deleteNote(token, noteId)
         notesRefreshTrigger.emit(Unit)
+    }
+
+    override fun getTranscriptions(noteId: String): Flow<PagingData<Transcription>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                TranscriptionPagingSource(
+                    apiService,
+                    authRepository,
+                    noteId
+                )
+            }
+        ).flow
+    }
+
+    override suspend fun getTranscription(noteId: String, transcriptionId: String): Transcription {
+        val token = authRepository.getValidToken()
+        return apiService.getTranscription(token, noteId, transcriptionId).toEntity()
     }
 
     private fun getMimeTypeFromUri(uri: Uri): String? {

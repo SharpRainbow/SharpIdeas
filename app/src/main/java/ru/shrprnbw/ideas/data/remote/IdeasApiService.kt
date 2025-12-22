@@ -20,7 +20,6 @@ import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
-import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
 import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
@@ -28,6 +27,7 @@ import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
 import ru.shrprnbw.ideas.data.remote.dto.response.PagedResponse
 import ru.shrprnbw.ideas.data.remote.dto.response.TagDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TokenResponseDto
+import ru.shrprnbw.ideas.data.remote.dto.response.TranscriptionDto
 import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
 
 interface IdeasApiService {
@@ -149,5 +149,20 @@ interface IdeasApiService {
         @Path("noteId") noteId: String,
         @Path("contentId") contentId: Long
     )
+
+    @GET("$VERSION_1/notes/{noteId}/transcriptions")
+    suspend fun getTranscriptions(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Query("page") page: Int,
+        @Query("size") limit: Int
+    ): PagedResponse<TranscriptionDto>
+
+    @GET("$VERSION_1/notes/{noteId}/transcriptions/{transcriptionId}")
+    suspend fun getTranscription(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Path("transcriptionId") transcriptionId: String
+    ): TranscriptionDto
 
 }

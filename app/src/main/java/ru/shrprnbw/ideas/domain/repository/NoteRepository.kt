@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
+import ru.shrprnbw.ideas.domain.entity.Transcription
 
 interface NoteRepository {
 
@@ -35,5 +36,9 @@ interface NoteRepository {
     suspend fun createAudioNote(title: String)
 
     suspend fun deleteNote(noteId: String)
+
+    fun getTranscriptions(noteId: String): Flow<PagingData<Transcription>>
+
+    suspend fun getTranscription(noteId: String, transcriptionId: String): Transcription
 
 }

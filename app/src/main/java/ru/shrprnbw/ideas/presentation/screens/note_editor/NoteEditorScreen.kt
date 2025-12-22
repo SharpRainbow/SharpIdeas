@@ -82,7 +82,8 @@ fun NoteEditorScreen(
             factory.create(noteId)
         }
     ),
-    onBackClicked: () -> Unit = { }
+    onBackClicked: () -> Unit = { },
+    onTranscriptionsClicked: () -> Unit = { }
 ) { // TODO: Add instrument bottom bar for text formatting (bold, italic, underline, etc.) + image and audio insertion
 
     val state = viewModel.state.collectAsState()
@@ -231,7 +232,8 @@ fun NoteEditorScreen(
                         viewModel.processCommand(
                             NoteEditorCommand.DeleteContentItem(idx)
                         )
-                    }
+                    },
+                    onTranscriptionsClicked = onTranscriptionsClicked
                 )
             }
         }
@@ -253,7 +255,8 @@ fun Content(
     onTitleChanged: (String) -> Unit,
     onTextChanged: (Int, String) -> Unit,
     onDeleteImageClick: (Int) -> Unit,
-    onDeleteTextRequested: (Int) -> Unit
+    onDeleteTextRequested: (Int) -> Unit,
+    onTranscriptionsClicked: () -> Unit = { }
 ) {
     LazyColumn(
         modifier = modifier
@@ -270,7 +273,8 @@ fun Content(
                         modifier = Modifier.weight(1f),
                         actionName = "Transcriptions",
                         color = AudioGreen,
-                        imageVector = Icons.Rounded.GraphicEq
+                        imageVector = Icons.Rounded.GraphicEq,
+                        onClick = onTranscriptionsClicked
                     )
                 } else {
                     NoteTransformation(
@@ -477,7 +481,8 @@ private fun NoteTransformation(
     modifier: Modifier = Modifier,
     actionName: String,
     imageVector: ImageVector,
-    color: Color = Utils.generateColorContrast(actionName)
+    color: Color = Utils.generateColorContrast(actionName),
+    onClick: () -> Unit = { }
 ) {
     Column(
         modifier = modifier
@@ -490,6 +495,7 @@ private fun NoteTransformation(
                 color = color,
                 shape = RoundedCornerShape(8.dp)
             )
+            .clickable(onClick = onClick)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

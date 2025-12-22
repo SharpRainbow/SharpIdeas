@@ -48,6 +48,7 @@ import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButtonMenu
@@ -93,6 +94,7 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -104,10 +106,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.presentation.navigation.Screen
+import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.SharpIdeasTheme
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
@@ -130,77 +135,85 @@ fun NoteListScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+        PagedItemsTemplate(
+            items = noteItems,
+            paddingValues = paddingValues,
+            errorText = stringResource(R.string.note_list_error_load),
         ) {
-            val listState = rememberLazyListState()
-            Column {
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
-                SearchBar(
-                    onSearchTriggered = onSearchTriggered,
-                    onProfileClicked = onProfileClicked,
-                    animatedVisibilityScope = animatedVisibilityScope,
-                    sharedTransitionScope = sharedTransitionScope
-                )
-                Spacer(
-                    modifier = Modifier.height(16.dp)
-                )
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    thickness = 1.dp
-                )
-                NotesList(
-                    onNoteClicked = onNoteClicked,
-                    notesListState = listState,
-                    lazyItems = noteItems
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                val listState = rememberLazyListState()
+                Column {
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+                    SearchBar(
+                        onSearchTriggered = onSearchTriggered,
+                        onProfileClicked = onProfileClicked,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        sharedTransitionScope = sharedTransitionScope
+                    )
+                    Spacer(
+                        modifier = Modifier.height(16.dp)
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        thickness = 1.dp
+                    )
+                    NotesList(
+                        onNoteClicked = onNoteClicked,
+                        notesListState = listState,
+                        lazyItems = noteItems
+                    )
+                }
+                FloatingActionButtonWithMenu(
+                    listState = listState,
+                    onTextNoteClicked = {
+                        viewModel.processCommand(
+                            NoteListCommand.ShowAddTextNoteDialog(true)
+                        )
+                    },
+                    onAudioNoteClicked = {
+                        viewModel.processCommand(
+                            NoteListCommand.ShowAddAudioNoteDialog(true)
+                        )
+                    }
                 )
             }
-            FloatingActionButtonWithMenu(
-                listState = listState,
-                onTextNoteClicked = {
-                    viewModel.processCommand(
-                        NoteListCommand.ShowAddTextNoteDialog(true)
-                    )
-                },
-                onAudioNoteClicked = {
-                    viewModel.processCommand(
-                        NoteListCommand.ShowAddAudioNoteDialog(true)
-                    )
-                }
-            )
-        }
-        if (state.value.showAddTextNoteDialog || state.value.showAddAudioNoteDialog) {
-            CreateNoteDialog(
-                dialogTitle = if (state.value.showAddTextNoteDialog) "Создать текстовую заметку" else "Создать аудиозаметку",
-                noteName = state.value.newNoteTitle,
-                onNoteNameChange = { title ->
-                    viewModel.processCommand(
-                        NoteListCommand.InputNewNoteTitle(title)
-                    )
-                },
-                onDismissRequest = {
-                    viewModel.processCommand(
-                        if (state.value.showAddTextNoteDialog)
-                            NoteListCommand.ShowAddTextNoteDialog(false)
-                        else
-                            NoteListCommand.ShowAddAudioNoteDialog(false)
-                    )
-                },
-                onCreateNoteRequest = {
-                    viewModel.processCommand(
-                        if (state.value.showAddTextNoteDialog)
-                            NoteListCommand.CreateTextNote(state.value.newNoteTitle)
-                        else
-                            NoteListCommand.CreateAudioNote(state.value.newNoteTitle)
-                    )
-                }
-            )
+            if (state.value.showAddTextNoteDialog || state.value.showAddAudioNoteDialog) {
+                CreateNoteDialog(
+                    dialogTitle = if (state.value.showAddTextNoteDialog) stringResource(R.string.note_list_add_note) else stringResource(
+                        R.string.note_list_add_audio
+                    ),
+                    noteName = state.value.newNoteTitle,
+                    onNoteNameChange = { title ->
+                        viewModel.processCommand(
+                            NoteListCommand.InputNewNoteTitle(title)
+                        )
+                    },
+                    onDismissRequest = {
+                        viewModel.processCommand(
+                            if (state.value.showAddTextNoteDialog)
+                                NoteListCommand.ShowAddTextNoteDialog(false)
+                            else
+                                NoteListCommand.ShowAddAudioNoteDialog(false)
+                        )
+                    },
+                    onCreateNoteRequest = {
+                        viewModel.processCommand(
+                            if (state.value.showAddTextNoteDialog)
+                                NoteListCommand.CreateTextNote(state.value.newNoteTitle)
+                            else
+                                NoteListCommand.CreateAudioNote(state.value.newNoteTitle)
+                        )
+                    }
+                )
+            }
         }
     }
 }
@@ -295,8 +308,9 @@ private fun NotesList(
     lazyItems: LazyPagingItems<NotePreview>
 ) {
     LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(top = 12.dp),
+        modifier = modifier.padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         state = notesListState
     ) {
         items(
@@ -306,14 +320,14 @@ private fun NotesList(
             val item = lazyItems[index]
             if (item != null) {
                 NoteItem(
-                    noteId = item.id,
                     title = item.title,
                     preview = item.preview,
                     time = DateFormatter.formatDateToString(item.updatedAt),
                     type = if (item.audioNote) NoteType.Audio else NoteType.Text,
-                    duration = "",
                     tags = item.tags,
-                    onNoteClicked = onNoteClicked
+                    onNoteClicked = {
+                        onNoteClicked(item.id)
+                    }
                 )
             }
         }
@@ -325,23 +339,18 @@ enum class NoteType { Text, Audio }
 @Composable
 private fun NoteItem(
     modifier: Modifier = Modifier,
-    noteId: String = "",
     title: String,
     preview: String,
     time: String,
     type: NoteType,
-    duration: String? = null,
     tags: List<String> = emptyList<String>(),
-    onNoteClicked: (String) -> Unit
+    onNoteClicked: () -> Unit
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
-            .clickable(
-                onClick = { onNoteClicked(noteId) }
-            ),
+            .clickable(onClick = onNoteClicked),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
