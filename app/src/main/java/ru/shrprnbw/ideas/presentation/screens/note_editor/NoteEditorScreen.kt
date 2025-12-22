@@ -2,7 +2,6 @@
 
 package ru.shrprnbw.ideas.presentation.screens.note_editor
 
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,21 +12,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AudioFile
 import androidx.compose.material.icons.outlined.TextFields
@@ -37,7 +32,6 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,7 +48,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -71,6 +64,7 @@ import coil3.compose.AsyncImage
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
+import ru.shrprnbw.ideas.presentation.components.AudioNotePlayer
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.DateFormatter
@@ -197,23 +191,25 @@ fun NoteEditorScreen(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        NoteTransformation(
-                            modifier = Modifier.weight(1f),
-                            actionName = "Keywords",
-                            color = Color(0xFF7B1FA2),
-                            imageVector = Icons.Rounded.Discount
-                        )
-                        NoteTransformation(
-                            modifier = Modifier.weight(1f),
-                            actionName = "Summary",
-                            color = TextBlue,
-                            imageVector = Icons.Rounded.AutoFixHigh
-                        )
                         if (currentState.note.audioNote) {
                             NoteTransformation(
+                                modifier = Modifier.weight(1f),
                                 actionName = "Transcriptions",
                                 color = AudioGreen,
                                 imageVector = Icons.Rounded.GraphicEq
+                            )
+                        } else {
+                            NoteTransformation(
+                                modifier = Modifier.weight(1f),
+                                actionName = "Keywords",
+                                color = Color(0xFF7B1FA2),
+                                imageVector = Icons.Rounded.Discount
+                            )
+                            NoteTransformation(
+                                modifier = Modifier.weight(1f),
+                                actionName = "Summary",
+                                color = TextBlue,
+                                imageVector = Icons.Rounded.AutoFixHigh
                             )
                         }
                     }
@@ -309,55 +305,10 @@ fun Content(
         ) { itemIndex, contentItem ->
             when (contentItem.type) {
                 ContentType.AUDIO -> {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    MaterialTheme.colorScheme.surfaceVariant,
-                                    RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Icon(
-                                modifier = Modifier
-                                    .background(
-                                        AudioGreen.copy(alpha = 0.2f),
-                                        CircleShape
-                                    )
-                                    .padding(4.dp),
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                tint = AudioGreen
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Column(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Аудиозапись", color = AudioGreen, fontSize = 12.sp)
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        LinearWavyProgressIndicator(
-                                            progress = { 0.35f },
-                                            color = AudioGreen
-                                        )
-                                    }
-                                    Spacer(Modifier.width(8.dp))
-//                                    if (duration != null) {
-//                                        Text(duration, color = Color.Gray, fontSize = 12.sp)
-//                                    }
-                                }
-                            }
-                        }
-                    }
+                    AudioNotePlayer(
+                        audioUrl = contentItem.data,
+                        accentColor = AudioGreen
+                    )
                 }
 
                 ContentType.TEXT -> {
