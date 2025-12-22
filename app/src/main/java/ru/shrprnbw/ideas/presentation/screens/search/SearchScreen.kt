@@ -137,6 +137,16 @@ fun SearchScreen(
                 thickness = 1.dp
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+            NoteTypeFilterChips(
+                selectedFilter = state.noteTypeFilter,
+                onFilterSelected = {
+                    viewModel.processCommand(
+                        SearchCommand.SetNoteTypeFilter(it)
+                    )
+                }
+            )
+
             if (state.tags.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 FilterOptions(
@@ -147,12 +157,13 @@ fun SearchScreen(
                         )
                     }
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(),
-                    thickness = 1.dp
-                )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 1.dp
+            )
 
             PagedItemsTemplate(
                 items = notesList,
@@ -193,10 +204,12 @@ fun FilterOptions(
             item(
                 key = tag.key.id
             ) {
-                TagChip(
-                    tag = tag.key,
+                NoteFilterChip(
+                    label = tag.key.name,
                     isSelected = tag.value,
-                    onTagToggle = onTagToggle
+                    onClick = {
+                        onTagToggle(tag.key)
+                    }
                 )
             }
         }
@@ -204,20 +217,18 @@ fun FilterOptions(
 }
 
 @Composable
-private fun TagChip(
+private fun NoteFilterChip(
     modifier: Modifier = Modifier,
-    tag: Tag,
+    label: String,
     isSelected: Boolean,
-    onTagToggle: (Tag) -> Unit,
+    onClick: () -> Unit
 ) {
     FilterChip(
         modifier = modifier,
         selected = isSelected,
-        onClick = {
-            onTagToggle(tag)
-        },
+        onClick = onClick,
         label = {
-            Text(text = tag.name)
+            Text(text = label)
         },
         leadingIcon = {
             AnimatedVisibility(
@@ -233,4 +244,40 @@ private fun TagChip(
             }
         }
     )
+}
+
+@Composable
+fun NoteTypeFilterChips(
+    modifier: Modifier = Modifier,
+    selectedFilter: NoteTypeFilter,
+    onFilterSelected: (NoteTypeFilter) -> Unit
+) {
+    LazyRow(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp)
+    ) {
+        item {
+            NoteFilterChip(
+                label = stringResource(R.string.search_filter_all),
+                isSelected = selectedFilter == NoteTypeFilter.ALL,
+                onClick = { onFilterSelected(NoteTypeFilter.ALL) }
+            )
+        }
+        item {
+            NoteFilterChip(
+                label = stringResource(R.string.search_filter_audio),
+                isSelected = selectedFilter == NoteTypeFilter.AUDIO,
+                onClick = { onFilterSelected(NoteTypeFilter.AUDIO) }
+            )
+        }
+        item {
+            NoteFilterChip(
+                label = stringResource(R.string.search_filter_text),
+                isSelected = selectedFilter == NoteTypeFilter.TEXT,
+                onClick = { onFilterSelected(NoteTypeFilter.TEXT) }
+            )
+        }
+    }
 }

@@ -17,6 +17,7 @@ interface NoteRepository {
         title: String,
         content: String,
         tagIds: List<Long>,
+        audioNote: Boolean?
     ): Flow<PagingData<NotePreview>>
 
     suspend fun getNoteInfo(noteId: String): Note

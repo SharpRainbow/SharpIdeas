@@ -36,4 +36,7 @@
     <string name="note_list_add_note">Создать текстовую заметку</string>
     <string name="note_list_add_audio">Создать аудиозаметку</string>
     <string name="search_screen_hint_search">Поиск заметок</string>
+    <string name="search_filter_all">Все</string>
+    <string name="search_filter_audio">Аудио</string>
+    <string name="search_filter_text">Текст</string>
 </resources>

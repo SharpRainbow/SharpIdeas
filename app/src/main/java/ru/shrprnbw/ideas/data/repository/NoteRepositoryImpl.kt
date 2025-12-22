@@ -68,7 +68,8 @@ class NoteRepositoryImpl @Inject constructor(
         globalSearch: Boolean,
         title: String,
         content: String,
-        tagIds: List<Long>
+        tagIds: List<Long>,
+        audioNote: Boolean?
     ): Flow<PagingData<NotePreview>> {
         return Pager(
             config = PagingConfig(
@@ -82,7 +83,8 @@ class NoteRepositoryImpl @Inject constructor(
                     globalSearch,
                     title,
                     content,
-                    tagIds
+                    tagIds,
+                    audioNote
                 )
             }
         ).flow

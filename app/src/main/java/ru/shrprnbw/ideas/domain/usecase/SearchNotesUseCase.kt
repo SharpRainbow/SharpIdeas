@@ -10,12 +10,14 @@ class SearchNotesUseCase @Inject constructor(
     operator fun invoke(
         globalSearch: Boolean,
         query: String,
-        tagIds: List<Long>
+        tagIds: List<Long>,
+        audioNote: Boolean?
     ) = noteRepository.searchNotes(
         globalSearch,
         query,
         query,
-        tagIds
+        tagIds,
+        audioNote
     )
 
 }

@@ -16,7 +16,8 @@ class NoteSearchPagingSource(
     private val globalSearch: Boolean,
     private val title: String,
     private val content: String,
-    private val tagIds: List<Long>
+    private val tagIds: List<Long>,
+    private val audioNote: Boolean?
 ): PagingSource<Int, NotePreview>() {
 
     override fun getRefreshKey(state: PagingState<Int, NotePreview>): Int? {
@@ -36,6 +37,7 @@ class NoteSearchPagingSource(
                 title = title.ifBlank { null },
                 content = content.ifBlank { null },
                 tagIds = tagIds.ifEmpty { null },
+                audioNote = audioNote,
                 page = position,
                 limit = params.loadSize
             )

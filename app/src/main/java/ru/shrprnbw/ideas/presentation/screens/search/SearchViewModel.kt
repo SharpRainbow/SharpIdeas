@@ -42,7 +42,8 @@ class SearchViewModel @Inject constructor(
                 searchNotesUseCase(
                     globalSearch = false,
                     query = query,
-                    tagIds = selectedTagIds
+                    tagIds = selectedTagIds,
+                    audioNote = screenState.noteTypeFilter.toApiParameter()
                 )
             }
         }.cachedIn(viewModelScope)
@@ -68,6 +69,13 @@ class SearchViewModel @Inject constructor(
                     currentTags[command.tag] = !currentValue
                     previousState.copy(
                         tags = currentTags
+                    )
+                }
+            }
+            is SearchCommand.SetNoteTypeFilter -> {
+                _state.update { previousState ->
+                    previousState.copy(
+                        noteTypeFilter = command.filter
                     )
                 }
             }
@@ -104,15 +112,30 @@ sealed interface SearchCommand {
 
     data class ToggleTag(val tag: Tag) : SearchCommand
 
+    data class SetNoteTypeFilter(val filter: NoteTypeFilter) : SearchCommand
+
 }
 
 data class SearchScreenState(
     val query: String = "",
     val tags: Map<Tag, Boolean> = mapOf(),
+    val noteTypeFilter: NoteTypeFilter = NoteTypeFilter.ALL,
     val error: Int? = null
 ) {
 
     val selectedTags: List<Tag>
         get() = tags.filter { it.value }.keys.toList()
 
+}
+
+enum class NoteTypeFilter {
+    ALL,
+    AUDIO,
+    TEXT;
+
+    fun toApiParameter(): Boolean? = when (this) {
+        ALL -> null
+        AUDIO -> true
+        TEXT -> false
+    }
 }

@@ -77,6 +77,7 @@ interface IdeasApiService {
         @Query("title") title: String?,
         @Query("content") content: String?,
         @Query("tagIds") tagIds: List<Long>?,
+        @Query("audioNote") audioNote: Boolean?,
         @Query("page") page: Int,
         @Query("size") limit: Int,
     ): PagedResponse<NotePreviewDto>
