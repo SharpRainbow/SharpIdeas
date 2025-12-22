@@ -19,11 +19,13 @@ import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
 import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
+import ru.shrprnbw.ideas.data.remote.dto.response.PagedResponse
 import ru.shrprnbw.ideas.data.remote.dto.response.TagDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TokenResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
@@ -66,7 +68,7 @@ interface IdeasApiService {
         @Header("Authorization") token: String,
         @Query("page") page: Int,
         @Query("size") limit: Int,
-    ): List<NotePreviewDto>
+    ): PagedResponse<NotePreviewDto>
 
     @GET("$VERSION_1/notes/search")
     suspend fun searchNotes(
@@ -77,7 +79,7 @@ interface IdeasApiService {
         @Query("tagIds") tagIds: List<Long>?,
         @Query("page") page: Int,
         @Query("size") limit: Int,
-    ): List<NotePreviewDto>
+    ): PagedResponse<NotePreviewDto>
 
     @POST("$VERSION_2/auth/login-password")
     suspend fun loginV2(
@@ -124,7 +126,7 @@ interface IdeasApiService {
     suspend fun updateNoteText(
         @Header("Authorization") token: String,
         @Path("noteId") noteId: String,
-        @Body updateRequest: UpdateNoteTextRequest
+        @Body updateRequest: UpdateNoteTextBatchRequest
     )
 
     @Multipart

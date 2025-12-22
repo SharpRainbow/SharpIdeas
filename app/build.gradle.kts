@@ -43,6 +43,7 @@ android {
 }
 
 dependencies {
+    implementation("com.squareup.okhttp3:logging-interceptor:5.3.2")
     implementation(libs.converter.scalars)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)

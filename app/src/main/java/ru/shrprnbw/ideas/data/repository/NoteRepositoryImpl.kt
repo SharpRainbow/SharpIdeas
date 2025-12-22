@@ -25,6 +25,7 @@ import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteTextRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NoteSearchPagingSource
 import ru.shrprnbw.ideas.domain.entity.ContentItem
@@ -98,13 +99,13 @@ class NoteRepositoryImpl @Inject constructor(
 
     override suspend fun updateNoteContent(noteId: String, noteContent: List<ContentItem>) {
         val token = authRepository.getValidToken()
-        for (contentItem in noteContent) {
-            apiService.updateNoteText(
-                token,
-                noteId,
-                contentItem.toUpdateRequest()
+        apiService.updateNoteText(
+            token,
+            noteId,
+            UpdateNoteTextBatchRequest(
+                notes = noteContent.map { it.toUpdateRequest() }
             )
-        }
+        )
         notesRefreshTrigger.emit(Unit)
     }
 
