@@ -1,7 +1,9 @@
 package ru.shrprnbw.ideas.presentation.screens.tag_management
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,8 +11,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -52,7 +52,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.domain.entity.Tag
+import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,12 +65,15 @@ fun TagManagementScreen(
     onBackClicked: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val tagsList = viewModel.tagsLazyList.collectAsLazyPagingItems()
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        modifier = modifier.fillMaxWidth().imePadding(),
+        modifier = modifier
+            .fillMaxWidth()
+            .imePadding(),
         topBar = {
             Column {
                 TopAppBar(
@@ -100,14 +106,19 @@ fun TagManagementScreen(
                 viewModel.processCommand(TagManagementCommand.ResetError)
             }
         }
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            item {
+        PagedItemsTemplate(
+            items = tagsList,
+            keyProducer = { index -> tagsList[index]?.id ?: index },
+            paddingValues = innerPadding,
+            errorText = stringResource(R.string.tags_list_error_loading),
+            listPadding = 0.dp,
+            listContentPadding = PaddingValues(),
+            listVerticalArrangement = Arrangement.spacedBy(0.dp),
+            screenContent = {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     var isAddTagFocused by remember { mutableStateOf(false) }
@@ -115,22 +126,26 @@ fun TagManagementScreen(
                         Icon(
                             imageVector = Icons.Outlined.Add,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp).clickable(
-                                onClick = {
-                                    focusRequester.requestFocus()
-                                }
-                            )
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable(
+                                    onClick = {
+                                        focusRequester.requestFocus()
+                                    }
+                                )
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Outlined.Close,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp).clickable(onClick = {
-                                viewModel.processCommand(
-                                    TagManagementCommand.InputNewTag("")
-                                )
-                                focusManager.clearFocus()
-                            })
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable(onClick = {
+                                    viewModel.processCommand(
+                                        TagManagementCommand.InputNewTag("")
+                                    )
+                                    focusManager.clearFocus()
+                                })
                         )
                     }
                     TextField(
@@ -185,115 +200,126 @@ fun TagManagementScreen(
                     )
                 }
             }
+        ) { tag ->
+            TagListItem(
+                tag = tag,
+                state = state,
+                viewModel = viewModel
+            )
+        }
+    }
+}
 
-            items(state.tags, key = { it.id }) { tag ->
-                val isEditing = state.editingTagId == tag.id
+@Composable
+private fun TagListItem(
+    tag: Tag,
+    state: TagManagementState,
+    viewModel: TagManagementViewModel
+) {
+    val isEditing = state.editingTagId == tag.id
 
-                if (isEditing) {
-                    HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp)
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            if (!isEditing) {
-                                viewModel.processCommand(
-                                    TagManagementCommand.StartEditTag(tag.id, tag.name)
-                                )
-                            }
-                        }
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = if (isEditing) Icons.Outlined.Delete else Icons.AutoMirrored.Outlined.Label,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable {
-                                if (isEditing) {
-                                    viewModel.processCommand(
-                                        TagManagementCommand.DeleteTag(tag.id)
-                                    )
-                                }
-                            },
-                        tint = if (isEditing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+    if (isEditing) {
+        HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp)
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (!isEditing) {
+                    viewModel.processCommand(
+                        TagManagementCommand.StartEditTag(tag.id, tag.name)
                     )
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    if (isEditing) {
-                        var textFieldValue by remember {
-                            mutableStateOf(
-                                TextFieldValue(
-                                    text = tag.name,
-                                    selection = TextRange(tag.name.length)
-                                )
-                            )
-                        }
-                        val editFocusRequester = remember { FocusRequester() }
-
-                        TextField(
-                            value = textFieldValue,
-                            onValueChange = { newValue ->
-                                textFieldValue = newValue
-                                viewModel.processCommand(
-                                    TagManagementCommand.UpdateTagInput(newValue.text)
-                                )
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .focusRequester(editFocusRequester)
-                                .onFocusChanged(onFocusChanged = {
-                                    if (it.isFocused && state.newTagInput.isNotEmpty()) {
-                                        viewModel.processCommand(
-                                            TagManagementCommand.InputNewTag("")
-                                        )
-                                    }
-                                }),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
-                            ),
-                            singleLine = true
-                        )
-
-                        LaunchedEffect(Unit) {
-                            editFocusRequester.requestFocus()
-                        }
-                    } else {
-                        Text(
-                            text = tag.name,
-                            modifier = Modifier.weight(1f),
-                            fontSize = 16.sp
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            if (isEditing) {
-                                viewModel.processCommand(
-                                    TagManagementCommand.SaveTag(tag)
-                                )
-                            } else {
-                                viewModel.processCommand(
-                                    TagManagementCommand.StartEditTag(tag.id, tag.name)
-                                )
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = if (isEditing) Icons.Outlined.Check else Icons.Outlined.Edit,
-                            contentDescription = if (isEditing) "Save" else "Edit"
-                        )
-                    }
-
-                }
-                if (isEditing) {
-                    HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp)
                 }
             }
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (isEditing) Icons.Outlined.Delete else Icons.AutoMirrored.Outlined.Label,
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+                .clickable {
+                    if (isEditing) {
+                        viewModel.processCommand(
+                            TagManagementCommand.DeleteTag(tag.id)
+                        )
+                    }
+                },
+            tint = if (isEditing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+
+        if (isEditing) {
+            var textFieldValue by remember {
+                mutableStateOf(
+                    TextFieldValue(
+                        text = tag.name,
+                        selection = TextRange(tag.name.length)
+                    )
+                )
+            }
+            val editFocusRequester = remember { FocusRequester() }
+
+            TextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    textFieldValue = newValue
+                    viewModel.processCommand(
+                        TagManagementCommand.UpdateTagInput(newValue.text)
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(editFocusRequester)
+                    .onFocusChanged(onFocusChanged = {
+                        if (it.isFocused && state.newTagInput.isNotEmpty()) {
+                            viewModel.processCommand(
+                                TagManagementCommand.InputNewTag("")
+                            )
+                        }
+                    }),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                singleLine = true
+            )
+
+            LaunchedEffect(Unit) {
+                editFocusRequester.requestFocus()
+            }
+        } else {
+            Text(
+                text = tag.name,
+                modifier = Modifier.weight(1f),
+                fontSize = 16.sp
+            )
         }
+
+        IconButton(
+            onClick = {
+                if (isEditing) {
+                    viewModel.processCommand(
+                        TagManagementCommand.SaveTag(tag)
+                    )
+                } else {
+                    viewModel.processCommand(
+                        TagManagementCommand.StartEditTag(tag.id, tag.name)
+                    )
+                }
+            }
+        ) {
+            Icon(
+                imageVector = if (isEditing) Icons.Outlined.Check else Icons.Outlined.Edit,
+                contentDescription = if (isEditing) "Save" else "Edit"
+            )
+        }
+
+    }
+    if (isEditing) {
+        HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp)
     }
 }

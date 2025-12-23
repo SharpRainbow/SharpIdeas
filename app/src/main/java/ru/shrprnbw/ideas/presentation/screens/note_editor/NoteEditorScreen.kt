@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -81,11 +82,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
 import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.entity.Tag
 import ru.shrprnbw.ideas.presentation.components.AudioNotePlayer
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
@@ -270,9 +274,10 @@ fun NoteEditorScreen(
                 )
 
                 if (currentState.showTagsDialog) {
+                    val pagesTagsList = viewModel.tagsLazyList.collectAsLazyPagingItems()
                     TagsBottomSheet(
                         noteTags = currentState.note.tags,
-                        availableTags = currentState.filteredAvailableTags,
+                        availableTags = pagesTagsList,
                         tagQuery = currentState.tagQuery,
                         tagError = currentState.tagError,
                         onDismiss = {
@@ -630,7 +635,7 @@ fun TagsSection(
 @Composable
 fun TagsBottomSheet(
     noteTags: List<String>,
-    availableTags: List<String>,
+    availableTags: LazyPagingItems<Tag>,
     tagQuery: String,
     tagError: Int? = null,
     onDismiss: () -> Unit,
@@ -714,7 +719,7 @@ fun TagsBottomSheet(
                 }
             )
             Spacer(modifier = Modifier.height(16.dp))
-            if (availableTags.isNotEmpty()) {
+            if (availableTags.itemCount > 0) {
                 Text(
                     text = "Доступные теги",
                     fontSize = 14.sp,
@@ -723,15 +728,23 @@ fun TagsBottomSheet(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                val noteTags = remember(noteTags) {
+                    noteTags.toSet()
+                }
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
-                    items(availableTags) { tag ->
-                        AssistChip(
-                            onClick = { onAddTag(tag) },
-                            label = { Text(tag) }
-                        )
+                    items(availableTags.itemCount) { index ->
+                        availableTags[index]?.name?.let { tag ->
+                            if (!noteTags.contains(tag)) {
+                                AssistChip(
+                                    onClick = { onAddTag(tag) },
+                                    label = { Text(tag) }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                        }
                     }
                 }
             }

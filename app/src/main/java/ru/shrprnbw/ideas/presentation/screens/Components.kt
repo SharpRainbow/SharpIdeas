@@ -58,6 +58,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
@@ -161,6 +162,9 @@ fun <T : Any> PagedItemsTemplate(
     items: LazyPagingItems<T>,
     paddingValues: PaddingValues,
     errorText: String,
+    listPadding: Dp = 16.dp,
+    listContentPadding: PaddingValues = PaddingValues(vertical = 12.dp),
+    listVerticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(8.dp),
     showLoading: Boolean = true,
     keyProducer: ((Int) -> Any)? = null,
     listState: LazyListState = rememberLazyListState(),
@@ -195,34 +199,34 @@ fun <T : Any> PagedItemsTemplate(
         }
 
         else -> {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .padding(horizontal = listPadding),
+                contentPadding = listContentPadding,
+                verticalArrangement = listVerticalArrangement,
+                state = listState
             ) {
-                screenContent()
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    state = listState
-                ) {
-                    items(items.itemCount, keyProducer) { index ->
-                        items[index]?.let { item ->
-                            itemContent(item)
-                        }
-                    }
+                item {
+                    screenContent()
+                }
 
-                    if (items.loadState.append is LoadState.Loading) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                ContainedLoadingIndicator()
-                            }
+                items(items.itemCount, keyProducer) { index ->
+                    items[index]?.let { item ->
+                        itemContent(item)
+                    }
+                }
+
+                if (items.loadState.append is LoadState.Loading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            ContainedLoadingIndicator()
                         }
                     }
                 }

@@ -1,10 +1,12 @@
 package ru.shrprnbw.ideas.domain.repository
 
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.domain.entity.Tag
 
 interface TagRepository {
 
-    suspend fun getUserTags(): List<Tag>
+    fun getUserTags(): Flow<PagingData<Tag>>
 
     suspend fun createTag(name: String)
 

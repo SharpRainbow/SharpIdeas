@@ -3,7 +3,6 @@ package ru.shrprnbw.ideas.data.repository
 import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
-import ru.shrprnbw.ideas.domain.entity.Tag
 import ru.shrprnbw.ideas.domain.entity.UserInfo
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.UserRepository
@@ -35,10 +34,4 @@ class UserRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun getCreatedTags(): List<Tag> {
-        val jwtToken = authRepository.getValidToken()
-        return apiService.getUserCreatedTags(
-            jwtToken
-        ).map { it.toEntity() }
-    }
 }

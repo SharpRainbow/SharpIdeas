@@ -59,10 +59,12 @@ interface IdeasApiService {
         @Body request: UpdatePersonalInfoRequest
     )
 
-    @GET("$VERSION_1/tags")
+    @GET("$VERSION_2/tags")
     suspend fun getUserCreatedTags(
         @Header("Authorization") token: String,
-    ): List<TagDto>
+        @Query("page") page: Int,
+        @Query("size") limit: Int,
+    ): PagedResponse<TagDto>
 
     @GET("$VERSION_1/notes/personal")
     suspend fun getUserNotes(
@@ -181,20 +183,20 @@ interface IdeasApiService {
         @Query("tag") tag: String
     )
 
-    @POST("$VERSION_1/tags")
+    @POST("$VERSION_2/tags")
     suspend fun createTag(
         @Header("Authorization") token: String,
         @Body request: CreateTagRequest
     )
 
-    @PATCH("$VERSION_1/tags/{tagId}")
+    @PATCH("$VERSION_2/tags/{tagId}")
     suspend fun updateTag(
         @Header("Authorization") token: String,
         @Path("tagId") tagId: Long,
         @Body request: CreateTagRequest
     )
 
-    @DELETE("$VERSION_1/tags/{tagId}")
+    @DELETE("$VERSION_2/tags/{tagId}")
     suspend fun deleteTag(
         @Header("Authorization") token: String,
         @Path("tagId") tagId: Long

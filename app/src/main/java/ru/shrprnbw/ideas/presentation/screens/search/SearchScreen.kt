@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Tag
@@ -71,6 +72,7 @@ fun SearchScreen(
 
     val state by viewModel.state.collectAsState()
     val notesList = viewModel.pagedNoteList.collectAsLazyPagingItems()
+    val tagsLazyList = viewModel.tagsFlow.collectAsLazyPagingItems()
 
     Scaffold(
         modifier = modifier.fillMaxWidth(),
@@ -147,13 +149,14 @@ fun SearchScreen(
                 }
             )
 
-            if (state.tags.isNotEmpty()) {
+            if (tagsLazyList.itemCount > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
                 FilterOptions(
-                    availableTags = state.tags,
-                    onTagToggle = {
+                    tagsList = tagsLazyList,
+                    selectedTags = state.selectedTags,
+                    onTagToggle = { tag ->
                         viewModel.processCommand(
-                            SearchCommand.ToggleTag(it)
+                            SearchCommand.ToggleTag(tag)
                         )
                     }
                 )
@@ -191,7 +194,8 @@ fun SearchScreen(
 @Composable
 fun FilterOptions(
     modifier: Modifier = Modifier,
-    availableTags: Map<Tag, Boolean>,
+    tagsList: LazyPagingItems<Tag>,
+    selectedTags: Set<Long>,
     onTagToggle: (Tag) -> Unit
 ) {
     LazyRow(
@@ -200,15 +204,17 @@ fun FilterOptions(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        availableTags.forEach { tag ->
-            item(
-                key = tag.key.id
-            ) {
+        items(
+            count = tagsList.itemCount,
+            key =  { index -> tagsList[index]?.id ?: index }
+        ) { index ->
+            tagsList[index]?.let { tag ->
+                val isSelected = selectedTags.contains(tag.id)
                 NoteFilterChip(
-                    label = tag.key.name,
-                    isSelected = tag.value,
+                    label = tag.name,
+                    isSelected = isSelected,
                     onClick = {
-                        onTagToggle(tag.key)
+                        onTagToggle(tag)
                     }
                 )
             }

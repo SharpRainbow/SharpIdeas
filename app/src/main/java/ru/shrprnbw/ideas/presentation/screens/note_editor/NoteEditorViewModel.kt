@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -52,6 +53,8 @@ class NoteEditorViewModel @AssistedInject constructor(
 
     private val _state = MutableStateFlow<NoteEditorState>(NoteEditorState.Initial)
     val state = _state.asStateFlow()
+
+    val tagsLazyList = getUserTagsUseCase().cachedIn(viewModelScope)
 
     init {
         viewModelScope.launch {
@@ -173,12 +176,10 @@ class NoteEditorViewModel @AssistedInject constructor(
             is NoteEditorCommand.OpenTagsDialog -> {
                 viewModelScope.launch {
                     try {
-                        val tags = getUserTagsUseCase()
                         _state.update { previousState ->
                             if (previousState is NoteEditorState.Editing) {
                                 previousState.copy(
                                     showTagsDialog = true,
-                                    availableTags = tags.map { it.name },
                                     tagError = null
                                 )
                             } else {
@@ -407,7 +408,7 @@ sealed interface NoteEditorState {
         val note: Note,
         val showTagsDialog: Boolean = false,
         val tagQuery: String = "",
-        val availableTags: List<String> = emptyList(),
+        val availableTags: Set<Long> = emptySet(),
         val error: Int? = null,
         val tagError: Int? = null
     ) : NoteEditorState {
@@ -420,15 +421,6 @@ sealed interface NoteEditorState {
                             it.data.isNotBlank()
                         }
                     }
-                }
-            }
-
-        val filteredAvailableTags: List<String>
-            get() = if (tagQuery.isBlank()) {
-                availableTags.filter { it !in note.tags }
-            } else {
-                availableTags.filter {
-                    it.contains(tagQuery, ignoreCase = true) && it !in note.tags
                 }
             }
     }
