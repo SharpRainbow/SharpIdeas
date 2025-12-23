@@ -51,6 +51,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -60,6 +62,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -103,6 +106,7 @@ fun NoteEditorScreen(
 ) { // TODO: Add instrument bottom bar for text formatting (bold, italic, underline, etc.) + image and audio insertion
 
     val state = viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri ->
@@ -221,8 +225,18 @@ fun NoteEditorScreen(
                             thickness = 1.dp
                         )
                     }
+                },
+                snackbarHost = {
+                    SnackbarHost(hostState = snackbarHostState)
                 }
             ) { innerPadding ->
+                val errorMessage = currentState.error?.let { stringResource(it) }
+                LaunchedEffect(currentState.error) {
+                    errorMessage?.let {
+                        snackbarHostState.showSnackbar(errorMessage)
+                        viewModel.processCommand(NoteEditorCommand.ResetError)
+                    }
+                }
                 Content(
                     modifier = Modifier.padding(innerPadding),
                     note = currentState.note,
@@ -260,6 +274,7 @@ fun NoteEditorScreen(
                         noteTags = currentState.note.tags,
                         availableTags = currentState.filteredAvailableTags,
                         tagQuery = currentState.tagQuery,
+                        tagError = currentState.tagError,
                         onDismiss = {
                             viewModel.processCommand(NoteEditorCommand.CloseTagsDialog)
                         },
@@ -617,6 +632,7 @@ fun TagsBottomSheet(
     noteTags: List<String>,
     availableTags: List<String>,
     tagQuery: String,
+    tagError: Int? = null,
     onDismiss: () -> Unit,
     onAddTag: (String) -> Unit,
     onRemoveTag: (String) -> Unit,
@@ -689,7 +705,13 @@ fun TagsBottomSheet(
                         }
                     }
                 },
-                singleLine = true
+                singleLine = true,
+                isError = tagError != null,
+                supportingText = {
+                    if (tagError != null) {
+                        Text(text = stringResource(tagError))
+                    }
+                }
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (availableTags.isNotEmpty()) {

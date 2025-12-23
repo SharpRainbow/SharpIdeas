@@ -52,4 +52,6 @@
     <string name="tag_management_error_update">Не удалось обновить тег</string>
     <string name="tag_management_error_delete">Не удалось удалить тег</string>
     <string name="tag_management_error_load">Не удалось загрузить теги</string>
+    <string name="tag_management_error_create_duplicate">Tag already exist</string>
+    <string name="note_tags_error_duplicate">Note tag already exist</string>
 </resources>

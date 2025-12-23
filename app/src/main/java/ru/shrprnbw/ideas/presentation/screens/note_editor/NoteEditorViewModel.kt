@@ -178,7 +178,8 @@ class NoteEditorViewModel @AssistedInject constructor(
                             if (previousState is NoteEditorState.Editing) {
                                 previousState.copy(
                                     showTagsDialog = true,
-                                    availableTags = tags.map { it.name }
+                                    availableTags = tags.map { it.name },
+                                    tagError = null
                                 )
                             } else {
                                 previousState
@@ -207,7 +208,8 @@ class NoteEditorViewModel @AssistedInject constructor(
                 _state.update { previousState ->
                     if (previousState is NoteEditorState.Editing) {
                         previousState.copy(
-                            tagQuery = command.query
+                            tagQuery = command.query,
+                            tagError = null
                         )
                     } else {
                         previousState
@@ -236,7 +238,10 @@ class NoteEditorViewModel @AssistedInject constructor(
                         _state.update { previousState ->
                             if (previousState is NoteEditorState.Editing) {
                                 previousState.copy(
-                                    error = R.string.note_tags_error_add
+                                    tagError = if (e.message?.contains("409") == true)
+                                        R.string.note_tags_error_duplicate
+                                    else
+                                        R.string.note_tags_error_add,
                                 )
                             } else {
                                 previousState
@@ -273,6 +278,18 @@ class NoteEditorViewModel @AssistedInject constructor(
                                 previousState
                             }
                         }
+                    }
+                }
+            }
+
+            NoteEditorCommand.ResetError -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            error = null
+                        )
+                    } else {
+                        previousState
                     }
                 }
             }
@@ -378,6 +395,8 @@ sealed interface NoteEditorCommand {
 
     data class InputTagQuery(val query: String) : NoteEditorCommand
 
+    data object ResetError : NoteEditorCommand
+
 }
 
 sealed interface NoteEditorState {
@@ -389,7 +408,8 @@ sealed interface NoteEditorState {
         val showTagsDialog: Boolean = false,
         val tagQuery: String = "",
         val availableTags: List<String> = emptyList(),
-        val error: Int? = null
+        val error: Int? = null,
+        val tagError: Int? = null
     ) : NoteEditorState {
         val isSaveEnabled: Boolean
             get() {

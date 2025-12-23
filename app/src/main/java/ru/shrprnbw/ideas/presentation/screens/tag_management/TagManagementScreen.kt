@@ -5,25 +5,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.rounded.Label
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -61,9 +64,10 @@ fun TagManagementScreen(
     val state by viewModel.state.collectAsState()
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().imePadding(),
         topBar = {
             Column {
                 TopAppBar(
@@ -84,8 +88,18 @@ fun TagManagementScreen(
                     }
                 )
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { innerPadding ->
+        val errorMessage = state.error?.let { stringResource(it) }
+        LaunchedEffect(state.error) {
+            errorMessage?.let {
+                snackbarHostState.showSnackbar(errorMessage)
+                viewModel.processCommand(TagManagementCommand.ResetError)
+            }
+        }
         LazyColumn(
             modifier = Modifier.padding(innerPadding)
         ) {
@@ -129,7 +143,16 @@ fun TagManagementScreen(
                         modifier = Modifier
                             .weight(1f)
                             .focusRequester(focusRequester)
-                            .onFocusChanged { isAddTagFocused = it.isFocused },
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    state.editingTagId?.let {
+                                        viewModel.processCommand(
+                                            TagManagementCommand.CancelEditTag(it)
+                                        )
+                                    }
+                                }
+                                isAddTagFocused = focusState.isFocused
+                            },
                         placeholder = {
                             Text(
                                 text = stringResource(R.string.tag_management_create_hint),
@@ -183,7 +206,7 @@ fun TagManagementScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = if (isEditing) Icons.Outlined.Delete else Icons.Rounded.Label,
+                        imageVector = if (isEditing) Icons.Outlined.Delete else Icons.AutoMirrored.Outlined.Label,
                         contentDescription = null,
                         modifier = Modifier
                             .size(24.dp)
@@ -207,6 +230,7 @@ fun TagManagementScreen(
                                 )
                             )
                         }
+                        val editFocusRequester = remember { FocusRequester() }
 
                         TextField(
                             value = textFieldValue,
@@ -218,7 +242,14 @@ fun TagManagementScreen(
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .focusRequester(focusRequester),
+                                .focusRequester(editFocusRequester)
+                                .onFocusChanged(onFocusChanged = {
+                                    if (it.isFocused && state.newTagInput.isNotEmpty()) {
+                                        viewModel.processCommand(
+                                            TagManagementCommand.InputNewTag("")
+                                        )
+                                    }
+                                }),
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
@@ -229,7 +260,7 @@ fun TagManagementScreen(
                         )
 
                         LaunchedEffect(Unit) {
-                            focusRequester.requestFocus()
+                            editFocusRequester.requestFocus()
                         }
                     } else {
                         Text(

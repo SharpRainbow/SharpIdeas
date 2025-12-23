@@ -44,7 +44,15 @@ class TagManagementViewModel @Inject constructor(
                         _state.update { it.copy(newTagInput = "") }
                         loadTags()
                     } catch (e: Exception) {
-                        _state.update { it.copy(error = R.string.tag_management_error_create) }
+                        _state.update {
+                            it.copy(
+                                error = if (e.message?.contains("409") == true) {
+                                    R.string.tag_management_error_create_duplicate
+                                } else {
+                                    R.string.tag_management_error_create
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -105,6 +113,10 @@ class TagManagementViewModel @Inject constructor(
                     }
                 }
             }
+
+            TagManagementCommand.ResetError -> {
+                _state.update { it.copy(error = null) }
+            }
         }
     }
 
@@ -129,6 +141,7 @@ sealed interface TagManagementCommand {
     data class UpdateTagInput(val input: String) : TagManagementCommand
     data class SaveTag(val tag: Tag) : TagManagementCommand
     data class DeleteTag(val tagId: Long) : TagManagementCommand
+    data object ResetError : TagManagementCommand
 }
 
 data class TagManagementState(
