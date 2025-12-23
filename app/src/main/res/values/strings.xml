@@ -46,4 +46,10 @@
     <string name="note_tags_error_add">Не удалось добавить тег</string>
     <string name="note_tags_error_remove">Не удалось удалить тег</string>
     <string name="note_tags_empty">Нет тегов</string>
+    <string name="tag_management_title">Edit labels</string>
+    <string name="tag_management_create_hint">Create new label</string>
+    <string name="tag_management_error_create">Не удалось создать тег</string>
+    <string name="tag_management_error_update">Не удалось обновить тег</string>
+    <string name="tag_management_error_delete">Не удалось удалить тег</string>
+    <string name="tag_management_error_load">Не удалось загрузить теги</string>
 </resources>

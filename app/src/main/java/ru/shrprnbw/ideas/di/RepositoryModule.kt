@@ -7,10 +7,12 @@ import dagger.hilt.components.SingletonComponent
 import ru.shrprnbw.ideas.data.repository.AuthRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.CredentialsRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.NoteRepositoryImpl
+import ru.shrprnbw.ideas.data.repository.TagRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.UserRepositoryImpl
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.CredentialsRepository
 import ru.shrprnbw.ideas.domain.repository.NoteRepository
+import ru.shrprnbw.ideas.domain.repository.TagRepository
 import ru.shrprnbw.ideas.domain.repository.UserRepository
 import javax.inject.Singleton
 
@@ -33,5 +35,9 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindNoteRepository(impl: NoteRepositoryImpl): NoteRepository
+
+    @Binds
+    @Singleton
+    fun bindTagRepository(impl: TagRepositoryImpl): TagRepository
 
 }

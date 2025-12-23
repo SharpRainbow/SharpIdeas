@@ -22,6 +22,7 @@ import ru.shrprnbw.ideas.presentation.screens.profile.ProfileScreen
 import ru.shrprnbw.ideas.presentation.screens.profile_edit.ProfileEditScreen
 import ru.shrprnbw.ideas.presentation.screens.register.RegisterScreen
 import ru.shrprnbw.ideas.presentation.screens.search.SearchScreen
+import ru.shrprnbw.ideas.presentation.screens.tag_management.TagManagementScreen
 import ru.shrprnbw.ideas.presentation.screens.transcription_detail.TranscriptionDetailScreen
 import ru.shrprnbw.ideas.presentation.screens.transcriptions.TranscriptionsScreen
 
@@ -137,6 +138,18 @@ fun NavGraph() {
                         navController.navigate(
                             Screen.EditNote.createRoute(it)
                         )
+                    },
+                    onTagManagementClicked = {
+                        navController.navigate(Screen.TagManagement.route)
+                    }
+                )
+            }
+            composable(
+                route = Screen.TagManagement.route
+            ) {
+                TagManagementScreen(
+                    onBackClicked = {
+                        navController.popBackStack()
                     }
                 )
             }
@@ -219,6 +232,8 @@ sealed class Screen(val route: String) {
     data object EditUserInfo : Screen("user_info_edit")
 
     data object Notes : Screen("notes")
+
+    data object TagManagement : Screen("tag_management")
 
 //    data object CreateNote : Screen("create_note")
 

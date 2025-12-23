@@ -14,6 +14,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteTextRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.CreateTagRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.GoogleTokenAuthRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
@@ -58,7 +59,7 @@ interface IdeasApiService {
         @Body request: UpdatePersonalInfoRequest
     )
 
-    @GET("$VERSION_1/users/tags")
+    @GET("$VERSION_1/tags")
     suspend fun getUserCreatedTags(
         @Header("Authorization") token: String,
     ): List<TagDto>
@@ -178,6 +179,25 @@ interface IdeasApiService {
         @Header("Authorization") token: String,
         @Path("noteId") noteId: String,
         @Query("tag") tag: String
+    )
+
+    @POST("$VERSION_1/tags")
+    suspend fun createTag(
+        @Header("Authorization") token: String,
+        @Body request: CreateTagRequest
+    )
+
+    @PATCH("$VERSION_1/tags/{tagId}")
+    suspend fun updateTag(
+        @Header("Authorization") token: String,
+        @Path("tagId") tagId: Long,
+        @Body request: CreateTagRequest
+    )
+
+    @DELETE("$VERSION_1/tags/{tagId}")
+    suspend fun deleteTag(
+        @Header("Authorization") token: String,
+        @Path("tagId") tagId: Long
     )
 
 }

@@ -104,6 +104,7 @@ fun NoteListScreen(
     onNoteClicked: (String) -> Unit = {},
     onSearchTriggered: () -> Unit = {},
     onProfileClicked: () -> Unit = {},
+    onTagManagementClicked: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
@@ -126,6 +127,7 @@ fun NoteListScreen(
                 SearchBar(
                     onSearchTriggered = onSearchTriggered,
                     onProfileClicked = onProfileClicked,
+                    onTagManagementClicked = onTagManagementClicked,
                     animatedVisibilityScope = animatedVisibilityScope,
                     sharedTransitionScope = sharedTransitionScope
                 )
@@ -210,6 +212,7 @@ private fun SearchBar(
     searchPlaceholder: String = "Поиск заметок",
     onSearchTriggered: () -> Unit = {},
     onProfileClicked: () -> Unit = {},
+    onTagManagementClicked: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?
 ) {
@@ -224,7 +227,7 @@ private fun SearchBar(
             modifier = Modifier
                 .clip(RoundedCornerShape(4.dp))
                 .clickable(
-                    onClick = {}
+                    onClick = onTagManagementClicked
                 ),
             imageVector = Icons.Rounded.Menu,
             contentDescription = "Menu Icon",
