@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.rounded.AudioFile
-import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -296,8 +295,7 @@ fun NoteItem(
                         for (t in tags) {
                             NoteLabel(
                                 label = t,
-                                color = Utils.generateColorContrast(t),
-                                imageVector = Icons.Rounded.GraphicEq
+                                color = Utils.generateColorContrast(t)
                             )
                         }
                     }
@@ -318,7 +316,7 @@ fun NoteLabel(
     modifier: Modifier = Modifier,
     label: String,
     color: Color,
-    imageVector: ImageVector
+    imageVector: ImageVector? = null
 ) {
     Row(
         modifier = modifier
@@ -329,13 +327,17 @@ fun NoteLabel(
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(16.dp)
-        )
         Spacer(Modifier.width(4.dp))
+        if (imageVector != null) {
+            Icon(
+                imageVector = imageVector,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+        }
         Text(label, color = color, fontSize = 12.sp)
+        Spacer(Modifier.width(4.dp))
     }
 }

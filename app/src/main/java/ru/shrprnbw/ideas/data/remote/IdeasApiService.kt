@@ -166,4 +166,18 @@ interface IdeasApiService {
         @Path("transcriptionId") transcriptionId: String
     ): TranscriptionDto
 
+    @POST("$VERSION_1/notes/{noteId}/tags")
+    suspend fun addNoteTag(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Query("tag") tag: String
+    )
+
+    @DELETE("$VERSION_1/notes/{noteId}/tags")
+    suspend fun removeNoteTag(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Query("tag") tag: String
+    )
+
 }

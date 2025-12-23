@@ -11,17 +11,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AudioFile
@@ -30,17 +37,26 @@ import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Discount
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -233,8 +249,31 @@ fun NoteEditorScreen(
                             NoteEditorCommand.DeleteContentItem(idx)
                         )
                     },
-                    onTranscriptionsClicked = onTranscriptionsClicked
+                    onTranscriptionsClicked = onTranscriptionsClicked,
+                    onTagsClicked = {
+                        viewModel.processCommand(NoteEditorCommand.OpenTagsDialog)
+                    }
                 )
+
+                if (currentState.showTagsDialog) {
+                    TagsBottomSheet(
+                        noteTags = currentState.note.tags,
+                        availableTags = currentState.filteredAvailableTags,
+                        tagQuery = currentState.tagQuery,
+                        onDismiss = {
+                            viewModel.processCommand(NoteEditorCommand.CloseTagsDialog)
+                        },
+                        onAddTag = { tag ->
+                            viewModel.processCommand(NoteEditorCommand.AddTag(tag))
+                        },
+                        onRemoveTag = { tag ->
+                            viewModel.processCommand(NoteEditorCommand.RemoveTag(tag))
+                        },
+                        onQueryChange = { query ->
+                            viewModel.processCommand(NoteEditorCommand.InputTagQuery(query))
+                        }
+                    )
+                }
             }
         }
 
@@ -256,7 +295,8 @@ fun Content(
     onTextChanged: (Int, String) -> Unit,
     onDeleteImageClick: (Int) -> Unit,
     onDeleteTextRequested: (Int) -> Unit,
-    onTranscriptionsClicked: () -> Unit = { }
+    onTranscriptionsClicked: () -> Unit = { },
+    onTagsClicked: () -> Unit = { }
 ) {
     LazyColumn(
         modifier = modifier
@@ -329,6 +369,15 @@ fun Content(
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            TagsSection(
+                tags = note.tags,
+                onTagsClicked = onTagsClicked
+            )
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         itemsIndexed(
@@ -505,6 +554,167 @@ private fun NoteTransformation(
             tint = color
         )
         Text(text = actionName)
+    }
+}
+
+@Composable
+fun TagsSection(
+    modifier: Modifier = Modifier,
+    tags: List<String>,
+    onTagsClicked: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        if (tags.isEmpty()) {
+            OutlinedButton (
+                onClick = onTagsClicked,
+                modifier = Modifier.padding(start = 16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.Label,
+                    contentDescription = stringResource(R.string.note_tags_add),
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
+                Text(
+                    text = stringResource(R.string.note_tags_empty),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else {
+            LazyRow(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                items(tags) { tag ->
+                    AssistChip(
+                        onClick = onTagsClicked,
+                        label = {
+                            Text(
+                                text = tag,
+                                fontSize = 12.sp
+                            )
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TagsBottomSheet(
+    noteTags: List<String>,
+    availableTags: List<String>,
+    tagQuery: String,
+    onDismiss: () -> Unit,
+    onAddTag: (String) -> Unit,
+    onRemoveTag: (String) -> Unit,
+    onQueryChange: (String) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(R.string.note_tags_manage),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            if (noteTags.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.note_tags),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    items(noteTags) { tag ->
+                        FilterChip(
+                            selected = true,
+                            onClick = { onRemoveTag(tag) },
+                            label = { Text(tag) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Remove",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            OutlinedTextField(
+                value = tagQuery,
+                onValueChange = onQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = {
+                    Text(stringResource(R.string.note_tags_input_hint))
+                },
+                trailingIcon = {
+                    if (tagQuery.isNotBlank()) {
+                        IconButton(onClick = {
+                            onAddTag(tagQuery)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = stringResource(R.string.note_tags_add)
+                            )
+                        }
+                    }
+                },
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            if (availableTags.isNotEmpty()) {
+                Text(
+                    text = "Доступные теги",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    items(availableTags) { tag ->
+                        AssistChip(
+                            onClick = { onAddTag(tag) },
+                            label = { Text(tag) }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+        }
     }
 }
 

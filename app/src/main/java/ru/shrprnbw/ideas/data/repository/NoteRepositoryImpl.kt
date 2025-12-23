@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalCoroutinesApi::class)
+@file:OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 
 package ru.shrprnbw.ideas.data.repository
 
@@ -11,8 +11,10 @@ import androidx.paging.PagingData
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onStart
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -48,7 +50,9 @@ class NoteRepositoryImpl @Inject constructor(
     override fun getUserNotes(): Flow<PagingData<NotePreview>> {
         return notesRefreshTrigger.onStart {
             emit(Unit)
-        }.flatMapLatest {
+        }.debounce(
+            timeoutMillis = 1000
+        ).flatMapLatest {
             Pager(
                 config = PagingConfig(
                     pageSize = 10,
@@ -206,6 +210,18 @@ class NoteRepositoryImpl @Inject constructor(
     override suspend fun getTranscription(noteId: String, transcriptionId: String): Transcription {
         val token = authRepository.getValidToken()
         return apiService.getTranscription(token, noteId, transcriptionId).toEntity()
+    }
+
+    override suspend fun addNoteTag(noteId: String, tag: String) {
+        val token = authRepository.getValidToken()
+        apiService.addNoteTag(token, noteId, tag)
+        notesRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun removeNoteTag(noteId: String, tag: String) {
+        val token = authRepository.getValidToken()
+        apiService.removeNoteTag(token, noteId, tag)
+        notesRefreshTrigger.emit(Unit)
     }
 
     private fun getMimeTypeFromUri(uri: Uri): String? {

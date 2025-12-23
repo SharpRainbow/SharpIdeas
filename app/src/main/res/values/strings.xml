@@ -39,4 +39,11 @@
     <string name="search_filter_all">Все</string>
     <string name="search_filter_audio">Аудио</string>
     <string name="search_filter_text">Текст</string>
+    <string name="note_tags">Теги</string>
+    <string name="note_tags_manage">Управление тегами</string>
+    <string name="note_tags_add">Добавить тег</string>
+    <string name="note_tags_input_hint">Введите название тега</string>
+    <string name="note_tags_error_add">Не удалось добавить тег</string>
+    <string name="note_tags_error_remove">Не удалось удалить тег</string>
+    <string name="note_tags_empty">Нет тегов</string>
 </resources>

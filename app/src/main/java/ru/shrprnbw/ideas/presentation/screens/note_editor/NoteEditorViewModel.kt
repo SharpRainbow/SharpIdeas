@@ -23,10 +23,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.usecase.AddNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTextBlockUseCase
 import ru.shrprnbw.ideas.domain.usecase.DeleteNoteContentUseCase
 import ru.shrprnbw.ideas.domain.usecase.DeleteNoteUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetNoteInfoUseCase
+import ru.shrprnbw.ideas.domain.usecase.GetUserTagsUseCase
+import ru.shrprnbw.ideas.domain.usecase.RemoveNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteContentUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteUseCase
 import ru.shrprnbw.ideas.domain.usecase.UploadImageUseCase
@@ -41,6 +44,9 @@ class NoteEditorViewModel @AssistedInject constructor(
     private val deleteNoteContentUseCase: DeleteNoteContentUseCase,
     private val addNoteTextBlockUseCase: AddNoteTextBlockUseCase,
     private val deleteNoteUseCase: DeleteNoteUseCase,
+    private val addNoteTagUseCase: AddNoteTagUseCase,
+    private val removeNoteTagUseCase: RemoveNoteTagUseCase,
+    private val getUserTagsUseCase: GetUserTagsUseCase,
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
@@ -163,6 +169,113 @@ class NoteEditorViewModel @AssistedInject constructor(
                     }
                 }
             }
+
+            is NoteEditorCommand.OpenTagsDialog -> {
+                viewModelScope.launch {
+                    try {
+                        val tags = getUserTagsUseCase()
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    showTagsDialog = true,
+                                    availableTags = tags.map { it.name }
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("NoteEditorViewModel", "Load tags error: ${e.message}")
+                    }
+                }
+            }
+
+            is NoteEditorCommand.CloseTagsDialog -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            showTagsDialog = false,
+                            tagQuery = ""
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
+
+            is NoteEditorCommand.InputTagQuery -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            tagQuery = command.query
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
+
+            is NoteEditorCommand.AddTag -> {
+                viewModelScope.launch {
+                    try {
+                        addNoteTagUseCase(noteId, command.tag)
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    tagQuery = "",
+                                    note = previousState.note.copy(
+                                        tags = previousState.note.tags + command.tag
+                                    )
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("NoteEditorViewModel", "Add tag error: ${e.message}")
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    error = R.string.note_tags_error_add
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }
+            }
+
+            is NoteEditorCommand.RemoveTag -> {
+                viewModelScope.launch {
+                    try {
+                        removeNoteTagUseCase(noteId, command.tag)
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    tagQuery = "",
+                                    note = previousState.note.copy(
+                                        tags = previousState.note.tags - command.tag
+                                    )
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("NoteEditorViewModel", "Remove tag error: ${e.message}")
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    error = R.string.note_tags_error_remove
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -171,14 +284,20 @@ class NoteEditorViewModel @AssistedInject constructor(
             try {
                 val note = getNoteInfoUseCase(noteId)
                 val contentItems = note.contents.toMutableList()
-                NoteEditorState.Editing(
-                    note = note.copy(contents = contentItems)
-                )
+                if (previousState is NoteEditorState.Editing) {
+                    previousState.copy(
+                        note = note.copy(contents = contentItems)
+                    )
+                } else {
+                    NoteEditorState.Editing(
+                        note = note.copy(contents = contentItems)
+                    )
+                }
             } catch (e: Exception) {
                 Log.d("NoteEditorViewModel", "Load note error: ${e.message}")
                 if (previousState is NoteEditorState.Editing) {
                     previousState.copy(
-                        error = R.string.edit_note_error
+                        error = R.string.edit_note_load_error
                     )
                 } else {
                     NoteEditorState.Finished
@@ -249,6 +368,16 @@ sealed interface NoteEditorCommand {
 
     data object DeleteNote : NoteEditorCommand
 
+    data object OpenTagsDialog : NoteEditorCommand
+
+    data object CloseTagsDialog : NoteEditorCommand
+
+    data class AddTag(val tag: String) : NoteEditorCommand
+
+    data class RemoveTag(val tag: String) : NoteEditorCommand
+
+    data class InputTagQuery(val query: String) : NoteEditorCommand
+
 }
 
 sealed interface NoteEditorState {
@@ -257,6 +386,9 @@ sealed interface NoteEditorState {
 
     data class Editing(
         val note: Note,
+        val showTagsDialog: Boolean = false,
+        val tagQuery: String = "",
+        val availableTags: List<String> = emptyList(),
         val error: Int? = null
     ) : NoteEditorState {
         val isSaveEnabled: Boolean
@@ -268,6 +400,15 @@ sealed interface NoteEditorState {
                             it.data.isNotBlank()
                         }
                     }
+                }
+            }
+
+        val filteredAvailableTags: List<String>
+            get() = if (tagQuery.isBlank()) {
+                availableTags.filter { it !in note.tags }
+            } else {
+                availableTags.filter {
+                    it.contains(tagQuery, ignoreCase = true) && it !in note.tags
                 }
             }
     }
