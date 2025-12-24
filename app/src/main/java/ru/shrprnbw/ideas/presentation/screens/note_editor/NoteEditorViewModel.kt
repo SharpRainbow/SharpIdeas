@@ -13,6 +13,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
@@ -22,7 +23,10 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTextBlockUseCase
@@ -32,6 +36,7 @@ import ru.shrprnbw.ideas.domain.usecase.GetNoteInfoUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetUserTagsUseCase
 import ru.shrprnbw.ideas.domain.usecase.RemoveNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteContentUseCase
+import ru.shrprnbw.ideas.domain.usecase.UpdateNoteTextUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteUseCase
 import ru.shrprnbw.ideas.domain.usecase.UploadImageUseCase
 
@@ -48,9 +53,13 @@ class NoteEditorViewModel @AssistedInject constructor(
     private val addNoteTagUseCase: AddNoteTagUseCase,
     private val removeNoteTagUseCase: RemoveNoteTagUseCase,
     private val getUserTagsUseCase: GetUserTagsUseCase,
+    private val updateNoteTextUseCase: UpdateNoteTextUseCase,
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
+    private val saveNoteFlow = MutableSharedFlow<Unit>()
+    private val contentUpdates = mutableMapOf<Long, ContentItem>()
+    private val mutex = Mutex()
     private val _state = MutableStateFlow<NoteEditorState>(NoteEditorState.Initial)
     val state = _state.asStateFlow()
 
@@ -79,36 +88,48 @@ class NoteEditorViewModel @AssistedInject constructor(
             }
 
             is NoteEditorCommand.InputContent -> {
-                _state.update { previousState ->
-                    if (previousState is NoteEditorState.Editing) {
-                        val newContents = previousState.note.contents.toMutableList()
-                        val editedId = newContents[command.index].id
-                        newContents[command.index] = newContents[command.index].copy(
-                            data = command.content,
-                            edited = editedId != -1L
-                        )
-                        previousState.copy(
-                            note = previousState.note.copy(
-                                contents = newContents
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            val newContents = previousState.note.contents.toMutableList()
+                            val editedId = newContents[command.index].id
+                            if (newContents[command.index].data == command.content) {
+                                return@update previousState
+                            }
+                            newContents[command.index] = newContents[command.index].copy(
+                                data = command.content,
+                                edited = editedId != -1L
                             )
-                        )
-                    } else {
-                        previousState
+                            previousState.copy(
+                                note = previousState.note.copy(
+                                    contents = newContents
+                                )
+                            ).also {
+                                mutex.withLock {
+                                    contentUpdates[editedId] = newContents[command.index]
+                                    saveNoteFlow.emit(Unit)
+                                }
+                            }
+                        } else {
+                            previousState
+                        }
                     }
                 }
             }
 
             is NoteEditorCommand.InputTitle -> {
-                _state.update { previousState ->
-                    if (previousState is NoteEditorState.Editing) {
-                        previousState.copy(
-                            note = previousState.note.copy(
-                                title = command.title,
-                                noteUpdated = true
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            previousState.copy(
+                                note = previousState.note.copy(
+                                    title = command.title,
+                                    noteUpdated = true
+                                )
                             )
-                        )
-                    } else {
-                        previousState
+                        } else {
+                            previousState
+                        }
                     }
                 }
             }
@@ -325,29 +346,52 @@ class NoteEditorViewModel @AssistedInject constructor(
     }
 
     private fun autoSaveNote() {
-        state.filter {
-            it is NoteEditorState.Editing && it.isSaveEnabled
-        }
+        saveNoteFlow
             .debounce(2000)
             .onEach {
-                saveNote()
+                saveNoteContents()
             }
             .onCompletion {
                 externalScope.launch {
-                    saveNote()
+                    saveNoteContents()
+                }
+            }
+            .launchIn(viewModelScope)
+        state
+            .filter { (it is NoteEditorState.Editing) && it.note.noteUpdated }
+            .debounce(500)
+            .onEach { currentState ->
+                (currentState as? NoteEditorState.Editing)?.let {
+                    saveNote(it.note)
                 }
             }
             .launchIn(viewModelScope)
     }
 
-    private suspend fun saveNote() {
+    private suspend fun saveNoteContents() {
+        mutex.lock()
         try {
-            val previousState = _state.value
-            if (previousState is NoteEditorState.Editing) {
-                val note = previousState.note
-                updateNoteUseCase(note)
-                updateNoteContentUseCase(note)
+            updateNoteTextUseCase(noteId, contentUpdates.values.toList())
+            contentUpdates.clear()
+        } catch (e: Exception) {
+            Log.d("NoteEditorViewModel", "Save command error: ${e.message}")
+            _state.update { previousState ->
+                if (previousState is NoteEditorState.Editing) {
+                    previousState.copy(
+                        error = R.string.edit_note_error
+                    )
+                } else {
+                    previousState
+                }
             }
+        } finally {
+            mutex.unlock()
+        }
+    }
+
+    private suspend fun saveNote(note: Note) {
+        try {
+            updateNoteUseCase(note)
         } catch (e: Exception) {
             Log.d("NoteEditorViewModel", "Save command error: ${e.message}")
             _state.update { previousState ->

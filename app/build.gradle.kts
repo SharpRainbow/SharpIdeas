@@ -43,6 +43,8 @@ android {
 }
 
 dependencies {
+    implementation("com.colintheshots:twain:0.3.2")
+    implementation("com.github.donald-okara:TextieMDLibrary:1.0.4")
     implementation("com.squareup.okhttp3:logging-interceptor:5.3.2")
     implementation(libs.converter.scalars)
     implementation(libs.androidx.credentials)

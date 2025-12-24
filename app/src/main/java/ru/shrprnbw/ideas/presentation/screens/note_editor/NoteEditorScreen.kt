@@ -67,6 +67,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -75,6 +76,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +87,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
+import com.colintheshots.twain.MarkdownEditor
+import com.colintheshots.twain.MarkdownText
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
@@ -285,6 +289,7 @@ fun NoteEditorScreen(
                         },
                         onAddTag = { tag ->
                             viewModel.processCommand(NoteEditorCommand.AddTag(tag))
+                            pagesTagsList.refresh()
                         },
                         onRemoveTag = { tag ->
                             viewModel.processCommand(NoteEditorCommand.RemoveTag(tag))
@@ -505,44 +510,83 @@ fun TextContent(
     modifier: Modifier = Modifier,
     text: String,
     onTextInput: (String) -> Unit,
+    editorView: Boolean = true,
     onDeleteRequest: () -> Unit = {}
 ) {
-    TextField(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .onKeyEvent { event ->
-                if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
-                    if (text.isEmpty()) {
-                        onDeleteRequest()
-                        true
+    if (editorView) {
+        val keyboardController = LocalSoftwareKeyboardController.current
+        MarkdownEditor(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 28.dp)
+                .onKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
+                        if (text.isEmpty()) {
+                            onDeleteRequest()
+                            true
+                        } else {
+                            false
+                        }
                     } else {
                         false
                     }
-                } else {
-                    false
-                }
-            },
-        value = text,
-        onValueChange = onTextInput,
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        textStyle = TextStyle(
+                }.onFocusChanged { focusState ->
+                    if (!focusState.hasFocus) {
+                        keyboardController?.hide()
+                    }
+                },
+            value = text,
+            onValueChange = onTextInput,
+            hint = R.string.add_text_hint
+        )
+    } else {
+        MarkdownText(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            markdown = text,
             fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface
-        ),
-        placeholder = {
-            Text(
-                text = stringResource(R.string.add_text_hint),
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-            )
-        }
-    )
+        )
+    }
+//    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+//    val visualTransformation = remember { TextEditorVisualTransformer() }
+//    TextField(
+//        modifier = modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 8.dp)
+//            .onKeyEvent { event ->
+//                if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
+//                    if (text.isEmpty()) {
+//                        onDeleteRequest()
+//                        true
+//                    } else {
+//                        false
+//                    }
+//                } else {
+//                    false
+//                }
+//            },
+//        value = text,
+//        onValueChange = onTextInput,
+//        colors = TextFieldDefaults.colors(
+//            focusedContainerColor = Color.Transparent,
+//            unfocusedContainerColor = Color.Transparent,
+//            focusedIndicatorColor = Color.Transparent,
+//            unfocusedIndicatorColor = Color.Transparent
+//        ),
+//        textStyle = TextStyle(
+//            fontSize = 16.sp,
+//            color = MaterialTheme.colorScheme.onSurface
+//        ),
+//        placeholder = {
+//            Text(
+//                text = stringResource(R.string.add_text_hint),
+//                fontSize = 16.sp,
+//                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+//            )
+//        },
+//        visualTransformation = visualTransformation
+//    )
 }
 
 @Composable
