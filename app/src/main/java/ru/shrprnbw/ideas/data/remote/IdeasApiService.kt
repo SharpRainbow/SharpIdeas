@@ -1,7 +1,6 @@
 package ru.shrprnbw.ideas.data.remote
 
 import okhttp3.MultipartBody
-import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -88,7 +87,7 @@ interface IdeasApiService {
     @POST("$VERSION_2/auth/login-password")
     suspend fun loginV2(
         @Body request: LoginRequestDto
-    ): Response<TokenResponseDto>
+    ): TokenResponseDto
 
     @POST("$VERSION_2/auth/refresh")
     suspend fun refreshAccessToken(

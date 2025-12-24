@@ -26,18 +26,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Label
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.rounded.AudioFile
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -344,4 +350,44 @@ fun NoteLabel(
         Text(label, color = color, fontSize = 12.sp)
         Spacer(Modifier.width(4.dp))
     }
+}
+
+@Composable
+fun NavigationDrawerContent(
+    modifier: Modifier = Modifier,
+    selectedScreen: NavigationScreen = NavigationScreen.Home,
+    onHomeClicked: () -> Unit = {},
+    onTagManagementClicked: () -> Unit = {}
+) {
+    ModalDrawerSheet(modifier = modifier) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "SharpIdeas",
+            modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
+            style = MaterialTheme.typography.titleLarge
+        )
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(12.dp))
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
+            label = { Text("Главный экран") },
+            selected = selectedScreen == NavigationScreen.Home,
+            onClick = onHomeClicked,
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.AutoMirrored.Rounded.Label, contentDescription = null) },
+            label = { Text("Управление тегами") },
+            selected = selectedScreen == NavigationScreen.TagManagement,
+            onClick = onTagManagementClicked,
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
+    }
+}
+
+enum class NavigationScreen {
+    Home,
+    TagManagement
 }

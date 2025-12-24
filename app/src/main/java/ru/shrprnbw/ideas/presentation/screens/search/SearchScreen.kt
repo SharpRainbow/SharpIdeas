@@ -53,7 +53,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Tag
-import ru.shrprnbw.ideas.presentation.navigation.Screen
+import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_DUR
+import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_KEY
 import ru.shrprnbw.ideas.presentation.screens.NoteItem
 import ru.shrprnbw.ideas.presentation.screens.NoteType
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
@@ -94,10 +95,10 @@ fun SearchScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .sharedElement(
-                            sharedContentState = rememberSharedContentState(key = Screen.Search.ANIMATION_KEY),
+                            sharedContentState = rememberSharedContentState(key = SEARCH_ANIMATION_KEY),
                             animatedVisibilityScope = animatedVisibilityScope ?: return@Scaffold,
                             boundsTransform = { _, _ ->
-                                tween(durationMillis = Screen.Search.ANIMATION_DUR)
+                                tween(durationMillis = SEARCH_ANIMATION_DUR)
                             },
                             clipInOverlayDuringTransition = OverlayClip(SearchBarDefaults.inputFieldShape)
                         )

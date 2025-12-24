@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -62,7 +62,7 @@ import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
 fun TagManagementScreen(
     modifier: Modifier = Modifier,
     viewModel: TagManagementViewModel = hiltViewModel(),
-    onBackClicked: () -> Unit
+    onMenuClicked: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
     val tagsList = viewModel.tagsLazyList.collectAsLazyPagingItems()
@@ -85,10 +85,10 @@ fun TagManagementScreen(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onBackClicked) {
+                        IconButton(onClick = onMenuClicked) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = stringResource(R.string.back)
+                                imageVector = Icons.Rounded.Menu,
+                                contentDescription = "Menu"
                             )
                         }
                     }

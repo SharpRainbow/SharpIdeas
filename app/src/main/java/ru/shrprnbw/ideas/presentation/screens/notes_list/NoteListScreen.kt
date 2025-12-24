@@ -89,7 +89,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
-import ru.shrprnbw.ideas.presentation.navigation.Screen
+import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_DUR
+import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_KEY
 import ru.shrprnbw.ideas.presentation.screens.NoteItem
 import ru.shrprnbw.ideas.presentation.screens.NoteType
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
@@ -104,7 +105,7 @@ fun NoteListScreen(
     onNoteClicked: (String) -> Unit = {},
     onSearchTriggered: () -> Unit = {},
     onProfileClicked: () -> Unit = {},
-    onTagManagementClicked: () -> Unit = {},
+    onMenuClicked: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
@@ -127,7 +128,7 @@ fun NoteListScreen(
                 SearchBar(
                     onSearchTriggered = onSearchTriggered,
                     onProfileClicked = onProfileClicked,
-                    onTagManagementClicked = onTagManagementClicked,
+                    onMenuClicked = onMenuClicked,
                     animatedVisibilityScope = animatedVisibilityScope,
                     sharedTransitionScope = sharedTransitionScope
                 )
@@ -212,7 +213,7 @@ private fun SearchBar(
     searchPlaceholder: String = "Поиск заметок",
     onSearchTriggered: () -> Unit = {},
     onProfileClicked: () -> Unit = {},
-    onTagManagementClicked: () -> Unit = {},
+    onMenuClicked: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?
 ) {
@@ -227,7 +228,7 @@ private fun SearchBar(
             modifier = Modifier
                 .clip(RoundedCornerShape(4.dp))
                 .clickable(
-                    onClick = onTagManagementClicked
+                    onClick = onMenuClicked
                 ),
             imageVector = Icons.Rounded.Menu,
             contentDescription = "Menu Icon",
@@ -239,10 +240,10 @@ private fun SearchBar(
                     .weight(1f)
                     .clip(SearchBarDefaults.inputFieldShape)
                     .sharedElement(
-                        sharedContentState = rememberSharedContentState(key = Screen.Search.ANIMATION_KEY),
+                        sharedContentState = rememberSharedContentState(key = SEARCH_ANIMATION_KEY),
                         animatedVisibilityScope = animatedVisibilityScope ?: return,
                         boundsTransform = { _, _ ->
-                            tween(durationMillis = Screen.Search.ANIMATION_DUR)
+                            tween(durationMillis = SEARCH_ANIMATION_DUR)
                         },
                         clipInOverlayDuringTransition = OverlayClip(SearchBarDefaults.inputFieldShape)
                     )

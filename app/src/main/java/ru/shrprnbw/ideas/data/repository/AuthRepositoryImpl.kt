@@ -38,13 +38,12 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun login(login: String, password: String): TokenPair {
-        val response = apiService.loginV2(
+        return apiService.loginV2(
             LoginRequestDto(
                 email = login,
                 password = password
             )
-        )
-        return response.body()!!.toEntity()
+        ).toEntity()
     }
 
     override suspend fun logout() {
