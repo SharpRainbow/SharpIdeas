@@ -35,7 +35,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.AudioFile
+import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.FormatBold
+import androidx.compose.material.icons.outlined.FormatItalic
+import androidx.compose.material.icons.outlined.FormatStrikethrough
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.rounded.AutoFixHigh
@@ -69,6 +73,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -84,8 +89,10 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,7 +101,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.colintheshots.twain.MarkdownText
-import com.example.textiemdlibrary.TextEditorVisualTransformer
+import com.example.textiemdlibrary.AnnotationsManager
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
@@ -136,6 +143,8 @@ fun NoteEditorScreen(
         }
 
         is NoteEditorState.Editing -> {
+            var formatCallback by remember { mutableStateOf<((FormatType) -> Unit)?>(null) }
+
             Scaffold(
                 modifier = modifier
                     .fillMaxWidth()
@@ -262,6 +271,18 @@ fun NoteEditorScreen(
                 },
                 snackbarHost = {
                     SnackbarHost(hostState = snackbarHostState)
+                },
+                bottomBar = {
+                    if (!currentState.note.audioNote && !currentState.isPreviewMode) {
+                        FormattingToolbar(
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.surface)
+                                .imePadding(),
+                            onFormatClick = { formatType ->
+                                formatCallback?.invoke(formatType)
+                            }
+                        )
+                    }
                 }
             ) { innerPadding ->
                 val errorMessage = currentState.error?.let { stringResource(it) }
@@ -271,10 +292,14 @@ fun NoteEditorScreen(
                         viewModel.processCommand(NoteEditorCommand.ResetError)
                     }
                 }
+
                 Content(
                     modifier = Modifier.padding(innerPadding),
                     note = currentState.note,
                     isPreviewMode = currentState.isPreviewMode,
+                    onFormatCallbackChange = { callback ->
+                        formatCallback = callback
+                    },
                     onTitleChanged = { title ->
                         viewModel.processCommand(
                             NoteEditorCommand.InputTitle(title)
@@ -344,6 +369,7 @@ fun Content(
     modifier: Modifier = Modifier,
     note: Note,
     isPreviewMode: Boolean = false,
+    onFormatCallbackChange: ((FormatType) -> Unit) -> Unit = { },
     onTitleChanged: (String) -> Unit,
     onTextChanged: (Int, String) -> Unit,
     onDeleteImageClick: (Int) -> Unit,
@@ -451,6 +477,7 @@ fun Content(
                     TextContent(
                         text = contentItem.data,
                         editorView = !isPreviewMode,
+                        onFormatCallbackChange = onFormatCallbackChange,
                         onTextInput = { input ->
                             onTextChanged(itemIndex, input)
                         },
@@ -540,18 +567,72 @@ fun TextContent(
     text: String,
     onTextInput: (String) -> Unit,
     editorView: Boolean = true,
+    onFormatCallbackChange: ((FormatType) -> Unit) -> Unit = { },
     onDeleteRequest: () -> Unit = {}
 ) {
     if (editorView) {
 //        val keyboardController = LocalSoftwareKeyboardController.current
-        val visualTransformation = remember { TextEditorVisualTransformer() }
+        val annotationsManager = remember { AnnotationsManager() }
+//        val visualTransformation = remember { TextEditorVisualTransformer() }
         val bottomAnchorBringIntoViewRequester = remember { BringIntoViewRequester() }
         var fieldHeight by remember { mutableFloatStateOf(0f) }
+        var textFieldValue by remember {
+            mutableStateOf(TextFieldValue(text = text, selection = TextRange(text.length)))
+        }
 
-        LaunchedEffect(text, fieldHeight) {
+        // Update text without changing cursor position when text changes externally
+        LaunchedEffect(text) {
+            if (textFieldValue.text != text) {
+                val currentSelection = textFieldValue.selection
+                textFieldValue = TextFieldValue(
+                    text = text,
+                    selection = currentSelection.let {
+                        if (it.start <= text.length) it else TextRange(text.length)
+                    }
+                )
+            }
+        }
+
+        // Register formatting callback
+        LaunchedEffect(Unit) { // TODO: Move to viewmodel
+            onFormatCallbackChange { formatType ->
+                val start = textFieldValue.selection.start
+                val end = textFieldValue.selection.end
+
+                if (start != end) {
+                    val newText = when (formatType) {
+                        FormatType.BOLD -> annotationsManager.applyBold(
+                            textFieldValue.text, start, end
+                        )
+                        FormatType.ITALIC -> applyItalics(
+                            textFieldValue.text, start, end
+                        )
+                        FormatType.STRIKETHROUGH -> applyStrikethrough(
+                            textFieldValue.text, start, end
+                        )
+                        FormatType.MONOSPACE -> annotationsManager.applyMonospace(
+                            textFieldValue.text, start, end
+                        )
+                    }
+                    // Calculate the difference in length to adjust cursor position
+                    val lengthDiff = newText.length - textFieldValue.text.length
+                    val newCursorPosition = end + lengthDiff
+
+                    textFieldValue = TextFieldValue(
+                        text = newText,
+                        selection = TextRange(newCursorPosition)
+                    )
+                    onTextInput(newText)
+                }
+            }
+        }
+
+        LaunchedEffect(fieldHeight) {
             bottomAnchorBringIntoViewRequester.bringIntoView()
         }
+
         Column(modifier = modifier) {
+
             TextField(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -561,7 +642,7 @@ fun TextContent(
                     }
                     .onKeyEvent { event ->
                         if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
-                            if (text.isEmpty()) {
+                            if (textFieldValue.text.isEmpty()) {
                                 onDeleteRequest()
                                 true
                             } else {
@@ -571,8 +652,11 @@ fun TextContent(
                             false
                         }
                     },
-                value = text,
-                onValueChange = onTextInput,
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    textFieldValue = newValue
+                    onTextInput(newValue.text)
+                },
                 textStyle = TextStyle(
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -590,7 +674,7 @@ fun TextContent(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                 },
-                visualTransformation = visualTransformation
+//                visualTransformation = visualTransformation
             )
 //            MarkdownEditor(
 //                modifier = Modifier
@@ -637,6 +721,65 @@ fun TextContent(
             fontSize = 16.sp,
         )
     }
+}
+
+@Composable
+fun FormattingToolbar(
+    modifier: Modifier = Modifier,
+    onFormatClick: (FormatType) -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FormatButton(
+            icon = Icons.Outlined.FormatBold,
+            contentDescription = "Bold",
+            onClick = { onFormatClick(FormatType.BOLD) }
+        )
+        FormatButton(
+            icon = Icons.Outlined.FormatItalic,
+            contentDescription = "Italic",
+            onClick = { onFormatClick(FormatType.ITALIC) }
+        )
+        FormatButton(
+            icon = Icons.Outlined.FormatStrikethrough,
+            contentDescription = "Strikethrough",
+            onClick = { onFormatClick(FormatType.STRIKETHROUGH) }
+        )
+        FormatButton(
+            icon = Icons.Outlined.Code,
+            contentDescription = "Monospace",
+            onClick = { onFormatClick(FormatType.MONOSPACE) }
+        )
+    }
+}
+
+@Composable
+private fun FormatButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+enum class FormatType {
+    BOLD,
+    ITALIC,
+    STRIKETHROUGH,
+    MONOSPACE
 }
 
 @Composable
@@ -844,6 +987,58 @@ fun TagsBottomSheet(
             }
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+private fun applyStrikethrough(text: String, selectionStart: Int, selectionEnd: Int): String {
+    val annotation = "~~"
+    val start = minOf(selectionStart, selectionEnd)
+    val end = maxOf(selectionStart, selectionEnd)
+
+    if (start != end) {
+        val beforeSelection = text.substring(0, start)
+        val selectedText = text.substring(start, end)
+        val afterSelection = text.substring(end)
+
+        val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
+            val cleanText = selectedText.removeSurrounding(annotation)
+            "$beforeSelection$cleanText$afterSelection"
+        } else {
+            "$beforeSelection~~$selectedText~~$afterSelection"
+        }
+
+        return result
+    } else {
+        val beforeCursor = text.substring(0, start)
+        val afterCursor = text.substring(start)
+
+        return "$beforeCursor~~$afterCursor~~"
+    }
+}
+
+private fun applyItalics(text: String, selectionStart: Int, selectionEnd: Int): String {
+    val annotation = "*"
+    val start = minOf(selectionStart, selectionEnd)
+    val end = maxOf(selectionStart, selectionEnd)
+
+    if (start != end) {
+        val beforeSelection = text.substring(0, start)
+        val selectedText = text.substring(start, end)
+        val afterSelection = text.substring(end)
+
+        val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
+            val cleanText = selectedText.removeSurrounding(annotation)
+            "$beforeSelection$cleanText$afterSelection"
+        } else {
+            "${beforeSelection}*${selectedText}*${afterSelection}"
+        }
+
+        return result
+    } else {
+        val beforeCursor = text.substring(0, start)
+        val afterCursor = text.substring(start)
+
+        return "${beforeCursor}*${afterCursor}*"
     }
 }
 
