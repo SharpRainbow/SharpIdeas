@@ -315,6 +315,18 @@ class NoteEditorViewModel @AssistedInject constructor(
                     }
                 }
             }
+
+            NoteEditorCommand.TogglePreviewMode -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            isPreviewMode = !previousState.isPreviewMode
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
         }
     }
 
@@ -442,6 +454,8 @@ sealed interface NoteEditorCommand {
 
     data object ResetError : NoteEditorCommand
 
+    data object TogglePreviewMode : NoteEditorCommand
+
 }
 
 sealed interface NoteEditorState {
@@ -454,7 +468,8 @@ sealed interface NoteEditorState {
         val tagQuery: String = "",
         val availableTags: Set<Long> = emptySet(),
         val error: Int? = null,
-        val tagError: Int? = null
+        val tagError: Int? = null,
+        val isPreviewMode: Boolean = false
     ) : NoteEditorState {
         val isSaveEnabled: Boolean
             get() {

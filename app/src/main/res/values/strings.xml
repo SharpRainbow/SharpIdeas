@@ -55,4 +55,6 @@
     <string name="tag_management_error_create_duplicate">Tag already exist</string>
     <string name="note_tags_error_duplicate">Note tag already exist</string>
     <string name="tags_list_error_loading">Unable to load tags list</string>
+    <string name="preview_mode">Preview mode</string>
+    <string name="edit_mode">Edit mode</string>
 </resources>
