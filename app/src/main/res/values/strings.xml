@@ -24,6 +24,7 @@
     <string name="edit_note_image_upload_error">Unable to upload image</string>
     <string name="edit_note_content_delete_error">Unable to delete content</string>
     <string name="delete_note">Delete note</string>
+    <string name="delete_note_request">Permanently delete?</string>
     <string name="edit_note_delete_error">Unable to delete note</string>
     <string name="edit_note_load_error">Unable to load note. Maybe it was deleted or server experiencing troubles</string>
     <string name="transcriptions">Transcriptions</string>
@@ -58,4 +59,8 @@
     <string name="preview_mode">Preview mode</string>
     <string name="edit_mode">Edit mode</string>
     <string name="edit_note_audio_upload_error">Unable to upload audio</string>
+    <string name="note_name">Note name</string>
+    <string name="delete_note_confirmation">This will make current note inaccessible on all devices</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
 </resources>

@@ -177,6 +177,14 @@ fun NoteListScreen(
         }
         if (state.value.showAddTextNoteDialog || state.value.showAddAudioNoteDialog) {
             CreateNoteDialog(
+                icon = {
+                    Icon(
+                        imageVector =
+                            if (state.value.showAddTextNoteDialog) Icons.Filled.TextFields
+                            else Icons.Rounded.AudioFile,
+                        contentDescription = null
+                    )
+                },
                 dialogTitle = if (state.value.showAddTextNoteDialog) stringResource(R.string.note_list_add_note) else stringResource(
                     R.string.note_list_add_audio
                 ),
@@ -401,6 +409,7 @@ fun BoxScope.FloatingActionButtonWithMenu(
 @Composable
 private fun CreateNoteDialog(
     modifier: Modifier = Modifier,
+    icon: @Composable (() -> Unit)?,
     dialogTitle: String,
     noteName: String,
     onNoteNameChange: (String) -> Unit,
@@ -410,12 +419,13 @@ private fun CreateNoteDialog(
     AlertDialog(
         modifier = modifier,
         onDismissRequest = onDismissRequest,
-        title = { Text(dialogTitle) },
+        icon = icon,
+        title = { Text(text = dialogTitle, textAlign = TextAlign.Center) },
         text = {
             OutlinedTextField(
                 value = noteName,
                 onValueChange = onNoteNameChange,
-                label = { Text("Note Name") },
+                label = { Text(stringResource(R.string.note_name)) },
                 singleLine = true
             )
         },

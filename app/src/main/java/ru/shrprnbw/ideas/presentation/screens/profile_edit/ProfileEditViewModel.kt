@@ -3,6 +3,7 @@ package ru.shrprnbw.ideas.presentation.screens.profile_edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,7 +23,10 @@ class ProfileEditViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        getProfileInfo()
+        viewModelScope.launch {
+            delay(500)
+            getProfileInfo()
+        }
     }
 
     fun processCommand(command: ProfileEditCommand) {
@@ -84,31 +88,29 @@ class ProfileEditViewModel @Inject constructor(
         } ?: R.string.error_unknown
     }
 
-    private fun getProfileInfo() {
-        viewModelScope.launch {
-            try {
-                val profileInfo = getProfileInfoUseCase()
-                _state.update {
-                    if (it is ProfileEditState.Editing) {
-                        it.copy(
-                            email = profileInfo.email,
-                            username = profileInfo.username,
-                            firstName = profileInfo.name,
-                            lastName = profileInfo.surname
-                        )
-                    } else {
-                        it
-                    }
+    private suspend fun getProfileInfo() {
+        try {
+            val profileInfo = getProfileInfoUseCase()
+            _state.update {
+                if (it is ProfileEditState.Editing) {
+                    it.copy(
+                        email = profileInfo.email,
+                        username = profileInfo.username,
+                        firstName = profileInfo.name,
+                        lastName = profileInfo.surname
+                    )
+                } else {
+                    it
                 }
-            } catch (e: Exception) {
-                _state.update {
-                    if (it is ProfileEditState.Editing) {
-                        it.copy(
-                            error = R.string.error_network
-                        )
-                    } else {
-                        it
-                    }
+            }
+        } catch (e: Exception) {
+            _state.update {
+                if (it is ProfileEditState.Editing) {
+                    it.copy(
+                        error = R.string.error_network
+                    )
+                } else {
+                    it
                 }
             }
         }

@@ -46,7 +46,7 @@ fun NavGraph() {
                 when (targetState.destination.route) {
                     Screen.Search.route -> fadeIn(animationSpec = tween(ANIMATION_DUR))
                     else -> slideIntoContainer(
-                        towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                        towards = AnimatedContentTransitionScope.SlideDirection.Start,
                         animationSpec = tween(ANIMATION_DUR)
                     )
                 }
@@ -54,20 +54,26 @@ fun NavGraph() {
             exitTransition = {
                 when (targetState.destination.route) {
                     Screen.Search.route -> fadeOut(animationSpec = tween(ANIMATION_DUR))
-                    else -> fadeOut(animationSpec = tween(ANIMATION_DUR))
+                    else -> slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                        animationSpec = tween(ANIMATION_DUR)
+                    )
                 }
             },
             popEnterTransition = {
                 when (initialState.destination.route) {
                     Screen.Search.route -> fadeIn(animationSpec = tween(ANIMATION_DUR))
-                    else -> fadeIn(animationSpec = tween(ANIMATION_DUR))
+                    else -> slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = tween(ANIMATION_DUR)
+                    )
                 }
             },
             popExitTransition = {
                 when (initialState.destination.route) {
                     Screen.Search.route -> fadeOut(animationSpec = tween(ANIMATION_DUR))
                     else -> slideOutOfContainer(
-                        towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                        towards = AnimatedContentTransitionScope.SlideDirection.End,
                         animationSpec = tween(ANIMATION_DUR)
                     )
                 }

@@ -50,9 +50,11 @@ import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Discount
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
@@ -67,6 +69,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -97,10 +100,14 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
@@ -130,6 +137,13 @@ fun NoteEditorScreen(
     onTranscriptionsClicked: () -> Unit = { }
 ) {
 
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.processCommand(NoteEditorCommand.LoadNote)
+        }
+    }
+
     val state = viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val imagePicker = rememberLauncherForActivityResult(
@@ -150,7 +164,14 @@ fun NoteEditorScreen(
     when (val currentState = state.value) {
 
         NoteEditorState.Initial -> {
-
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                ContainedLoadingIndicator()
+            }
         }
 
         is NoteEditorState.Editing -> {
@@ -266,7 +287,7 @@ fun NoteEditorScreen(
                                         .clickable(
                                             onClick = {
                                                 viewModel.processCommand(
-                                                    NoteEditorCommand.DeleteNote
+                                                    NoteEditorCommand.ShowDeletionDialog
                                                 )
                                             }
                                         ),
@@ -362,6 +383,17 @@ fun NoteEditorScreen(
                         },
                         onQueryChange = { query ->
                             viewModel.processCommand(NoteEditorCommand.InputTagQuery(query))
+                        }
+                    )
+                }
+
+                if (currentState.showDeleteDialog) {
+                    DeleteConfirmationDialog(
+                        onConfirm = {
+                            viewModel.processCommand(NoteEditorCommand.ConfirmNoteDeletion)
+                        },
+                        onDismiss = {
+                            viewModel.processCommand(NoteEditorCommand.DismissDeletionDialog)
                         }
                     )
                 }
@@ -739,6 +771,10 @@ fun TextContent(
                 .padding(horizontal = 24.dp),
             markdown = text,
             fontSize = 16.sp,
+            style = TextStyle(
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
         )
     }
 }
@@ -1096,6 +1132,52 @@ fun UploadProgressOverlay(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+fun DeleteConfirmationDialog(
+    modifier: Modifier = Modifier,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.DeleteOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text(text = stringResource(R.string.delete_note_request))
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.delete_note_confirmation),
+                    style = TextStyle(lineBreak = LineBreak.Simple)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = onConfirm
+                ) {
+                    Text(text = stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = onDismiss
+                ) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }
 

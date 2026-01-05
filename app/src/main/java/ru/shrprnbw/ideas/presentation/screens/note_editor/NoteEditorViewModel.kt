@@ -67,9 +67,6 @@ class NoteEditorViewModel @AssistedInject constructor(
     val tagsLazyList = getUserTagsUseCase().cachedIn(viewModelScope)
 
     init {
-        viewModelScope.launch {
-            loadNote(noteId)
-        }
         autoSaveNote()
     }
 
@@ -223,26 +220,6 @@ class NoteEditorViewModel @AssistedInject constructor(
                 }
             }
 
-            is NoteEditorCommand.DeleteNote -> {
-                viewModelScope.launch {
-                    _state.update { previousState ->
-                        if (previousState is NoteEditorState.Editing) {
-                            try {
-                                deleteNoteUseCase(noteId)
-                                NoteEditorState.Finished
-                            } catch (e: Exception) {
-                                Log.d("NoteEditorViewModel", "Note delete error: ${e.message}")
-                                previousState.copy(
-                                    error = R.string.edit_note_delete_error
-                                )
-                            }
-                        } else {
-                            previousState
-                        }
-                    }
-                }
-            }
-
             is NoteEditorCommand.OpenTagsDialog -> {
                 viewModelScope.launch {
                     try {
@@ -376,6 +353,50 @@ class NoteEditorViewModel @AssistedInject constructor(
                     }
                 }
             }
+
+            NoteEditorCommand.ConfirmNoteDeletion -> {
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            try {
+                                deleteNoteUseCase(noteId)
+                                NoteEditorState.Finished
+                            } catch (e: Exception) {
+                                Log.d("NoteEditorViewModel", "Note delete error: ${e.message}")
+                                previousState.copy(
+                                    showDeleteDialog = false,
+                                    error = R.string.edit_note_delete_error
+                                )
+                            }
+                        } else {
+                            previousState
+                        }
+                    }
+                }
+            }
+
+            NoteEditorCommand.DismissDeletionDialog -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            showDeleteDialog = false
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
+            NoteEditorCommand.ShowDeletionDialog -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            showDeleteDialog = true
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
         }
     }
 
@@ -491,8 +512,6 @@ sealed interface NoteEditorCommand {
 
     data class DeleteContentItem(val contentId: Int) : NoteEditorCommand
 
-    data object DeleteNote : NoteEditorCommand
-
     data object OpenTagsDialog : NoteEditorCommand
 
     data object CloseTagsDialog : NoteEditorCommand
@@ -506,6 +525,12 @@ sealed interface NoteEditorCommand {
     data object ResetError : NoteEditorCommand
 
     data object TogglePreviewMode : NoteEditorCommand
+
+    data object ShowDeletionDialog : NoteEditorCommand
+
+    data object DismissDeletionDialog : NoteEditorCommand
+
+    data object ConfirmNoteDeletion : NoteEditorCommand
 
 }
 
@@ -521,7 +546,8 @@ sealed interface NoteEditorState {
         val error: Int? = null,
         val tagError: Int? = null,
         val isPreviewMode: Boolean = false,
-        val uploadProgress: Float? = null
+        val uploadProgress: Float? = null,
+        val showDeleteDialog: Boolean = false
     ) : NoteEditorState {
         val isSaveEnabled: Boolean
             get() {

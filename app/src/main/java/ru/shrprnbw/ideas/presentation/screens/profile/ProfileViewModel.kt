@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,7 +23,10 @@ class ProfileViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        loadProfileData()
+        viewModelScope.launch {
+            delay(500)
+            loadProfileData()
+        }
     }
 
     fun processCommand(command: ProfileScreenCommand) {
@@ -42,12 +46,14 @@ class ProfileViewModel @Inject constructor(
             }
 
             ProfileScreenCommand.RefreshProfile -> {
-                loadProfileData()
+                viewModelScope.launch {
+                    loadProfileData()
+                }
             }
         }
     }
 
-    private fun loadProfileData() {
+    private suspend fun loadProfileData() {
         _state.update { previousState ->
             if (previousState is ProfileScreenState.Displaying) {
                 previousState.copy(isRefreshing = true)
@@ -55,24 +61,22 @@ class ProfileViewModel @Inject constructor(
                 previousState
             }
         }
-        viewModelScope.launch {
-            try {
-                val userInfo = getProfileInfoUseCase()
-                _state.update {
-                    ProfileScreenState.Displaying(
-                        username = userInfo.username,
-                        firstName = userInfo.name,
-                        lastName = userInfo.surname,
-                        email = userInfo.email
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Error loading profile info", e)
-                _state.update {
-                    ProfileScreenState.Error(
-                        message = "Failed to load profile information."
-                    )
-                }
+        try {
+            val userInfo = getProfileInfoUseCase()
+            _state.update {
+                ProfileScreenState.Displaying(
+                    username = userInfo.username,
+                    firstName = userInfo.name,
+                    lastName = userInfo.surname,
+                    email = userInfo.email
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("ProfileViewModel", "Error loading profile info", e)
+            _state.update {
+                ProfileScreenState.Error(
+                    message = "Failed to load profile information."
+                )
             }
         }
     }
