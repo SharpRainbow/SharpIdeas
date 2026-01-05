@@ -12,14 +12,17 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onStart
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import ru.shrprnbw.ideas.data.ProgressEmittingRequestBody
 import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.mapper.toUpdateRequest
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
@@ -151,6 +154,36 @@ class NoteRepositoryImpl @Inject constructor(
         )
     }
 
+    override fun addNoteAudio(noteId: String, audioUri: Uri): Flow<Float> = callbackFlow {
+        val audioName = getFileNameFromUri(audioUri)
+        val mimeType = getMimeTypeFromUri(audioUri)
+        if (audioName == null) {
+            close(IllegalArgumentException("Failed to retrieve audio data from URI"))
+            return@callbackFlow
+        }
+        trySend(0f)
+        val requestBody = ProgressEmittingRequestBody(
+            context = context,
+            fileUri = audioUri,
+            mediaType = mimeType ?: "audio/*",
+            progressChannel = this
+        )
+        val audioPart = MultipartBody.Part.createFormData(
+            "file",
+            audioName,
+            requestBody
+        )
+        try {
+            val token = authRepository.getValidToken()
+            apiService.uploadNoteAudio(token, noteId, audioPart)
+            trySend(1f)
+            close()
+        } catch (e: Exception) {
+            close(e)
+        }
+        awaitClose()
+    }
+
     override suspend fun deleteNoteContent(noteId: String, contentId: Long) {
         val token = authRepository.getValidToken()
         apiService.deleteNoteContent(
@@ -226,21 +259,7 @@ class NoteRepositoryImpl @Inject constructor(
 
     private fun getMimeTypeFromUri(uri: Uri): String? {
         return try {
-            context.contentResolver.query(
-                uri,
-                arrayOf(MediaStore.Images.ImageColumns.MIME_TYPE),
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    cursor.getString(cursor.getColumnIndexOrThrow(
-                        MediaStore.Images.ImageColumns.MIME_TYPE
-                    ))
-                } else {
-                    null
-                }
-            }
+            context.contentResolver.getType(uri)
         } catch (e: Exception) {
             null
         }

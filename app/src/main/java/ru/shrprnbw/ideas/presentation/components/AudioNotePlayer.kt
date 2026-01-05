@@ -77,15 +77,28 @@ fun AudioNotePlayer(
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 isPlaying = playing
+                if (!playing && player.currentPosition >= player.duration) {
+                    player.playWhenReady = false
+                    player.seekTo(0L)
+                    currentPosition = 0L
+                }
             }
         }
         player.addListener(listener)
+    }
 
-        while (isActive) {
+    LaunchedEffect(isPlaying, player) {
+        if (isPlaying) {
+            while (isActive) {
+                currentPosition = player.currentPosition
+                val d = player.duration
+                duration = if (d > 0) d else 0L
+                delay(100L)
+            }
+        } else {
             currentPosition = player.currentPosition
             val d = player.duration
             duration = if (d > 0) d else 0L
-            delay(100L)
         }
     }
 

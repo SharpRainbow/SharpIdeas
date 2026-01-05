@@ -57,4 +57,5 @@
     <string name="tags_list_error_loading">Unable to load tags list</string>
     <string name="preview_mode">Preview mode</string>
     <string name="edit_mode">Edit mode</string>
+    <string name="edit_note_audio_upload_error">Unable to upload audio</string>
 </resources>

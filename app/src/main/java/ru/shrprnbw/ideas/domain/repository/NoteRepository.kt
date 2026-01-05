@@ -30,6 +30,8 @@ interface NoteRepository {
 
     suspend fun addNoteImage(noteId: String, imageUri: Uri)
 
+    fun addNoteAudio(noteId: String, audioUri: Uri): Flow<Float>
+
     suspend fun deleteNoteContent(noteId: String, contentId: Long)
 
     suspend fun createTextNote(title: String)

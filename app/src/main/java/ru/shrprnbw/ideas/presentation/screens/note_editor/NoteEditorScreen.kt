@@ -2,6 +2,8 @@
 
 package ru.shrprnbw.ideas.presentation.screens.note_editor
 
+import android.net.Uri
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,10 +16,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -124,7 +128,7 @@ fun NoteEditorScreen(
     ),
     onBackClicked: () -> Unit = { },
     onTranscriptionsClicked: () -> Unit = { }
-) { // TODO: Add instrument bottom bar for text formatting (bold, italic, underline, etc.) + image and audio insertion
+) {
 
     val state = viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -133,6 +137,13 @@ fun NoteEditorScreen(
     ) { uri ->
         uri?.let {
             viewModel.processCommand(NoteEditorCommand.UploadImage(uri))
+        }
+    }
+    val audioPicker: ManagedActivityResultLauncher<Array<String>, Uri?> = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri?.let {
+            viewModel.processCommand(NoteEditorCommand.UploadAudio(uri))
         }
     }
 
@@ -182,11 +193,13 @@ fun NoteEditorScreen(
                                             .padding(end = 8.dp)
                                             .clickable(
                                                 onClick = {
-//                                            imagePicker.launch(
-//                                                PickVisualMediaRequest(
-//                                                    mediaType = ActivityResultContracts
-//                                                )
-//                                            )
+                                                    audioPicker.launch(
+                                                        arrayOf(
+                                                            "audio/mpeg",
+                                                            "audio/wav",
+                                                            "audio/m4a"
+                                                        )
+                                                    )
                                                 }
                                             ),
                                         imageVector = Icons.Outlined.AudioFile,
@@ -277,7 +290,8 @@ fun NoteEditorScreen(
                         FormattingToolbar(
                             modifier = Modifier
                                 .background(MaterialTheme.colorScheme.surface)
-                                .imePadding(),
+                                .imePadding()
+                                .navigationBarsPadding(),
                             onFormatClick = { formatType ->
                                 formatCallback?.invoke(formatType)
                             }
@@ -349,6 +363,12 @@ fun NoteEditorScreen(
                         onQueryChange = { query ->
                             viewModel.processCommand(NoteEditorCommand.InputTagQuery(query))
                         }
+                    )
+                }
+
+                if (currentState.uploadProgress != null) {
+                    UploadProgressOverlay(
+                        progress = currentState.uploadProgress
                     )
                 }
             }
@@ -1039,6 +1059,43 @@ private fun applyItalics(text: String, selectionStart: Int, selectionEnd: Int): 
         val afterCursor = text.substring(start)
 
         return "${beforeCursor}*${afterCursor}*"
+    }
+}
+
+@Composable
+fun UploadProgressOverlay(
+    modifier: Modifier = Modifier,
+    progress: Float
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Uploading audio...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            androidx.compose.material3.LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+            )
+            Text(
+                text = "${(progress * 100).toInt()}%",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

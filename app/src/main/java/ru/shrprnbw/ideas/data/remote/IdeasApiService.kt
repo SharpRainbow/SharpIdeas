@@ -146,6 +146,14 @@ interface IdeasApiService {
         @Part file: MultipartBody.Part
     )
 
+    @Multipart
+    @POST("$VERSION_1/notes/{noteId}/contents/audio")
+    suspend fun uploadNoteAudio(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Part file: MultipartBody.Part
+    )
+
     @DELETE("$VERSION_1/notes/{noteId}/contents/{contentId}")
     suspend fun deleteNoteContent(
         @Header("Authorization") token: String,

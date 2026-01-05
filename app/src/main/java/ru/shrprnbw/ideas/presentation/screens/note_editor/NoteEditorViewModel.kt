@@ -16,6 +16,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -35,18 +36,18 @@ import ru.shrprnbw.ideas.domain.usecase.DeleteNoteUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetNoteInfoUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetUserTagsUseCase
 import ru.shrprnbw.ideas.domain.usecase.RemoveNoteTagUseCase
-import ru.shrprnbw.ideas.domain.usecase.UpdateNoteContentUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteTextUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteUseCase
+import ru.shrprnbw.ideas.domain.usecase.UploadAudioUseCase
 import ru.shrprnbw.ideas.domain.usecase.UploadImageUseCase
 
 @HiltViewModel(assistedFactory = NoteEditorViewModel.Factory::class)
 class NoteEditorViewModel @AssistedInject constructor(
     @Assisted("noteId") private val noteId: String,
     private val getNoteInfoUseCase: GetNoteInfoUseCase,
-    private val updateNoteContentUseCase: UpdateNoteContentUseCase,
     private val updateNoteUseCase: UpdateNoteUseCase,
     private val uploadImageUseCase: UploadImageUseCase,
+    private val uploadAudioUseCase: UploadAudioUseCase,
     private val deleteNoteContentUseCase: DeleteNoteContentUseCase,
     private val addNoteTextBlockUseCase: AddNoteTextBlockUseCase,
     private val deleteNoteUseCase: DeleteNoteUseCase,
@@ -154,11 +155,59 @@ class NoteEditorViewModel @AssistedInject constructor(
                 }
             }
 
+            is NoteEditorCommand.UploadAudio -> {
+                uploadAudioUseCase(noteId, command.uri).onCompletion { cause ->
+                    if (cause == null) {
+                        loadNote(noteId)
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    uploadProgress = null
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }.onEach { progress ->
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            previousState.copy(
+                                uploadProgress = progress
+                            )
+                        } else {
+                            previousState
+                        }
+                    }
+                }.catch { e ->
+                    Log.d("NoteEditorViewModel", "Audio upload error: ${e.message}")
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            previousState.copy(
+                                error = R.string.edit_note_audio_upload_error,
+                                uploadProgress = null
+                            )
+                        } else {
+                            previousState
+                        }
+                    }
+                }.launchIn(viewModelScope)
+            }
+
             is NoteEditorCommand.DeleteContentItem -> {
                 viewModelScope.launch {
                     try {
-                        deleteNoteContentUseCase(noteId, command.contentId.toLong())
-                        loadNote(noteId)
+                        val contentId = command.contentId.toLong()
+                        deleteNoteContentUseCase(noteId, contentId)
+                        launch {
+                            mutex.withLock {
+                                contentUpdates.remove(contentId)
+                                saveNoteFlow.emit(Unit)
+                            }
+                        }
+                        launch {
+                            loadNote(noteId)
+                        }
                     } catch (e: Exception) {
                         Log.d("NoteEditorViewModel", "Content delete error: ${e.message}")
                         _state.update { previousState ->
@@ -438,6 +487,8 @@ sealed interface NoteEditorCommand {
 
     data class UploadImage(val uri: Uri) : NoteEditorCommand
 
+    data class UploadAudio(val uri: Uri) : NoteEditorCommand
+
     data class DeleteContentItem(val contentId: Int) : NoteEditorCommand
 
     data object DeleteNote : NoteEditorCommand
@@ -469,7 +520,8 @@ sealed interface NoteEditorState {
         val availableTags: Set<Long> = emptySet(),
         val error: Int? = null,
         val tagError: Int? = null,
-        val isPreviewMode: Boolean = false
+        val isPreviewMode: Boolean = false,
+        val uploadProgress: Float? = null
     ) : NoteEditorState {
         val isSaveEnabled: Boolean
             get() {
