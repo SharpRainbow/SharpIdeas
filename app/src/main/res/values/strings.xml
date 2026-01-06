@@ -68,4 +68,17 @@
     <string name="accept">Accept</string>
     <string name="transcription_headline">Generate transcription?</string>
     <string name="transcription_supporting_text">Your audio will be processed by AI. Transcription generation may take several minutes depending on the length of the audio.</string>
+    <string name="enter_with_google">Войти c Google</string>
+    <string name="enter">Войти</string>
+    <string name="register">Зарегистрироваться</string>
+    <string name="create_account_hint">Нет аккаунта?\n</string>
+    <string name="password_hint">Пароль</string>
+    <string name="email_hint">Электронная почта</string>
+    <string name="login_title">Войдите в свой аккаунт</string>
+    <string name="welcome_title">Добро пожаловать\n</string>
+    <string name="email_icon_description">Email Icon</string>
+    <string name="app_icon_description">App launcher</string>
+    <string name="server_icon_description">Server icon</string>
+    <string name="server_url_hint">Server url</string>
+    <string name="login_error_invalid_server_url">Server is not responding! Check url!</string>
 </resources>

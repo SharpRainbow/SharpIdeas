@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Domain
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
@@ -105,7 +107,7 @@ fun LoginScreen(
                                 .size(72.dp)
                                 .clip(RoundedCornerShape(16.dp)),
                             painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                            contentDescription = "App launcher"
+                            contentDescription = stringResource(R.string.app_icon_description)
                         )
                     }
 
@@ -121,9 +123,9 @@ fun LoginScreen(
                                         fontWeight = FontWeight.Bold
                                     )
                             ) {
-                                append("Добро пожаловать\n")
+                                append(stringResource(R.string.welcome_title))
                             }
-                            append("Войдите в свой аккаунт")
+                            append(stringResource(R.string.login_title))
                         },
                         textAlign = TextAlign.Center,
                         style = TextStyle(lineHeight = 24.sp, platformStyle = PlatformTextStyle(includeFontPadding = false))
@@ -134,25 +136,42 @@ fun LoginScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         UserInfoFieldNextFocus(
+                            value = currentState.serverUrl,
+                            onValueChange = { text ->
+                                viewModel.processCommand(
+                                    LoginCommand.InputServerUrl(text)
+                                )
+                            },
+                            label = stringResource(R.string.server_url_hint),
+                            icon = {
+                                Icon(
+                                    modifier = Modifier.size(20.dp),
+                                    imageVector = Icons.Default.Domain,
+                                    contentDescription = stringResource(R.string.server_icon_description)
+                                )
+                            },
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        UserInfoFieldNextFocus(
                             value = currentState.email,
                             onValueChange = { text ->
                                 viewModel.processCommand(
                                     LoginCommand.InputEmail(text)
                                 )
                             },
-                            label = "Электронная почта",
+                            label = stringResource(R.string.email_hint),
                             icon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Email,
-                                    contentDescription = "Email Icon"
+                                    contentDescription = stringResource(R.string.email_icon_description)
                                 )
                             },
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         PasswordInputField(
                             value = currentState.password,
-                            placeHolderText = "Пароль"
+                            placeHolderText = stringResource(R.string.password_hint)
                         ) { text ->
                             viewModel.processCommand(
                                 LoginCommand.InputPassword(text)
@@ -162,7 +181,7 @@ fun LoginScreen(
                         Text(
                             text = buildAnnotatedString {
                                 withStyle(style = SpanStyle(fontSize = 12.sp)) {
-                                    append("Нет аккаунта?\n")
+                                    append(stringResource(R.string.create_account_hint))
                                 }
                                 withLink(
                                     LinkAnnotation.Clickable(
@@ -179,7 +198,7 @@ fun LoginScreen(
                                         }
                                     )
                                 ) {
-                                    append("Зарегистрироваться")
+                                    append(stringResource(R.string.register))
                                 }
                             },
                             textAlign = TextAlign.Center,
@@ -189,16 +208,20 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                         enabled = currentState.isLoginEnabled,
                         onClick = {
                             viewModel.processCommand(LoginCommand.Login)
                         }
                     ) {
-                        Text("Войти")
+                        Text(stringResource(R.string.enter))
                     }
                     Button(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                         onClick = {
                             viewModel.processCommand(
                                 LoginCommand.LoginWithGoogle(
@@ -213,7 +236,7 @@ fun LoginScreen(
                             modifier = Modifier.size(ButtonDefaults.IconSize)
                         )
                         Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                        Text("Войти c Google")
+                        Text(stringResource(R.string.enter_with_google))
                     }
                 }
             }

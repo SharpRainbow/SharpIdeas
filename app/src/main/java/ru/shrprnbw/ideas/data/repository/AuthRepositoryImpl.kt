@@ -11,6 +11,7 @@ import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
 import ru.shrprnbw.ideas.domain.entity.TokenPair
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.CredentialsRepository
+import java.net.HttpURLConnection
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -71,6 +72,10 @@ class AuthRepositoryImpl @Inject constructor(
                 idToken = idToken
             )
         ).toEntity()
+    }
+
+    override suspend fun checkServerConnection(): Boolean {
+        return apiService.checkHealth().code() == HttpURLConnection.HTTP_OK
     }
 
     private suspend fun refreshAccessToken(refreshToken: String) {

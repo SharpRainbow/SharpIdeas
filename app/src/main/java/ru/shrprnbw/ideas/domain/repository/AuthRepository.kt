@@ -20,4 +20,6 @@ interface AuthRepository {
 
     suspend fun loginWithGoogle(idToken: String): TokenPair
 
+    suspend fun checkServerConnection(): Boolean
+
 }

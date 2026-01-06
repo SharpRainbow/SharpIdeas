@@ -1,6 +1,7 @@
 package ru.shrprnbw.ideas.data.remote
 
 import okhttp3.MultipartBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -25,6 +26,7 @@ import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
 import ru.shrprnbw.ideas.data.remote.dto.response.PagedResponse
+import ru.shrprnbw.ideas.data.remote.dto.response.StatusResponse
 import ru.shrprnbw.ideas.data.remote.dto.response.TagDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TokenResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TranscriptionDto
@@ -33,9 +35,12 @@ import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
 interface IdeasApiService {
 
     companion object {
-        const val VERSION_1 = "v1"
-        const val VERSION_2 = "v2"
+        const val VERSION_1 = "api/v1"
+        const val VERSION_2 = "api/v2"
     }
+
+    @GET("readyz")
+    suspend fun checkHealth(): Response<StatusResponse>
 
     @POST("$VERSION_1/users/login")
     suspend fun login(
