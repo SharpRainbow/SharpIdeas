@@ -7,6 +7,7 @@ import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -86,6 +87,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -146,20 +148,6 @@ fun NoteEditorScreen(
 
     val state = viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri ->
-        uri?.let {
-            viewModel.processCommand(NoteEditorCommand.UploadImage(uri))
-        }
-    }
-    val audioPicker: ManagedActivityResultLauncher<Array<String>, Uri?> = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        uri?.let {
-            viewModel.processCommand(NoteEditorCommand.UploadAudio(uri))
-        }
-    }
 
     when (val currentState = state.value) {
 
@@ -182,126 +170,11 @@ fun NoteEditorScreen(
                     .fillMaxWidth()
                     .imePadding(),
                 topBar = {
-                    Column {
-                        TopAppBar(
-                            title = {
-                                Text(
-                                    text = stringResource(R.string.create_note),
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            navigationIcon = {
-                                Icon(
-                                    modifier = Modifier
-                                        .padding(start = 8.dp, end = 8.dp)
-                                        .clickable(
-                                            onClick = onBackClicked
-                                        ),
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                    contentDescription = stringResource(R.string.back)
-                                )
-                            },
-                            actions = {
-                                if (currentState.note.audioNote && currentState.note.contents.isEmpty()) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .padding(end = 8.dp)
-                                            .clickable(
-                                                onClick = {
-                                                    audioPicker.launch(
-                                                        arrayOf(
-                                                            "audio/mpeg",
-                                                            "audio/wav",
-                                                            "audio/m4a"
-                                                        )
-                                                    )
-                                                }
-                                            ),
-                                        imageVector = Icons.Outlined.AudioFile,
-                                        contentDescription = stringResource(R.string.add_audio),
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                } else if (!currentState.note.audioNote) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .padding(end = 8.dp)
-                                            .clickable(
-                                                onClick = {
-                                                    viewModel.processCommand(
-                                                        NoteEditorCommand.TogglePreviewMode
-                                                    )
-                                                }
-                                            ),
-                                        imageVector = if (currentState.isPreviewMode)
-                                            Icons.Rounded.Edit
-                                        else
-                                            Icons.Outlined.RemoveRedEye,
-                                        contentDescription = if (currentState.isPreviewMode)
-                                            stringResource(R.string.edit_mode)
-                                        else
-                                            stringResource(R.string.preview_mode),
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Icon(
-                                        modifier = Modifier
-                                            .padding(end = 8.dp)
-                                            .clickable(
-                                                onClick = {
-                                                    viewModel.processCommand(
-                                                        NoteEditorCommand.AddNoteTextItem
-                                                    )
-                                                }
-                                            ),
-                                        imageVector = Icons.Outlined.TextFields,
-                                        contentDescription = stringResource(R.string.add_photo),
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Icon(
-                                        modifier = Modifier
-                                            .padding(end = 8.dp)
-                                            .clickable(
-                                                onClick = {
-                                                    imagePicker.launch(
-                                                        PickVisualMediaRequest(
-                                                            mediaType = ActivityResultContracts
-                                                                .PickVisualMedia
-                                                                .ImageOnly
-                                                        )
-                                                    )
-                                                }
-                                            ),
-                                        imageVector = Icons.Outlined.AddPhotoAlternate,
-                                        contentDescription = stringResource(R.string.add_photo),
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                                Icon(
-                                    modifier = Modifier
-                                        .padding(end = 8.dp)
-                                        .clickable(
-                                            onClick = {
-                                                viewModel.processCommand(
-                                                    NoteEditorCommand.ShowDeletionDialog
-                                                )
-                                            }
-                                        ),
-                                    imageVector = Icons.Outlined.DeleteOutline,
-                                    contentDescription = stringResource(R.string.delete_note),
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.fillMaxWidth(),
-                            thickness = 1.dp
-                        )
-                    }
+                    NoteEditorTopAppBar(
+                        currentState = currentState,
+                        viewModel = viewModel,
+                        onBackClicked = onBackClicked
+                    )
                 },
                 snackbarHost = {
                     SnackbarHost(hostState = snackbarHostState)
@@ -430,7 +303,8 @@ fun Content(
     onTagsClicked: () -> Unit = { }
 ) {
     LazyColumn(
-        modifier = modifier
+        modifier = modifier,
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         item {
             Row(
@@ -496,7 +370,7 @@ fun Content(
         item {
             Text(
                 modifier = Modifier.padding(horizontal = 24.dp),
-                text = DateFormatter.formatCurrentDate(),
+                text = DateFormatter.formatDateToString(note.createdAt),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -629,8 +503,9 @@ fun TextContent(
         val bottomAnchorBringIntoViewRequester = remember { BringIntoViewRequester() }
         var fieldHeight by remember { mutableFloatStateOf(0f) }
         var textFieldValue by remember {
-            mutableStateOf(TextFieldValue(text = text, selection = TextRange(text.length)))
+            mutableStateOf(TextFieldValue(text = text))
         }
+        var hasFocus by remember { mutableStateOf(false) }
 
         // Update text without changing cursor position when text changes externally
         LaunchedEffect(text) {
@@ -656,12 +531,15 @@ fun TextContent(
                         FormatType.BOLD -> annotationsManager.applyBold(
                             textFieldValue.text, start, end
                         )
+
                         FormatType.ITALIC -> applyItalics(
                             textFieldValue.text, start, end
                         )
+
                         FormatType.STRIKETHROUGH -> applyStrikethrough(
                             textFieldValue.text, start, end
                         )
+
                         FormatType.MONOSPACE -> annotationsManager.applyMonospace(
                             textFieldValue.text, start, end
                         )
@@ -680,7 +558,9 @@ fun TextContent(
         }
 
         LaunchedEffect(fieldHeight) {
-            bottomAnchorBringIntoViewRequester.bringIntoView()
+            if (hasFocus) {
+                bottomAnchorBringIntoViewRequester.bringIntoView()
+            }
         }
 
         Column(modifier = modifier) {
@@ -692,9 +572,12 @@ fun TextContent(
                     .onGloballyPositioned { coordinates ->
                         fieldHeight = coordinates.size.height.toFloat()
                     }
+                    .onFocusChanged { focusState ->
+                        hasFocus = focusState.isFocused
+                    }
                     .onKeyEvent { event ->
                         if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
-                            if (textFieldValue.text.isEmpty()) {
+                            if (text.isEmpty()) {
                                 onDeleteRequest()
                                 true
                             } else {
@@ -726,7 +609,6 @@ fun TextContent(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                 },
-//                visualTransformation = visualTransformation
             )
 //            MarkdownEditor(
 //                modifier = Modifier
@@ -755,14 +637,13 @@ fun TextContent(
 //                onValueChange = onTextInput,
 //                hint = R.string.add_text_hint
 //            )
-            Spacer(modifier = Modifier.height(8.dp))
+//            Spacer(modifier = Modifier.height(8.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
                     .bringIntoViewRequester(bottomAnchorBringIntoViewRequester)
             )
-
         }
     } else {
         MarkdownText(
@@ -883,7 +764,7 @@ fun TagsSection(
     ) {
 
         if (tags.isEmpty()) {
-            OutlinedButton (
+            OutlinedButton(
                 onClick = onTagsClicked,
                 modifier = Modifier.padding(start = 16.dp)
             ) {
@@ -1177,6 +1058,158 @@ fun DeleteConfirmationDialog(
                     Text(text = stringResource(R.string.cancel))
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun NoteEditorTopAppBar(
+    modifier: Modifier = Modifier,
+    currentState: NoteEditorState.Editing,
+    viewModel: NoteEditorViewModel,
+    onBackClicked: () -> Unit
+) {
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        uri?.let {
+            viewModel.processCommand(NoteEditorCommand.UploadImage(uri))
+        }
+    }
+    val audioPicker: ManagedActivityResultLauncher<Array<String>, Uri?> =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            uri?.let {
+                viewModel.processCommand(NoteEditorCommand.UploadAudio(uri))
+            }
+        }
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        TopAppBar(
+            title = {
+                Text(
+                    text = stringResource(R.string.create_note),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+            ),
+            navigationIcon = {
+                Icon(
+                    modifier = Modifier
+                        .padding(start = 8.dp, end = 8.dp)
+                        .clickable(
+                            onClick = onBackClicked
+                        ),
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = stringResource(R.string.back)
+                )
+            },
+            actions = {
+                if (currentState.note.audioNote && currentState.note.contents.isEmpty()) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable(
+                                onClick = {
+                                    audioPicker.launch(
+                                        arrayOf(
+                                            "audio/mpeg",
+                                            "audio/wav",
+                                            "audio/m4a"
+                                        )
+                                    )
+                                }
+                            ),
+                        imageVector = Icons.Outlined.AudioFile,
+                        contentDescription = stringResource(R.string.add_audio),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                } else if (!currentState.note.audioNote) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable(
+                                onClick = {
+                                    viewModel.processCommand(
+                                        NoteEditorCommand.TogglePreviewMode
+                                    )
+                                }
+                            ),
+                        imageVector = if (currentState.isPreviewMode)
+                            Icons.Rounded.Edit
+                        else
+                            Icons.Outlined.RemoveRedEye,
+                        contentDescription = if (currentState.isPreviewMode)
+                            stringResource(R.string.edit_mode)
+                        else
+                            stringResource(R.string.preview_mode),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                    AnimatedVisibility(!currentState.isPreviewMode) {
+                        Icon(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clickable(
+                                    onClick = {
+                                        viewModel.processCommand(
+                                            NoteEditorCommand.AddNoteTextItem
+                                        )
+                                    }
+                                ),
+                            imageVector = Icons.Outlined.TextFields,
+                            contentDescription = stringResource(R.string.add_photo),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    AnimatedVisibility(!currentState.isPreviewMode) {
+                        Icon(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clickable(
+                                    onClick = {
+                                        imagePicker.launch(
+                                            PickVisualMediaRequest(
+                                                mediaType = ActivityResultContracts
+                                                    .PickVisualMedia
+                                                    .ImageOnly
+                                            )
+                                        )
+                                    }
+                                ),
+                            imageVector = Icons.Outlined.AddPhotoAlternate,
+                            contentDescription = stringResource(R.string.add_photo),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                AnimatedVisibility(!currentState.isPreviewMode) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable(
+                                onClick = {
+                                    viewModel.processCommand(
+                                        NoteEditorCommand.ShowDeletionDialog
+                                    )
+                                }
+                            ),
+                        imageVector = Icons.Outlined.DeleteOutline,
+                        contentDescription = stringResource(R.string.delete_note),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        )
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.dp
         )
     }
 }

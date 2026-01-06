@@ -63,4 +63,9 @@
     <string name="delete_note_confirmation">This will make current note inaccessible on all devices</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
+    <string name="transcriptions_error_rate_limit">Transcription task is alredy in progress</string>
+    <string name="transcriptions_error_unknown">Unable to add transcription</string>
+    <string name="accept">Accept</string>
+    <string name="transcription_headline">Generate transcription?</string>
+    <string name="transcription_supporting_text">Your audio will be processed by AI. Transcription generation may take several minutes depending on the length of the audio.</string>
 </resources>

@@ -1,6 +1,7 @@
 package ru.shrprnbw.ideas.utils
 
 import androidx.compose.ui.graphics.Color
+import java.net.URLDecoder
 
 object Utils {
 
@@ -41,7 +42,7 @@ object Utils {
             val uuidPattern = """^[a-fA-F0-9-]{36}_(.+)$""".toRegex()
             val matchResult = uuidPattern.find(fileNameWithUuid)
 
-            matchResult?.groupValues?.getOrNull(1) ?: fileNameWithUuid
+            URLDecoder.decode(matchResult?.groupValues?.getOrNull(1) ?: fileNameWithUuid, "UTF-8")
         } catch (e: Exception) {
             "Аудиозапись"
         }

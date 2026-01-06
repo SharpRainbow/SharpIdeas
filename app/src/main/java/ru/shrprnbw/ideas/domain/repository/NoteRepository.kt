@@ -44,6 +44,8 @@ interface NoteRepository {
 
     suspend fun getTranscription(noteId: String, transcriptionId: String): Transcription
 
+    suspend fun requestTranscription(noteId: String)
+
     suspend fun addNoteTag(noteId: String, tag: String)
 
     suspend fun removeNoteTag(noteId: String, tag: String)

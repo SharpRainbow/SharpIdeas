@@ -176,6 +176,12 @@ interface IdeasApiService {
         @Path("transcriptionId") transcriptionId: String
     ): TranscriptionDto
 
+    @POST("$VERSION_1/notes/{noteId}/transcriptions")
+    suspend fun generateNoteTranscription(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String
+    )
+
     @POST("$VERSION_1/notes/{noteId}/tags")
     suspend fun addNoteTag(
         @Header("Authorization") token: String,

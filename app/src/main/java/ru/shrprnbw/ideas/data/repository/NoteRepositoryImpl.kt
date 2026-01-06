@@ -49,6 +49,7 @@ class NoteRepositoryImpl @Inject constructor(
 
     // TODO: Add flow for single note updates
     private val notesRefreshTrigger = MutableSharedFlow<Unit>()
+    private val transcriptionsRefreshTrigger = MutableSharedFlow<Unit>()
 
     override fun getUserNotes(): Flow<PagingData<NotePreview>> {
         return notesRefreshTrigger.onStart {
@@ -225,24 +226,36 @@ class NoteRepositoryImpl @Inject constructor(
     }
 
     override fun getTranscriptions(noteId: String): Flow<PagingData<Transcription>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 10,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = {
-                TranscriptionPagingSource(
-                    apiService,
-                    authRepository,
-                    noteId
-                )
-            }
-        ).flow
+        return transcriptionsRefreshTrigger.onStart {
+            emit(Unit)
+        }.debounce(
+            timeoutMillis = 1000
+        ).flatMapLatest {
+            Pager(
+                config = PagingConfig(
+                    pageSize = 10,
+                    enablePlaceholders = false
+                ),
+                pagingSourceFactory = {
+                    TranscriptionPagingSource(
+                        apiService,
+                        authRepository,
+                        noteId
+                    )
+                }
+            ).flow
+        }
     }
 
     override suspend fun getTranscription(noteId: String, transcriptionId: String): Transcription {
         val token = authRepository.getValidToken()
         return apiService.getTranscription(token, noteId, transcriptionId).toEntity()
+    }
+
+    override suspend fun requestTranscription(noteId: String) {
+        val token = authRepository.getValidToken()
+        apiService.generateNoteTranscription(token, noteId)
+        transcriptionsRefreshTrigger.emit(Unit)
     }
 
     override suspend fun addNoteTag(noteId: String, tag: String) {
