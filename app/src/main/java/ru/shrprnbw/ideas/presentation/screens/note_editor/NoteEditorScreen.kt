@@ -26,13 +26,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -80,14 +81,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -96,7 +97,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -114,7 +114,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.colintheshots.twain.MarkdownText
-import com.example.textiemdlibrary.AnnotationsManager
+import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
@@ -163,7 +163,6 @@ fun NoteEditorScreen(
         }
 
         is NoteEditorState.Editing -> {
-            var formatCallback by remember { mutableStateOf<((FormatType) -> Unit)?>(null) }
 
             Scaffold(
                 modifier = modifier
@@ -187,7 +186,9 @@ fun NoteEditorScreen(
                                 .imePadding()
                                 .navigationBarsPadding(),
                             onFormatClick = { formatType ->
-                                formatCallback?.invoke(formatType)
+                                viewModel.processCommand(
+                                    NoteEditorCommand.ApplyFormatting(formatType)
+                                )
                             }
                         )
                     }
@@ -205,9 +206,15 @@ fun NoteEditorScreen(
                     modifier = Modifier.padding(innerPadding),
                     note = currentState.note,
                     isPreviewMode = currentState.isPreviewMode,
-                    onFormatCallbackChange = { callback ->
-                        formatCallback = callback
+                    setFocus = { index, selection ->
+                        viewModel.processCommand(
+                            NoteEditorCommand.SetFocus(
+                                index,
+                                selection
+                            )
+                        )
                     },
+                    textSelectionRange = currentState.selection,
                     onTitleChanged = { title ->
                         viewModel.processCommand(
                             NoteEditorCommand.InputTitle(title)
@@ -294,103 +301,92 @@ fun Content(
     modifier: Modifier = Modifier,
     note: Note,
     isPreviewMode: Boolean = false,
-    onFormatCallbackChange: ((FormatType) -> Unit) -> Unit = { },
+    setFocus: (index: Int, selection: TextRange) -> Unit,
+    textSelectionRange: TextRange = TextRange(0, 0),
     onTitleChanged: (String) -> Unit,
     onTextChanged: (Int, String) -> Unit,
     onDeleteImageClick: (Int) -> Unit,
     onDeleteTextRequested: (Int) -> Unit,
     onTranscriptionsClicked: () -> Unit = { },
-    onTagsClicked: () -> Unit = { }
+    onTagsClicked: () -> Unit = { },
 ) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(bottom = 16.dp)
+    Column( // TODO: Add lazy column with collapsing toolbar
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 16.dp)
     ) {
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                if (note.audioNote) {
-                    NoteTransformation(
-                        modifier = Modifier.weight(1f),
-                        actionName = "Transcriptions",
-                        color = AudioGreen,
-                        imageVector = Icons.Rounded.GraphicEq,
-                        onClick = onTranscriptionsClicked
-                    )
-                } else {
-                    NoteTransformation(
-                        modifier = Modifier.weight(1f),
-                        actionName = "Keywords",
-                        color = Color(0xFF7B1FA2),
-                        imageVector = Icons.Rounded.Discount
-                    )
-                    NoteTransformation(
-                        modifier = Modifier.weight(1f),
-                        actionName = "Summary",
-                        color = TextBlue,
-                        imageVector = Icons.Rounded.AutoFixHigh
-                    )
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (note.audioNote) {
+                NoteTransformation(
+                    modifier = Modifier.weight(1f),
+                    actionName = "Transcriptions",
+                    color = AudioGreen,
+                    imageVector = Icons.Rounded.GraphicEq,
+                    onClick = onTranscriptionsClicked
+                )
+            } else {
+                NoteTransformation(
+                    modifier = Modifier.weight(1f),
+                    actionName = "Keywords",
+                    color = Color(0xFF7B1FA2),
+                    imageVector = Icons.Rounded.Discount
+                )
+                NoteTransformation(
+                    modifier = Modifier.weight(1f),
+                    actionName = "Summary",
+                    color = TextBlue,
+                    imageVector = Icons.Rounded.AutoFixHigh
+                )
             }
         }
 
-        item {
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                value = note.title,
-                onValueChange = onTitleChanged,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                textStyle = TextStyle(
+        TextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            value = note.title,
+            onValueChange = onTitleChanged,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            textStyle = TextStyle(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.note_title),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.note_title),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                    )
-                }
-            )
-        }
-
-        item {
-            Text(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                text = DateFormatter.formatDateToString(note.createdAt),
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            TagsSection(
-                tags = note.tags,
-                onTagsClicked = onTagsClicked
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-
-        itemsIndexed(
-            note.contents,
-            key = { _, contentItem ->
-                contentItem.id
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                )
             }
-        ) { itemIndex, contentItem ->
+        )
+
+        Text(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            text = DateFormatter.formatDateToString(note.createdAt),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        TagsSection(
+            tags = note.tags,
+            onTagsClicked = onTagsClicked
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
+        note.contents.forEachIndexed { itemIndex, contentItem ->
             when (contentItem.type) {
                 ContentType.AUDIO -> {
                     AudioNotePlayer(
@@ -402,8 +398,11 @@ fun Content(
                 ContentType.TEXT -> {
                     TextContent(
                         text = contentItem.data,
+                        selectionRange = textSelectionRange,
                         editorView = !isPreviewMode,
-                        onFormatCallbackChange = onFormatCallbackChange,
+                        setFocus = { selection ->
+                            setFocus(itemIndex, selection)
+                        },
                         onTextInput = { input ->
                             onTextChanged(itemIndex, input)
                         },
@@ -493,123 +492,71 @@ fun TextContent(
     text: String,
     onTextInput: (String) -> Unit,
     editorView: Boolean = true,
-    onFormatCallbackChange: ((FormatType) -> Unit) -> Unit = { },
+    setFocus: (selection: TextRange) -> Unit = { _ -> },
+    selectionRange: TextRange = TextRange(0, 0),
     onDeleteRequest: () -> Unit = {}
 ) {
     if (editorView) {
 //        val keyboardController = LocalSoftwareKeyboardController.current
-        val annotationsManager = remember { AnnotationsManager() }
-//        val visualTransformation = remember { TextEditorVisualTransformer() }
-        val bottomAnchorBringIntoViewRequester = remember { BringIntoViewRequester() }
-        var fieldHeight by remember { mutableFloatStateOf(0f) }
-        var textFieldValue by remember {
-            mutableStateOf(TextFieldValue(text = text))
-        }
-        var hasFocus by remember { mutableStateOf(false) }
-
-        // Update text without changing cursor position when text changes externally
-        LaunchedEffect(text) {
-            if (textFieldValue.text != text) {
-                val currentSelection = textFieldValue.selection
-                textFieldValue = TextFieldValue(
-                    text = text,
-                    selection = currentSelection.let {
-                        if (it.start <= text.length) it else TextRange(text.length)
-                    }
-                )
-            }
+        val bringIntoViewRequester = remember { BringIntoViewRequester() }
+        val coroutineScope = rememberCoroutineScope()
+        var textFieldValue by remember(text) {
+            mutableStateOf(TextFieldValue(text = text, selection = selectionRange))
         }
 
-        // Register formatting callback
-        LaunchedEffect(Unit) { // TODO: Move to viewmodel
-            onFormatCallbackChange { formatType ->
-                val start = textFieldValue.selection.start
-                val end = textFieldValue.selection.end
-
-                if (start != end) {
-                    val newText = when (formatType) {
-                        FormatType.BOLD -> annotationsManager.applyBold(
-                            textFieldValue.text, start, end
-                        )
-
-                        FormatType.ITALIC -> applyItalics(
-                            textFieldValue.text, start, end
-                        )
-
-                        FormatType.STRIKETHROUGH -> applyStrikethrough(
-                            textFieldValue.text, start, end
-                        )
-
-                        FormatType.MONOSPACE -> annotationsManager.applyMonospace(
-                            textFieldValue.text, start, end
-                        )
-                    }
-                    // Calculate the difference in length to adjust cursor position
-                    val lengthDiff = newText.length - textFieldValue.text.length
-                    val newCursorPosition = end + lengthDiff
-
-                    textFieldValue = TextFieldValue(
-                        text = newText,
-                        selection = TextRange(newCursorPosition)
-                    )
-                    onTextInput(newText)
-                }
-            }
-        }
-
-        LaunchedEffect(fieldHeight) {
-            if (hasFocus) {
-                bottomAnchorBringIntoViewRequester.bringIntoView()
-            }
-        }
-
-        Column(modifier = modifier) {
-
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .onGloballyPositioned { coordinates ->
-                        fieldHeight = coordinates.size.height.toFloat()
-                    }
-                    .onFocusChanged { focusState ->
-                        hasFocus = focusState.isFocused
-                    }
-                    .onKeyEvent { event ->
-                        if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
-                            if (text.isEmpty()) {
-                                onDeleteRequest()
-                                true
-                            } else {
-                                false
-                            }
+        BasicTextField(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .onKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
+                        if (text.isEmpty()) {
+                            onDeleteRequest()
+                            true
                         } else {
                             false
                         }
-                    },
-                value = textFieldValue,
-                onValueChange = { newValue ->
-                    textFieldValue = newValue
-                    onTextInput(newValue.text)
+                    } else {
+                        false
+                    }
+                }
+                .onFocusEvent {
+                    if (it.hasFocus) {
+                        setFocus(textFieldValue.selection)
+                    }
                 },
-                textStyle = TextStyle(
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.add_text_hint),
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                    )
-                },
-            )
+            value = textFieldValue,
+            onValueChange = { newValue ->
+                textFieldValue = newValue
+                onTextInput(newValue.text)
+                setFocus(textFieldValue.selection)
+            },
+            textStyle = TextStyle(
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            onTextLayout = {
+                val cursorRect = it.getCursorRect(textFieldValue.selection.start)
+                coroutineScope.launch {
+                    bringIntoViewRequester.bringIntoView(cursorRect)
+                }
+            },
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier
+                        .bringIntoViewRequester(bringIntoViewRequester)
+                ) {
+                    if (textFieldValue.text.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.add_text_hint),
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
 //            MarkdownEditor(
 //                modifier = Modifier
 //                    .fillMaxWidth()
@@ -638,13 +585,6 @@ fun TextContent(
 //                hint = R.string.add_text_hint
 //            )
 //            Spacer(modifier = Modifier.height(8.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .bringIntoViewRequester(bottomAnchorBringIntoViewRequester)
-            )
-        }
     } else {
         MarkdownText(
             modifier = modifier
@@ -710,13 +650,6 @@ private fun FormatButton(
             tint = MaterialTheme.colorScheme.onSurface
         )
     }
-}
-
-enum class FormatType {
-    BOLD,
-    ITALIC,
-    STRIKETHROUGH,
-    MONOSPACE
 }
 
 @Composable
@@ -924,58 +857,6 @@ fun TagsBottomSheet(
             }
             Spacer(modifier = Modifier.height(32.dp))
         }
-    }
-}
-
-private fun applyStrikethrough(text: String, selectionStart: Int, selectionEnd: Int): String {
-    val annotation = "~~"
-    val start = minOf(selectionStart, selectionEnd)
-    val end = maxOf(selectionStart, selectionEnd)
-
-    if (start != end) {
-        val beforeSelection = text.substring(0, start)
-        val selectedText = text.substring(start, end)
-        val afterSelection = text.substring(end)
-
-        val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
-            val cleanText = selectedText.removeSurrounding(annotation)
-            "$beforeSelection$cleanText$afterSelection"
-        } else {
-            "$beforeSelection~~$selectedText~~$afterSelection"
-        }
-
-        return result
-    } else {
-        val beforeCursor = text.substring(0, start)
-        val afterCursor = text.substring(start)
-
-        return "$beforeCursor~~$afterCursor~~"
-    }
-}
-
-private fun applyItalics(text: String, selectionStart: Int, selectionEnd: Int): String {
-    val annotation = "*"
-    val start = minOf(selectionStart, selectionEnd)
-    val end = maxOf(selectionStart, selectionEnd)
-
-    if (start != end) {
-        val beforeSelection = text.substring(0, start)
-        val selectedText = text.substring(start, end)
-        val afterSelection = text.substring(end)
-
-        val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
-            val cleanText = selectedText.removeSurrounding(annotation)
-            "$beforeSelection$cleanText$afterSelection"
-        } else {
-            "${beforeSelection}*${selectedText}*${afterSelection}"
-        }
-
-        return result
-    } else {
-        val beforeCursor = text.substring(0, start)
-        val afterCursor = text.substring(start)
-
-        return "${beforeCursor}*${afterCursor}*"
     }
 }
 

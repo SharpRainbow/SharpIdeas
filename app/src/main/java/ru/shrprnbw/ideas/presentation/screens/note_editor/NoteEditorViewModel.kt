@@ -4,6 +4,7 @@ package ru.shrprnbw.ideas.presentation.screens.note_editor
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.text.TextRange
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
@@ -28,6 +29,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
+import ru.shrprnbw.ideas.domain.entity.ContentType
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTextBlockUseCase
@@ -80,6 +82,7 @@ class NoteEditorViewModel @AssistedInject constructor(
 
             NoteEditorCommand.AddNoteTextItem -> {
                 viewModelScope.launch {
+                    saveNoteContents()
                     addNoteTextBlockUseCase(noteId, "")
                     loadNote(noteId)
                 }
@@ -397,6 +400,67 @@ class NoteEditorViewModel @AssistedInject constructor(
                     }
                 }
             }
+
+            is NoteEditorCommand.ApplyFormatting -> {
+                val currentState = _state.value
+                if (currentState is NoteEditorState.Editing && currentState.focusedContentIndex != -1) {
+                    val start = currentState.selection.start
+                    val end = currentState.selection.end
+                    val contentItem = currentState.note.contents[currentState.focusedContentIndex]
+                    if (contentItem.type != ContentType.TEXT || start == end) {
+                        return
+                    }
+                    val content = contentItem.data
+                    val formatType = command.formatType
+                    val newText = when (formatType) {
+                        FormatType.BOLD -> applyBold(
+                            content, start, end
+                        )
+
+                        FormatType.ITALIC -> applyItalics(
+                            content, start, end
+                        )
+
+                        FormatType.STRIKETHROUGH -> applyStrikethrough(
+                            content, start, end
+                        )
+
+                        FormatType.MONOSPACE -> applyMonospace(
+                            content, start, end
+                        )
+                    }
+                    val lengthDiff = (newText.length - content.length)
+                    _state.update {
+                        if (it is NoteEditorState.Editing) {
+                            it.copy(
+                                selection = TextRange(
+                                    it.selection.start,
+                                    it.selection.end + lengthDiff
+                                )
+                            )
+                        } else {
+                            it
+                        }
+                    }
+                    processCommand(NoteEditorCommand.InputContent(
+                        newText,
+                        currentState.focusedContentIndex
+                    ))
+                }
+            }
+
+            is NoteEditorCommand.SetFocus -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            focusedContentIndex = command.contentIdx,
+                            selection = command.selection
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
         }
     }
 
@@ -488,6 +552,122 @@ class NoteEditorViewModel @AssistedInject constructor(
         }
     }
 
+    private fun applyBold(text: String, selectionStart: Int, selectionEnd: Int): String {
+
+        /**
+         * Function to apply $annotation around the selected text
+         */
+
+        val annotation = "**"
+
+        val start = minOf(selectionStart, selectionEnd)
+        val end = maxOf(selectionStart, selectionEnd)
+
+        if (start != end) {
+            val beforeSelection = text.substring(0, start)
+            val selectedText = text.substring(start, end)
+            val afterSelection = text.substring(end)
+
+            val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
+                val cleanText = selectedText.removeSurrounding(annotation)
+                "$beforeSelection$cleanText$afterSelection"
+            } else {
+                "$beforeSelection**$selectedText**$afterSelection"
+            }
+
+            return result
+        } else {
+            val beforeCursor = text.substring(0, start)
+            val afterCursor = text.substring(start)
+
+            val result = "$beforeCursor**$afterCursor**"
+
+            return result
+        }
+    }
+
+    private fun applyStrikethrough(text: String, selectionStart: Int, selectionEnd: Int): String {
+        val annotation = "~~"
+        val start = minOf(selectionStart, selectionEnd)
+        val end = maxOf(selectionStart, selectionEnd)
+
+        if (start != end) {
+            val beforeSelection = text.substring(0, start)
+            val selectedText = text.substring(start, end)
+            val afterSelection = text.substring(end)
+
+            val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
+                val cleanText = selectedText.removeSurrounding(annotation)
+                "$beforeSelection$cleanText$afterSelection"
+            } else {
+                "$beforeSelection~~$selectedText~~$afterSelection"
+            }
+
+            return result
+        } else {
+            val beforeCursor = text.substring(0, start)
+            val afterCursor = text.substring(start)
+
+            return "$beforeCursor~~$afterCursor~~"
+        }
+    }
+
+    private fun applyItalics(text: String, selectionStart: Int, selectionEnd: Int): String {
+        val annotation = "*"
+        val start = minOf(selectionStart, selectionEnd)
+        val end = maxOf(selectionStart, selectionEnd)
+
+        if (start != end) {
+            val beforeSelection = text.substring(0, start)
+            val selectedText = text.substring(start, end)
+            val afterSelection = text.substring(end)
+
+            val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
+                val cleanText = selectedText.removeSurrounding(annotation)
+                "$beforeSelection$cleanText$afterSelection"
+            } else {
+                "${beforeSelection}*${selectedText}*${afterSelection}"
+            }
+
+            return result
+        } else {
+            val beforeCursor = text.substring(0, start)
+            val afterCursor = text.substring(start)
+
+            return "${beforeCursor}*${afterCursor}*"
+        }
+    }
+
+    private fun applyMonospace(text: String, selectionStart: Int, selectionEnd: Int): String {
+
+        /**
+         * Function to apply $annotation around the selected text
+         */
+        val annotation = "```"
+        val start = minOf(selectionStart, selectionEnd)
+        val end = maxOf(selectionStart, selectionEnd)
+
+        if (start != end) {
+            val beforeSelection = text.substring(0, start)
+            val selectedText = text.substring(start, end)
+            val afterSelection = text.substring(end)
+
+            val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
+                val cleanText = selectedText.removeSurrounding(annotation)
+                "$beforeSelection$cleanText$afterSelection"
+            } else {
+                "$beforeSelection```$selectedText```$afterSelection"
+            }
+
+            return result
+        } else {
+            val beforeCursor = text.substring(0, start)
+            val afterCursor = text.substring(start)
+
+            return "$beforeCursor```$afterCursor```"
+        }
+    }
+
     @AssistedFactory
     interface Factory {
 
@@ -532,6 +712,17 @@ sealed interface NoteEditorCommand {
 
     data object ConfirmNoteDeletion : NoteEditorCommand
 
+    data class SetFocus(val contentIdx: Int, val selection: TextRange) : NoteEditorCommand
+
+    data class ApplyFormatting(val formatType: FormatType) : NoteEditorCommand
+
+}
+
+enum class FormatType {
+    BOLD,
+    ITALIC,
+    STRIKETHROUGH,
+    MONOSPACE
 }
 
 sealed interface NoteEditorState {
@@ -547,7 +738,9 @@ sealed interface NoteEditorState {
         val tagError: Int? = null,
         val isPreviewMode: Boolean = false,
         val uploadProgress: Float? = null,
-        val showDeleteDialog: Boolean = false
+        val showDeleteDialog: Boolean = false,
+        val focusedContentIndex: Int = -1,
+        val selection: TextRange = TextRange.Zero
     ) : NoteEditorState {
         val isSaveEnabled: Boolean
             get() {
