@@ -11,6 +11,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,6 +88,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -94,7 +97,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -102,7 +107,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -230,7 +237,7 @@ fun NoteEditorScreen(
                 }
 
                 Content(
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
                     note = currentState.note,
                     isPreviewMode = currentState.isPreviewMode,
                     setFocus = { index, selection ->
@@ -323,7 +330,11 @@ fun NoteEditorScreen(
                             viewModel.processCommand(NoteEditorCommand.AddCollaboratorByEmail(email))
                         },
                         onRemoveCollaborator = { collaboratorId ->
-                            viewModel.processCommand(NoteEditorCommand.RemoveCollaborator(collaboratorId))
+                            viewModel.processCommand(
+                                NoteEditorCommand.RemoveCollaborator(
+                                    collaboratorId
+                                )
+                            )
                         },
                         onAddToGroup = { groupId ->
                             viewModel.processCommand(NoteEditorCommand.AddToGroup(groupId))
@@ -366,125 +377,140 @@ fun Content(
     onTranscriptionsClicked: () -> Unit = { },
     onTagsClicked: () -> Unit = { },
 ) {
-    Column( // TODO: Add lazy column with collapsing toolbar
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(bottom = 16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (note.audioNote) {
-                NoteTransformation(
-                    modifier = Modifier.weight(1f),
-                    actionName = "Transcriptions",
-                    color = AudioGreen,
-                    imageVector = Icons.Rounded.GraphicEq,
-                    onClick = onTranscriptionsClicked
-                )
-            } else {
-                NoteTransformation(
-                    modifier = Modifier.weight(1f),
-                    actionName = "Keywords",
-                    color = Color(0xFF7B1FA2),
-                    imageVector = Icons.Rounded.Discount
-                )
-                NoteTransformation(
-                    modifier = Modifier.weight(1f),
-                    actionName = "Summary",
-                    color = TextBlue,
-                    imageVector = Icons.Rounded.AutoFixHigh
-                )
-            }
-        }
+    var viewingImageUrl by remember { mutableStateOf<String?>(null) }
 
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            value = note.title,
-            onValueChange = onTitleChanged,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            textStyle = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            ),
-            placeholder = {
-                Text(
-                    text = stringResource(R.string.note_title),
+    Box(modifier = modifier) {
+        Column( // TODO: Add lazy column with collapsing toolbar
+            modifier = Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (note.audioNote) {
+                    NoteTransformation(
+                        modifier = Modifier.weight(1f),
+                        actionName = "Transcriptions",
+                        color = AudioGreen,
+                        imageVector = Icons.Rounded.GraphicEq,
+                        onClick = onTranscriptionsClicked
+                    )
+                } else {
+                    NoteTransformation(
+                        modifier = Modifier.weight(1f),
+                        actionName = "Keywords",
+                        color = Color(0xFF7B1FA2),
+                        imageVector = Icons.Rounded.Discount
+                    )
+                    NoteTransformation(
+                        modifier = Modifier.weight(1f),
+                        actionName = "Summary",
+                        color = TextBlue,
+                        imageVector = Icons.Rounded.AutoFixHigh
+                    )
+                }
+            }
+
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                value = note.title,
+                onValueChange = onTitleChanged,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                textStyle = TextStyle(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                )
-            }
-        )
-
-        Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
-            text = DateFormatter.formatDateToString(note.createdAt),
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        TagsSection(
-            tags = note.tags,
-            onTagsClicked = onTagsClicked
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-
-        note.contents.forEachIndexed { itemIndex, contentItem ->
-            when (contentItem.type) {
-                ContentType.AUDIO -> {
-                    AudioNotePlayer(
-                        audioUrl = contentItem.data,
-                        accentColor = AudioGreen
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.note_title),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                 }
+            )
 
-                ContentType.TEXT -> {
-                    TextContent(
-                        text = contentItem.data,
-                        selectionRange = textSelectionRange,
-                        editorView = !isPreviewMode,
-                        setFocus = { selection ->
-                            setFocus(itemIndex, selection)
-                        },
-                        onTextInput = { input ->
-                            onTextChanged(itemIndex, input)
-                        },
-                        onDeleteRequest = {
-                            onDeleteTextRequested(contentItem.id.toInt())
-                        }
-                    )
-                }
+            Text(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                text = DateFormatter.formatDateToString(note.createdAt),
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-                ContentType.IMAGE -> {
-                    val previousItem = note.contents.getOrNull(itemIndex - 1)
-                    if (previousItem?.type != ContentType.IMAGE) {
-                        note.contents.drop(itemIndex).takeWhile { item ->
-                            item.type == ContentType.IMAGE
-                        }.let { images ->
-                            ImageGroup(
-                                modifier = Modifier
-                                    .padding(horizontal = 24.dp)
-                                    .heightIn(max = 300.dp),
-                                images = images,
-                                onDeleteImageClick = onDeleteImageClick
-                            )
+            Spacer(modifier = Modifier.height(8.dp))
+            TagsSection(
+                tags = note.tags,
+                onTagsClicked = onTagsClicked
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            note.contents.forEachIndexed { itemIndex, contentItem ->
+                when (contentItem.type) {
+                    ContentType.AUDIO -> {
+                        AudioNotePlayer(
+                            audioUrl = contentItem.data,
+                            accentColor = AudioGreen
+                        )
+                    }
+
+                    ContentType.TEXT -> {
+                        TextContent(
+                            text = contentItem.data,
+                            selectionRange = textSelectionRange,
+                            editorView = !isPreviewMode,
+                            setFocus = { selection ->
+                                setFocus(itemIndex, selection)
+                            },
+                            onTextInput = { input ->
+                                onTextChanged(itemIndex, input)
+                            },
+                            onDeleteRequest = {
+                                onDeleteTextRequested(contentItem.id.toInt())
+                            }
+                        )
+                    }
+
+                    ContentType.IMAGE -> {
+                        val previousItem = note.contents.getOrNull(itemIndex - 1)
+                        if (previousItem?.type != ContentType.IMAGE) {
+                            note.contents.drop(itemIndex).takeWhile { item ->
+                                item.type == ContentType.IMAGE
+                            }.let { images ->
+                                ImageGroup(
+                                    modifier = Modifier
+                                        .padding(horizontal = 24.dp)
+                                        .heightIn(max = 300.dp),
+                                    images = images,
+                                    onDeleteImageClick = onDeleteImageClick,
+                                    onImageClick = { imageUrl ->
+                                        viewingImageUrl = imageUrl
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
+
+        }
+
+        viewingImageUrl?.let { imageUrl ->
+            FullScreenImageViewer(
+                imageUrl = imageUrl,
+                onDismiss = { viewingImageUrl = null }
+            )
         }
     }
 }
@@ -493,7 +519,8 @@ fun Content(
 fun ImageGroup(
     modifier: Modifier = Modifier,
     images: List<ContentItem>,
-    onDeleteImageClick: (Int) -> Unit
+    onDeleteImageClick: (Int) -> Unit,
+    onImageClick: (String) -> Unit = {}
 ) {
     Row(
         modifier = modifier,
@@ -502,10 +529,10 @@ fun ImageGroup(
         images.forEach { image ->
             ImageContent(
                 modifier = Modifier.weight(1f),
-                imageUrl = image.data
-            ) {
-                onDeleteImageClick(image.id.toInt())
-            }
+                imageUrl = image.data,
+                onImageClick = { onImageClick(image.data) },
+                onDeleteImageClick = { onDeleteImageClick(image.id.toInt()) }
+            )
         }
     }
 }
@@ -514,6 +541,7 @@ fun ImageGroup(
 fun ImageContent(
     modifier: Modifier = Modifier,
     imageUrl: String,
+    onImageClick: () -> Unit = {},
     onDeleteImageClick: () -> Unit
 ) {
     Box(
@@ -522,7 +550,8 @@ fun ImageContent(
         AsyncImage(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp)),
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onImageClick),
             model = imageUrl,
             contentDescription = null,
             contentScale = ContentScale.FillWidth
@@ -1004,6 +1033,108 @@ fun UploadProgressOverlay(
 }
 
 @Composable
+fun FullScreenImageViewer(
+    imageUrl: String,
+    onDismiss: () -> Unit
+) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+    var containerSize by remember { mutableStateOf(Size.Zero) }
+    var imageAspectRatio by remember { mutableFloatStateOf(1f) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.85f))
+            .onSizeChanged { size ->
+                containerSize = Size(size.width.toFloat(), size.height.toFloat())
+            }
+            .pointerInput(imageUrl, containerSize, imageAspectRatio) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    val newScale = (scale * zoom).coerceIn(1f, 5f)
+
+                    // Calculate the displayed image size based on ContentScale.Fit
+                    val containerAspect = if (containerSize.height > 0) containerSize.width / containerSize.height else 1f
+                    val displayedWidth: Float
+                    val displayedHeight: Float
+                    if (imageAspectRatio > containerAspect) {
+                        // Image is wider than container - width fills, height is smaller
+                        displayedWidth = containerSize.width
+                        displayedHeight = containerSize.width / imageAspectRatio
+                    } else {
+                        // Image is taller than container - height fills, width is smaller
+                        displayedHeight = containerSize.height
+                        displayedWidth = containerSize.height * imageAspectRatio
+                    }
+
+                    // Max offset = how much the scaled image extends beyond the container
+                    val maxX = ((displayedWidth * newScale - containerSize.width) / 2f).coerceAtLeast(0f)
+                    val maxY = ((displayedHeight * newScale - containerSize.height) / 2f).coerceAtLeast(0f)
+
+                    scale = newScale
+                    offsetX = (offsetX + pan.x).coerceIn(-maxX, maxX)
+                    offsetY = (offsetY + pan.y).coerceIn(-maxY, maxY)
+                }
+            }
+            .pointerInput(imageUrl) {
+                detectTapGestures(
+                    onTap = {
+                        if (scale <= 1f) {
+                            onDismiss()
+                        }
+                    },
+                    onDoubleTap = {
+                        if (scale > 1f) {
+                            scale = 1f
+                            offsetX = 0f
+                            offsetY = 0f
+                        } else {
+                            scale = 2.5f
+                        }
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            onSuccess = { state ->
+                val painter = state.painter
+                val intrinsicSize = painter.intrinsicSize
+                if (intrinsicSize.width > 0 && intrinsicSize.height > 0) {
+                    imageAspectRatio = intrinsicSize.width / intrinsicSize.height
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offsetX,
+                    translationY = offsetY
+                ),
+            contentScale = ContentScale.Fit
+        )
+
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(R.string.close),
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun DeleteConfirmationDialog(
     modifier: Modifier = Modifier,
     onConfirm: () -> Unit,
@@ -1282,7 +1413,7 @@ private fun NoteEditorTopAppBar(
         TopAppBar(
             title = {},
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
+                containerColor = MaterialTheme.colorScheme.surface,
                 navigationIconContentColor = MaterialTheme.colorScheme.onSurface
             ),
             navigationIcon = {
