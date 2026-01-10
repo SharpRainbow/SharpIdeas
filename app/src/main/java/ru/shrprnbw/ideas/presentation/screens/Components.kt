@@ -27,6 +27,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Label
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -358,7 +359,8 @@ fun NavigationDrawerContent(
     modifier: Modifier = Modifier,
     selectedScreen: NavigationScreen = NavigationScreen.Home,
     onHomeClicked: () -> Unit = {},
-    onTagManagementClicked: () -> Unit = {}
+    onTagManagementClicked: () -> Unit = {},
+    onGroupManagementClicked: () -> Unit = {}
 ) {
     ModalDrawerSheet(modifier = modifier) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -385,10 +387,19 @@ fun NavigationDrawerContent(
             onClick = onTagManagementClicked,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Filled.Group, contentDescription = null) },
+            label = { Text("Управление группами") },
+            selected = selectedScreen == NavigationScreen.GroupManagement,
+            onClick = onGroupManagementClicked,
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
     }
 }
 
 enum class NavigationScreen {
     Home,
-    TagManagement
+    TagManagement,
+    GroupManagement
 }

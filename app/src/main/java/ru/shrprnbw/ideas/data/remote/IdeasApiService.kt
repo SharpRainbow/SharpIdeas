@@ -5,6 +5,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -13,15 +14,19 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteTextRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.AddUserToGroupRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.CreateGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateTagRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.GoogleTokenAuthRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.UpdateGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
+import ru.shrprnbw.ideas.data.remote.dto.response.GroupDto
 import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
@@ -30,6 +35,7 @@ import ru.shrprnbw.ideas.data.remote.dto.response.StatusResponse
 import ru.shrprnbw.ideas.data.remote.dto.response.TagDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TokenResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TranscriptionDto
+import ru.shrprnbw.ideas.data.remote.dto.response.UserDto
 import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
 
 interface IdeasApiService {
@@ -218,6 +224,50 @@ interface IdeasApiService {
     suspend fun deleteTag(
         @Header("Authorization") token: String,
         @Path("tagId") tagId: Long
+    )
+
+    @GET("$VERSION_1/groups/owned")
+    suspend fun getOwnedGroups(
+        @Header("Authorization") token: String
+    ): List<GroupDto>
+
+    @POST("$VERSION_1/groups")
+    suspend fun createGroup(
+        @Header("Authorization") token: String,
+        @Body request: CreateGroupRequest
+    )
+
+    @PATCH("$VERSION_1/groups/{groupId}")
+    suspend fun updateGroup(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Long,
+        @Body request: UpdateGroupRequest
+    )
+
+    @DELETE("$VERSION_1/groups/{groupId}")
+    suspend fun deleteGroup(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Long
+    )
+
+    @GET("$VERSION_1/groups/{groupId}/users")
+    suspend fun getGroupUsers(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Long
+    ): List<UserDto>
+
+    @POST("$VERSION_1/groups/{groupId}/users")
+    suspend fun addUserToGroup(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Long,
+        @Body request: AddUserToGroupRequest
+    )
+
+    @HTTP(method = "DELETE", path = "$VERSION_1/groups/{groupId}/users", hasBody = true)
+    suspend fun removeUserFromGroup(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Long,
+        @Body request: AddUserToGroupRequest
     )
 
 }

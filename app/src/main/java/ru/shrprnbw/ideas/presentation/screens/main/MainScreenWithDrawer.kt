@@ -20,6 +20,7 @@ fun MainScreenWithDrawer(
     currentRoute: Screen,
     onNavigateToNotes: () -> Unit,
     onNavigateToTags: () -> Unit,
+    onNavigateToGroups: () -> Unit,
     gesturesEnabled: Boolean = true,
     content: @Composable (DrawerState, CoroutineScope) -> Unit
 ) {
@@ -48,6 +49,16 @@ fun MainScreenWithDrawer(
                         scope.launch {
                             drawerState.close()
                             onNavigateToTags()
+                        }
+                    } else {
+                        scope.launch { drawerState.close() }
+                    }
+                },
+                onGroupManagementClicked = {
+                    if (currentRoute != Screen.Groups) {
+                        scope.launch {
+                            drawerState.close()
+                            onNavigateToGroups()
                         }
                     } else {
                         scope.launch { drawerState.close() }

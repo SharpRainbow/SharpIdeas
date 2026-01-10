@@ -6,12 +6,14 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import ru.shrprnbw.ideas.data.repository.AuthRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.CredentialsRepositoryImpl
+import ru.shrprnbw.ideas.data.repository.GroupRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.NoteRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.SettingsRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.TagRepositoryImpl
 import ru.shrprnbw.ideas.data.repository.UserRepositoryImpl
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.CredentialsRepository
+import ru.shrprnbw.ideas.domain.repository.GroupRepository
 import ru.shrprnbw.ideas.domain.repository.NoteRepository
 import ru.shrprnbw.ideas.domain.repository.SettingsRepository
 import ru.shrprnbw.ideas.domain.repository.TagRepository
@@ -45,5 +47,9 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    @Singleton
+    fun bindGroupRepository(impl: GroupRepositoryImpl): GroupRepository
 
 }

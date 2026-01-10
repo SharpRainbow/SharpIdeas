@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.presentation.screens.NavigationScreen
+import ru.shrprnbw.ideas.presentation.screens.group_management.GroupManagementScreen
 import ru.shrprnbw.ideas.presentation.screens.login.LoginScreen
 import ru.shrprnbw.ideas.presentation.screens.main.MainScreenWithDrawer
 import ru.shrprnbw.ideas.presentation.screens.note_editor.NoteEditorScreen
@@ -126,6 +127,9 @@ fun NavGraph() {
                         onNavigateToTags = {
                             navController.navigate(Screen.Tags.route)
                         },
+                        onNavigateToGroups = {
+                            navController.navigate(Screen.Groups.route)
+                        },
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         NoteListScreen(
@@ -169,9 +173,37 @@ fun NavGraph() {
                         onNavigateToTags = {
                             navController.navigate(Screen.Tags.route)
                         },
+                        onNavigateToGroups = {
+                            navController.navigate(Screen.Groups.route)
+                        },
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         TagManagementScreen(
+                            onMenuClicked = {
+                                scope.launch { drawerState.open() }
+                            }
+                        )
+                    }
+                }
+
+                composable(route = Screen.Groups.route) {
+                    MainScreenWithDrawer(
+                        selectedScreen = NavigationScreen.GroupManagement,
+                        currentRoute = Screen.Groups,
+                        onNavigateToNotes = {
+                            navController.navigate(Screen.Notes.route) {
+                                popUpTo(Screen.Notes.route) { inclusive = true }
+                            }
+                        },
+                        onNavigateToTags = {
+                            navController.navigate(Screen.Tags.route)
+                        },
+                        onNavigateToGroups = {
+                            navController.navigate(Screen.Groups.route)
+                        },
+                        gesturesEnabled = true
+                    ) { drawerState, scope ->
+                        GroupManagementScreen(
                             onMenuClicked = {
                                 scope.launch { drawerState.open() }
                             }
@@ -266,6 +298,7 @@ sealed class Screen(val route: String) {
     data object Notes : Screen("notes")
     data object Search : Screen("search")
     data object Tags : Screen("tags")
+    data object Groups : Screen("groups")
     data object UserInfo : Screen("user_info")
     data object EditUserInfo : Screen("user_info_edit")
 

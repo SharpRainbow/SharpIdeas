@@ -81,4 +81,22 @@
     <string name="server_icon_description">Server icon</string>
     <string name="server_url_hint">Server url</string>
     <string name="login_error_invalid_server_url">Server is not responding! Check url!</string>
+
+    <!-- Group Management -->
+    <string name="group_management_title">Управление группами</string>
+    <string name="group_management_create_hint">Создать новую группу</string>
+    <string name="group_management_error_create">Не удалось создать группу</string>
+    <string name="group_management_error_update">Не удалось обновить группу</string>
+    <string name="group_management_error_delete">Не удалось удалить группу</string>
+    <string name="group_management_error_load">Не удалось загрузить группы</string>
+    <string name="group_management_error_load_users">Не удалось загрузить пользователей группы</string>
+    <string name="group_management_error_add_user">Не удалось добавить пользователя</string>
+    <string name="group_management_error_remove_user">Не удалось удалить пользователя</string>
+    <string name="group_management_error_user_not_found">Пользователь не найден</string>
+    <string name="group_management_error_user_already_in_group">Пользователь уже в группе</string>
+    <string name="group_management_add_user">Добавить пользователя</string>
+    <string name="group_management_enter_email">Введите email пользователя</string>
+    <string name="group_management_enter_uuid">Введите UUID пользователя</string>
+    <string name="group_management_members">Участники группы</string>
+    <string name="group_management_no_members">Нет участников</string>
 </resources>
