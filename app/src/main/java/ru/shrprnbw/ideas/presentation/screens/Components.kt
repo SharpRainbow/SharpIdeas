@@ -2,6 +2,7 @@
 
 package ru.shrprnbw.ideas.presentation.screens
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,6 +49,7 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -179,7 +181,7 @@ fun <T : Any> PagedItemsTemplate(
     itemContent: @Composable (item: T) -> Unit
 ) {
     when {
-        items.loadState.refresh is LoadState.Loading && showLoading -> {
+        items.loadState.refresh is LoadState.Loading && showLoading && items.itemCount == 0 -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -198,6 +200,9 @@ fun <T : Any> PagedItemsTemplate(
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
+                LaunchedEffect(Unit) {
+                    Log.d("PagedItemsTemplate", "Error loading items: ${(items.loadState.refresh as LoadState.Error).error.message}")
+                }
                 Text(
                     text = errorText,
                     color = MaterialTheme.colorScheme.error,

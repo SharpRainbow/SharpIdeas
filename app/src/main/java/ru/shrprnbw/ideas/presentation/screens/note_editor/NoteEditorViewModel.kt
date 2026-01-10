@@ -557,7 +557,8 @@ class NoteEditorViewModel @AssistedInject constructor(
                             if (previousState is NoteEditorState.Editing) {
                                 previousState.copy(
                                     collaboratorEmail = "",
-                                    isShareLoading = false
+                                    isShareLoading = false,
+                                    shareError = null
                                 )
                             } else {
                                 previousState
@@ -568,7 +569,7 @@ class NoteEditorViewModel @AssistedInject constructor(
                         _state.update { previousState ->
                             if (previousState is NoteEditorState.Editing) {
                                 previousState.copy(
-                                    shareError = R.string.share_error_add_collaborator,
+                                    shareError = parseAddCollaboratorError(e.message),
                                     isShareLoading = false
                                 )
                             } else {
@@ -593,7 +594,10 @@ class NoteEditorViewModel @AssistedInject constructor(
                         loadNote(noteId)
                         _state.update { previousState ->
                             if (previousState is NoteEditorState.Editing) {
-                                previousState.copy(isShareLoading = false)
+                                previousState.copy(
+                                    isShareLoading = false,
+                                    shareError = null
+                                )
                             } else {
                                 previousState
                             }
@@ -628,7 +632,10 @@ class NoteEditorViewModel @AssistedInject constructor(
                         loadNote(noteId)
                         _state.update { previousState ->
                             if (previousState is NoteEditorState.Editing) {
-                                previousState.copy(isShareLoading = false)
+                                previousState.copy(
+                                    isShareLoading = false,
+                                    shareError = null
+                                )
                             } else {
                                 previousState
                             }
@@ -649,10 +656,10 @@ class NoteEditorViewModel @AssistedInject constructor(
                 }
             }
 
-            NoteEditorCommand.RemoveFromGroup -> {
+            is NoteEditorCommand.RemoveFromGroup -> {
                 viewModelScope.launch {
                     val currentState = _state.value
-                    if (currentState is NoteEditorState.Editing && currentState.note.groupId != null) {
+                    if (currentState is NoteEditorState.Editing) {
                         _state.update { previousState ->
                             if (previousState is NoteEditorState.Editing) {
                                 previousState.copy(isShareLoading = true)
@@ -661,11 +668,14 @@ class NoteEditorViewModel @AssistedInject constructor(
                             }
                         }
                         try {
-                            removeNoteFromGroupUseCase(noteId, currentState.note.groupId)
+                            removeNoteFromGroupUseCase(noteId, command.groupId)
                             loadNote(noteId)
                             _state.update { previousState ->
                                 if (previousState is NoteEditorState.Editing) {
-                                    previousState.copy(isShareLoading = false)
+                                    previousState.copy(
+                                        isShareLoading = false,
+                                        shareError = null
+                                    )
                                 } else {
                                     previousState
                                 }
@@ -686,6 +696,14 @@ class NoteEditorViewModel @AssistedInject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private fun parseAddCollaboratorError(message: String?): Int {
+        return when {
+            message?.contains("404") == true -> R.string.share_error_collaborator_not_found
+            message?.contains("409") == true -> R.string.share_error_collaborator_already_added
+            else -> R.string.share_error_add_collaborator
         }
     }
 
@@ -953,7 +971,7 @@ sealed interface NoteEditorCommand {
 
     data class AddToGroup(val groupId: Long) : NoteEditorCommand
 
-    data object RemoveFromGroup : NoteEditorCommand
+    data class RemoveFromGroup(val groupId: Long) : NoteEditorCommand
 
 }
 

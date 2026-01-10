@@ -9,16 +9,14 @@ data class NoteDto(
     val id: String,
     @SerialName("title")
     val title: String,
-//    @SerialName("groupId")
-//    val groupId: Long?,
-    @SerialName("groupName")
-    val groupName: String?,
     @SerialName("owner")
     val owner: UserDto,
     @SerialName("contents")
     val contents: List<ContentItemDto>,
     @SerialName("tags")
     val tags: List<String>,
+    @SerialName("groups")
+    val groups: List<GroupDto>,
     @SerialName("collaborators")
     val collaborators: List<UserDto>,
     @SerialName("audioNote")

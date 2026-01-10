@@ -13,8 +13,9 @@
     <string name="registration_error_google_error">Google sign in failed, check email confirmation</string>
     <string name="google_mobile_client_id">972869100739-2rqvqodr2a7ckifre80c8etv8spi6rig.apps.googleusercontent.com</string>
     <string name="create_note">Create note</string>
-    <string name="add_photo">Add photo from gallery</string>
-    <string name="add_audio">Add audio file</string>
+    <string name="add_photo">Add photo</string>
+    <string name="add_audio">Add audio</string>
+    <string name="add_text">Add text</string>
     <string name="note_title">Title</string>
     <string name="save_note">Save Note</string>
     <string name="add_text_hint">Note something down</string>
@@ -115,4 +116,6 @@
     <string name="share_error_remove_collaborator">Не удалось удалить пользователя</string>
     <string name="share_error_add_to_group">Не удалось добавить в группу</string>
     <string name="share_error_remove_from_group">Не удалось убрать из группы</string>
+    <string name="share_error_collaborator_not_found">Пользователь не найден</string>
+    <string name="share_error_collaborator_already_added">Пользователь уже имеет доступ к заметке</string>
 </resources>

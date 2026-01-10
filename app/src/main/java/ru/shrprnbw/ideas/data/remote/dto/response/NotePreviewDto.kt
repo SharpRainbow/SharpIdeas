@@ -9,8 +9,6 @@ data class NotePreviewDto(
     val id: String,
     @SerialName("owner")
     val owner: UserDto,
-    @SerialName("groupName")
-    val groupName: String,
     @SerialName("title")
     val title: String,
     @SerialName("preview")

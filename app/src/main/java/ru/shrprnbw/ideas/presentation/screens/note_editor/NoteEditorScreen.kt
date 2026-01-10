@@ -144,6 +144,14 @@ fun NoteEditorScreen(
     onTranscriptionsClicked: () -> Unit = { }
 ) {
 
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        uri?.let {
+            viewModel.processCommand(NoteEditorCommand.UploadImage(uri))
+        }
+    }
+
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -193,6 +201,16 @@ fun NoteEditorScreen(
                             onFormatClick = { formatType ->
                                 viewModel.processCommand(
                                     NoteEditorCommand.ApplyFormatting(formatType)
+                                )
+                            },
+                            onTextAddClick = {
+                                viewModel.processCommand(NoteEditorCommand.AddNoteTextItem)
+                            },
+                            onImageAddClick = {
+                                imagePicker.launch(
+                                    PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                                    )
                                 )
                             }
                         )
@@ -286,8 +304,7 @@ fun NoteEditorScreen(
                 if (currentState.showShareSheet) {
                     ShareBottomSheet(
                         collaborators = currentState.note.collaborators,
-                        currentGroupId = currentState.note.groupId,
-                        currentGroupName = currentState.note.groupName,
+                        noteGroups = currentState.note.groups,
                         availableGroups = currentState.availableGroups,
                         collaboratorEmail = currentState.collaboratorEmail,
                         shareError = currentState.shareError,
@@ -307,8 +324,8 @@ fun NoteEditorScreen(
                         onAddToGroup = { groupId ->
                             viewModel.processCommand(NoteEditorCommand.AddToGroup(groupId))
                         },
-                        onRemoveFromGroup = {
-                            viewModel.processCommand(NoteEditorCommand.RemoveFromGroup)
+                        onRemoveFromGroup = { groupId ->
+                            viewModel.processCommand(NoteEditorCommand.RemoveFromGroup(groupId))
                         }
                     )
                 }
@@ -624,7 +641,7 @@ fun TextContent(
         MarkdownText(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp, vertical = 8.dp),
             markdown = text,
             fontSize = 16.sp,
             style = TextStyle(
@@ -638,7 +655,9 @@ fun TextContent(
 @Composable
 fun FormattingToolbar(
     modifier: Modifier = Modifier,
-    onFormatClick: (FormatType) -> Unit
+    onFormatClick: (FormatType) -> Unit,
+    onTextAddClick: () -> Unit = { },
+    onImageAddClick: () -> Unit = { }
 ) {
     Row(
         modifier = modifier
@@ -666,6 +685,26 @@ fun FormattingToolbar(
             contentDescription = "Monospace",
             onClick = { onFormatClick(FormatType.MONOSPACE) }
         )
+        IconButton(
+            onClick = onTextAddClick,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.TextFields,
+                contentDescription = stringResource(R.string.add_text),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        IconButton(
+            onClick = onImageAddClick,
+            modifier = Modifier.size(40.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.AddPhotoAlternate,
+                contentDescription = stringResource(R.string.add_photo),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 
@@ -982,8 +1021,7 @@ fun DeleteConfirmationDialog(
 @Composable
 fun ShareBottomSheet(
     collaborators: List<User>,
-    currentGroupId: Long?,
-    currentGroupName: String?,
+    noteGroups: List<Group>,
     availableGroups: List<Group>,
     collaboratorEmail: String,
     shareError: Int?,
@@ -993,9 +1031,10 @@ fun ShareBottomSheet(
     onAddCollaborator: (String) -> Unit,
     onRemoveCollaborator: (String) -> Unit,
     onAddToGroup: (Long) -> Unit,
-    onRemoveFromGroup: () -> Unit
+    onRemoveFromGroup: (Long) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val noteGroupIds = remember(noteGroups) { noteGroups.map { it.id }.toSet() }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -1035,51 +1074,48 @@ fun ShareBottomSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (currentGroupId != null && currentGroupName != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            MaterialTheme.colorScheme.secondaryContainer,
-                            RoundedCornerShape(8.dp)
-                        )
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            if (noteGroups.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = currentGroupName,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    IconButton(
-                        onClick = onRemoveFromGroup,
-                        enabled = !isLoading
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.share_remove_from_group),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    items(noteGroups) { group ->
+                        FilterChip(
+                            selected = true,
+                            onClick = { onRemoveFromGroup(group.id) },
+                            label = { Text(group.name) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.share_remove_from_group),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            enabled = !isLoading
                         )
                     }
                 }
-            } else {
-                if (availableGroups.isEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            val groupsToAdd = availableGroups.filter { it.id !in noteGroupIds }
+            if (groupsToAdd.isEmpty()) {
+                if (noteGroups.isEmpty()) {
                     Text(
                         text = stringResource(R.string.share_no_groups),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
                     )
-                } else {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(availableGroups) { group ->
-                            AssistChip(
-                                onClick = { onAddToGroup(group.id) },
-                                label = { Text(group.name) },
-                                enabled = !isLoading
-                            )
-                        }
+                }
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(groupsToAdd) { group ->
+                        AssistChip(
+                            onClick = { onAddToGroup(group.id) },
+                            label = { Text(group.name) },
+                            enabled = !isLoading
+                        )
                     }
                 }
             }
@@ -1200,13 +1236,6 @@ private fun NoteEditorTopAppBar(
     viewModel: NoteEditorViewModel,
     onBackClicked: () -> Unit
 ) {
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri ->
-        uri?.let {
-            viewModel.processCommand(NoteEditorCommand.UploadImage(uri))
-        }
-    }
     val audioPicker: ManagedActivityResultLauncher<Array<String>, Uri?> =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocument(),
@@ -1219,14 +1248,7 @@ private fun NoteEditorTopAppBar(
         modifier = modifier.fillMaxWidth()
     ) {
         TopAppBar(
-            title = {
-                Text(
-                    text = stringResource(R.string.create_note),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            },
+            title = {},
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
                 navigationIconContentColor = MaterialTheme.colorScheme.onSurface
@@ -1246,7 +1268,7 @@ private fun NoteEditorTopAppBar(
                 if (currentState.note.audioNote && currentState.note.contents.isEmpty()) {
                     Icon(
                         modifier = Modifier
-                            .padding(end = 8.dp)
+                            .padding(end = 16.dp)
                             .clickable(
                                 onClick = {
                                     audioPicker.launch(
@@ -1265,7 +1287,7 @@ private fun NoteEditorTopAppBar(
                 } else if (!currentState.note.audioNote) {
                     Icon(
                         modifier = Modifier
-                            .padding(end = 8.dp)
+                            .padding(end = 16.dp)
                             .clickable(
                                 onClick = {
                                     viewModel.processCommand(
@@ -1283,61 +1305,27 @@ private fun NoteEditorTopAppBar(
                             stringResource(R.string.preview_mode),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
-                    AnimatedVisibility(!currentState.isPreviewMode) {
-                        Icon(
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .clickable(
-                                    onClick = {
-                                        viewModel.processCommand(
-                                            NoteEditorCommand.AddNoteTextItem
-                                        )
-                                    }
-                                ),
-                            imageVector = Icons.Outlined.TextFields,
-                            contentDescription = stringResource(R.string.add_photo),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    AnimatedVisibility(!currentState.isPreviewMode) {
-                        Icon(
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .clickable(
-                                    onClick = {
-                                        imagePicker.launch(
-                                            PickVisualMediaRequest(
-                                                mediaType = ActivityResultContracts
-                                                    .PickVisualMedia
-                                                    .ImageOnly
-                                            )
-                                        )
-                                    }
-                                ),
-                            imageVector = Icons.Outlined.AddPhotoAlternate,
-                            contentDescription = stringResource(R.string.add_photo),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                 }
-                Icon(
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .clickable(
-                            onClick = {
-                                viewModel.processCommand(
-                                    NoteEditorCommand.OpenShareSheet
-                                )
-                            }
-                        ),
-                    imageVector = Icons.Outlined.Share,
-                    contentDescription = stringResource(R.string.share_note),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
                 AnimatedVisibility(!currentState.isPreviewMode) {
                     Icon(
                         modifier = Modifier
-                            .padding(end = 8.dp)
+                            .padding(end = 16.dp)
+                            .clickable(
+                                onClick = {
+                                    viewModel.processCommand(
+                                        NoteEditorCommand.OpenShareSheet
+                                    )
+                                }
+                            ),
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = stringResource(R.string.share_note),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                AnimatedVisibility(!currentState.isPreviewMode) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(end = 16.dp)
                             .clickable(
                                 onClick = {
                                     viewModel.processCommand(

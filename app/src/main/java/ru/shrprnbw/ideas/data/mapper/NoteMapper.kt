@@ -14,7 +14,6 @@ fun NotePreviewDto.toEntity(): NotePreview {
     return NotePreview(
         id = this.id,
         owner = this.owner.toEntity(),
-        groupName = this.groupName,
         title = this.title,
         preview = this.preview,
         tags = this.tags,
@@ -35,9 +34,8 @@ fun NoteDto.toEntity(): Note {
         audioNote = this.audioNote,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
+        groups = this.groups.map { it.toEntity() },
         collaborators = this.collaborators.map { it.toEntity() },
-        groupId = null,
-        groupName = this.groupName
     )
 }
 
