@@ -13,7 +13,9 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import ru.shrprnbw.ideas.data.remote.dto.request.AddCollaboratorRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteTextRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteToGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.AddUserToGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
@@ -22,6 +24,7 @@ import ru.shrprnbw.ideas.data.remote.dto.request.GoogleTokenAuthRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.RemoveNoteFromGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
@@ -268,6 +271,36 @@ interface IdeasApiService {
         @Header("Authorization") token: String,
         @Path("groupId") groupId: Long,
         @Body request: AddUserToGroupRequest
+    )
+
+    // Note Sharing API
+
+    @POST("$VERSION_1/notes/{noteId}/collaborators")
+    suspend fun addNoteCollaborator(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Body request: AddCollaboratorRequest
+    )
+
+    @DELETE("$VERSION_1/notes/{noteId}/collaborators/{collaboratorId}")
+    suspend fun removeNoteCollaborator(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Path("collaboratorId") collaboratorId: String
+    )
+
+    @POST("$VERSION_1/notes/{noteId}/groups")
+    suspend fun addNoteToGroup(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Body request: AddNoteToGroupRequest
+    )
+
+    @HTTP(method = "DELETE", path = "$VERSION_1/notes/{noteId}/groups", hasBody = true)
+    suspend fun removeNoteFromGroup(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Body request: RemoveNoteFromGroupRequest
     )
 
 }

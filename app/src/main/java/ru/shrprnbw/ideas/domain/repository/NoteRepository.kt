@@ -50,4 +50,12 @@ interface NoteRepository {
 
     suspend fun removeNoteTag(noteId: String, tag: String)
 
+    suspend fun addCollaborator(noteId: String, email: String?, userId: String?)
+
+    suspend fun removeCollaborator(noteId: String, collaboratorId: String)
+
+    suspend fun addNoteToGroup(noteId: String, groupId: Long, accessType: String)
+
+    suspend fun removeNoteFromGroup(noteId: String, groupId: Long)
+
 }

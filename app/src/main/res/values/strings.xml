@@ -99,4 +99,20 @@
     <string name="group_management_enter_uuid">Введите UUID пользователя</string>
     <string name="group_management_members">Участники группы</string>
     <string name="group_management_no_members">Нет участников</string>
+
+    <!-- Note Sharing -->
+    <string name="share_note">Поделиться заметкой</string>
+    <string name="share_note_title">Поделиться</string>
+    <string name="share_with_group">Поделиться с группой</string>
+    <string name="share_with_users">Поделиться с пользователями</string>
+    <string name="share_email_hint">Введите email пользователя</string>
+    <string name="share_add_collaborator">Добавить</string>
+    <string name="share_remove_collaborator">Удалить пользователя</string>
+    <string name="share_collaborators">Пользователи с доступом</string>
+    <string name="share_no_groups">Нет доступных групп</string>
+    <string name="share_remove_from_group">Убрать из группы</string>
+    <string name="share_error_add_collaborator">Не удалось добавить пользователя</string>
+    <string name="share_error_remove_collaborator">Не удалось удалить пользователя</string>
+    <string name="share_error_add_to_group">Не удалось добавить в группу</string>
+    <string name="share_error_remove_from_group">Не удалось убрать из группы</string>
 </resources>

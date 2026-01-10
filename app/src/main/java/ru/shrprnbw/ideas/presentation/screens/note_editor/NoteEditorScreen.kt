@@ -46,7 +46,10 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FormatBold
 import androidx.compose.material.icons.outlined.FormatItalic
 import androidx.compose.material.icons.outlined.FormatStrikethrough
+import androidx.compose.material.icons.outlined.GroupAdd
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.RemoveRedEye
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Discount
@@ -118,8 +121,10 @@ import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
+import ru.shrprnbw.ideas.domain.entity.Group
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.Tag
+import ru.shrprnbw.ideas.domain.entity.User
 import ru.shrprnbw.ideas.presentation.components.AudioNotePlayer
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
@@ -274,6 +279,36 @@ fun NoteEditorScreen(
                         },
                         onDismiss = {
                             viewModel.processCommand(NoteEditorCommand.DismissDeletionDialog)
+                        }
+                    )
+                }
+
+                if (currentState.showShareSheet) {
+                    ShareBottomSheet(
+                        collaborators = currentState.note.collaborators,
+                        currentGroupId = currentState.note.groupId,
+                        currentGroupName = currentState.note.groupName,
+                        availableGroups = currentState.availableGroups,
+                        collaboratorEmail = currentState.collaboratorEmail,
+                        shareError = currentState.shareError,
+                        isLoading = currentState.isShareLoading,
+                        onDismiss = {
+                            viewModel.processCommand(NoteEditorCommand.CloseShareSheet)
+                        },
+                        onEmailChange = { email ->
+                            viewModel.processCommand(NoteEditorCommand.InputCollaboratorEmail(email))
+                        },
+                        onAddCollaborator = { email ->
+                            viewModel.processCommand(NoteEditorCommand.AddCollaboratorByEmail(email))
+                        },
+                        onRemoveCollaborator = { collaboratorId ->
+                            viewModel.processCommand(NoteEditorCommand.RemoveCollaborator(collaboratorId))
+                        },
+                        onAddToGroup = { groupId ->
+                            viewModel.processCommand(NoteEditorCommand.AddToGroup(groupId))
+                        },
+                        onRemoveFromGroup = {
+                            viewModel.processCommand(NoteEditorCommand.RemoveFromGroup)
                         }
                     )
                 }
@@ -943,6 +978,221 @@ fun DeleteConfirmationDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShareBottomSheet(
+    collaborators: List<User>,
+    currentGroupId: Long?,
+    currentGroupName: String?,
+    availableGroups: List<Group>,
+    collaboratorEmail: String,
+    shareError: Int?,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onEmailChange: (String) -> Unit,
+    onAddCollaborator: (String) -> Unit,
+    onRemoveCollaborator: (String) -> Unit,
+    onAddToGroup: (Long) -> Unit,
+    onRemoveFromGroup: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.share_note_title),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.GroupAdd,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.share_with_group),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (currentGroupId != null && currentGroupName != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.secondaryContainer,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = currentGroupName,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    IconButton(
+                        onClick = onRemoveFromGroup,
+                        enabled = !isLoading
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.share_remove_from_group),
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+            } else {
+                if (availableGroups.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.share_no_groups),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
+                    )
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(availableGroups) { group ->
+                            AssistChip(
+                                onClick = { onAddToGroup(group.id) },
+                                label = { Text(group.name) },
+                                enabled = !isLoading
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PersonAdd,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.share_with_users),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = collaboratorEmail,
+                onValueChange = onEmailChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(stringResource(R.string.share_email_hint))
+                },
+                trailingIcon = {
+                    if (collaboratorEmail.isNotBlank()) {
+                        IconButton(
+                            onClick = { onAddCollaborator(collaboratorEmail) },
+                            enabled = !isLoading
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = stringResource(R.string.share_add_collaborator)
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                isError = shareError != null,
+                supportingText = {
+                    if (shareError != null) {
+                        Text(text = stringResource(shareError))
+                    }
+                },
+                enabled = !isLoading
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (collaborators.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.share_collaborators),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                collaborators.forEach { collaborator ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "${collaborator.firstName} ${collaborator.lastName}",
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = collaborator.email,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(
+                            onClick = { onRemoveCollaborator(collaborator.id) },
+                            enabled = !isLoading
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.share_remove_collaborator),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (isLoading) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ContainedLoadingIndicator()
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
 @Composable
 private fun NoteEditorTopAppBar(
     modifier: Modifier = Modifier,
@@ -1070,6 +1320,20 @@ private fun NoteEditorTopAppBar(
                         )
                     }
                 }
+                Icon(
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .clickable(
+                            onClick = {
+                                viewModel.processCommand(
+                                    NoteEditorCommand.OpenShareSheet
+                                )
+                            }
+                        ),
+                    imageVector = Icons.Outlined.Share,
+                    contentDescription = stringResource(R.string.share_note),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
                 AnimatedVisibility(!currentState.isPreviewMode) {
                     Icon(
                         modifier = Modifier

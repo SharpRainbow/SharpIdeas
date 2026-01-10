@@ -30,13 +30,19 @@ import kotlinx.coroutines.sync.withLock
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
+import ru.shrprnbw.ideas.domain.entity.Group
 import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.usecase.AddNoteCollaboratorUseCase
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTextBlockUseCase
+import ru.shrprnbw.ideas.domain.usecase.AddNoteToGroupUseCase
 import ru.shrprnbw.ideas.domain.usecase.DeleteNoteContentUseCase
 import ru.shrprnbw.ideas.domain.usecase.DeleteNoteUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetNoteInfoUseCase
+import ru.shrprnbw.ideas.domain.usecase.GetOwnedGroupsUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetUserTagsUseCase
+import ru.shrprnbw.ideas.domain.usecase.RemoveNoteCollaboratorUseCase
+import ru.shrprnbw.ideas.domain.usecase.RemoveNoteFromGroupUseCase
 import ru.shrprnbw.ideas.domain.usecase.RemoveNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteTextUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateNoteUseCase
@@ -57,6 +63,11 @@ class NoteEditorViewModel @AssistedInject constructor(
     private val removeNoteTagUseCase: RemoveNoteTagUseCase,
     private val getUserTagsUseCase: GetUserTagsUseCase,
     private val updateNoteTextUseCase: UpdateNoteTextUseCase,
+    private val addNoteCollaboratorUseCase: AddNoteCollaboratorUseCase,
+    private val removeNoteCollaboratorUseCase: RemoveNoteCollaboratorUseCase,
+    private val addNoteToGroupUseCase: AddNoteToGroupUseCase,
+    private val removeNoteFromGroupUseCase: RemoveNoteFromGroupUseCase,
+    private val getOwnedGroupsUseCase: GetOwnedGroupsUseCase,
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
@@ -461,6 +472,220 @@ class NoteEditorViewModel @AssistedInject constructor(
                     }
                 }
             }
+
+            NoteEditorCommand.OpenShareSheet -> {
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            previousState.copy(
+                                showShareSheet = true,
+                                isShareLoading = true,
+                                shareError = null
+                            )
+                        } else {
+                            previousState
+                        }
+                    }
+                    try {
+                        getOwnedGroupsUseCase().collect { groups ->
+                            _state.update { previousState ->
+                                if (previousState is NoteEditorState.Editing) {
+                                    previousState.copy(
+                                        availableGroups = groups,
+                                        isShareLoading = false
+                                    )
+                                } else {
+                                    previousState
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("NoteEditorViewModel", "Load groups error: ${e.message}")
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    isShareLoading = false
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }
+            }
+
+            NoteEditorCommand.CloseShareSheet -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            showShareSheet = false,
+                            collaboratorEmail = "",
+                            shareError = null
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
+
+            is NoteEditorCommand.InputCollaboratorEmail -> {
+                _state.update { previousState ->
+                    if (previousState is NoteEditorState.Editing) {
+                        previousState.copy(
+                            collaboratorEmail = command.email,
+                            shareError = null
+                        )
+                    } else {
+                        previousState
+                    }
+                }
+            }
+
+            is NoteEditorCommand.AddCollaboratorByEmail -> {
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            previousState.copy(isShareLoading = true)
+                        } else {
+                            previousState
+                        }
+                    }
+                    try {
+                        addNoteCollaboratorUseCase(noteId, command.email)
+                        loadNote(noteId)
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    collaboratorEmail = "",
+                                    isShareLoading = false
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("NoteEditorViewModel", "Add collaborator error: ${e.message}")
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    shareError = R.string.share_error_add_collaborator,
+                                    isShareLoading = false
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }
+            }
+
+            is NoteEditorCommand.RemoveCollaborator -> {
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            previousState.copy(isShareLoading = true)
+                        } else {
+                            previousState
+                        }
+                    }
+                    try {
+                        removeNoteCollaboratorUseCase(noteId, command.collaboratorId)
+                        loadNote(noteId)
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(isShareLoading = false)
+                            } else {
+                                previousState
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("NoteEditorViewModel", "Remove collaborator error: ${e.message}")
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    shareError = R.string.share_error_remove_collaborator,
+                                    isShareLoading = false
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }
+            }
+
+            is NoteEditorCommand.AddToGroup -> {
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        if (previousState is NoteEditorState.Editing) {
+                            previousState.copy(isShareLoading = true)
+                        } else {
+                            previousState
+                        }
+                    }
+                    try {
+                        addNoteToGroupUseCase(noteId, command.groupId)
+                        loadNote(noteId)
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(isShareLoading = false)
+                            } else {
+                                previousState
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d("NoteEditorViewModel", "Add to group error: ${e.message}")
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(
+                                    shareError = R.string.share_error_add_to_group,
+                                    isShareLoading = false
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }
+            }
+
+            NoteEditorCommand.RemoveFromGroup -> {
+                viewModelScope.launch {
+                    val currentState = _state.value
+                    if (currentState is NoteEditorState.Editing && currentState.note.groupId != null) {
+                        _state.update { previousState ->
+                            if (previousState is NoteEditorState.Editing) {
+                                previousState.copy(isShareLoading = true)
+                            } else {
+                                previousState
+                            }
+                        }
+                        try {
+                            removeNoteFromGroupUseCase(noteId, currentState.note.groupId)
+                            loadNote(noteId)
+                            _state.update { previousState ->
+                                if (previousState is NoteEditorState.Editing) {
+                                    previousState.copy(isShareLoading = false)
+                                } else {
+                                    previousState
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.d("NoteEditorViewModel", "Remove from group error: ${e.message}")
+                            _state.update { previousState ->
+                                if (previousState is NoteEditorState.Editing) {
+                                    previousState.copy(
+                                        shareError = R.string.share_error_remove_from_group,
+                                        isShareLoading = false
+                                    )
+                                } else {
+                                    previousState
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -716,6 +941,20 @@ sealed interface NoteEditorCommand {
 
     data class ApplyFormatting(val formatType: FormatType) : NoteEditorCommand
 
+    data object OpenShareSheet : NoteEditorCommand
+
+    data object CloseShareSheet : NoteEditorCommand
+
+    data class InputCollaboratorEmail(val email: String) : NoteEditorCommand
+
+    data class AddCollaboratorByEmail(val email: String) : NoteEditorCommand
+
+    data class RemoveCollaborator(val collaboratorId: String) : NoteEditorCommand
+
+    data class AddToGroup(val groupId: Long) : NoteEditorCommand
+
+    data object RemoveFromGroup : NoteEditorCommand
+
 }
 
 enum class FormatType {
@@ -740,7 +979,12 @@ sealed interface NoteEditorState {
         val uploadProgress: Float? = null,
         val showDeleteDialog: Boolean = false,
         val focusedContentIndex: Int = -1,
-        val selection: TextRange = TextRange.Zero
+        val selection: TextRange = TextRange.Zero,
+        val showShareSheet: Boolean = false,
+        val collaboratorEmail: String = "",
+        val availableGroups: List<Group> = emptyList(),
+        val shareError: Int? = null,
+        val isShareLoading: Boolean = false
     ) : NoteEditorState {
         val isSaveEnabled: Boolean
             get() {

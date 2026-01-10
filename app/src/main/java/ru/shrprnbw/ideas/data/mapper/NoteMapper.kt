@@ -35,7 +35,9 @@ fun NoteDto.toEntity(): Note {
         audioNote = this.audioNote,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
-        collaborators = this.collaborators.map { it.toEntity() }
+        collaborators = this.collaborators.map { it.toEntity() },
+        groupId = null,
+        groupName = this.groupName
     )
 }
 

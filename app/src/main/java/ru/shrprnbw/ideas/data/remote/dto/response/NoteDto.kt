@@ -9,8 +9,10 @@ data class NoteDto(
     val id: String,
     @SerialName("title")
     val title: String,
+//    @SerialName("groupId")
+//    val groupId: Long?,
     @SerialName("groupName")
-    val groupName: String,
+    val groupName: String?,
     @SerialName("owner")
     val owner: UserDto,
     @SerialName("contents")

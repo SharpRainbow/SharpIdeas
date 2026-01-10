@@ -6,6 +6,8 @@ data class Note(
     val createdAt: Long,
     val updatedAt: Long,
     val owner: User,
+    val groupId: Long?,
+    val groupName: String?,
     val contents: List<ContentItem>,
     val tags: List<String>,
     val collaborators: List<User>,

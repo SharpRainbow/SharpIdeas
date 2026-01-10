@@ -26,8 +26,11 @@ import ru.shrprnbw.ideas.data.ProgressEmittingRequestBody
 import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.mapper.toUpdateRequest
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
+import ru.shrprnbw.ideas.data.remote.dto.request.AddCollaboratorRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteTextRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.AddNoteToGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.RemoveNoteFromGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
@@ -268,6 +271,26 @@ class NoteRepositoryImpl @Inject constructor(
         val token = authRepository.getValidToken()
         apiService.removeNoteTag(token, noteId, tag)
         notesRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun addCollaborator(noteId: String, email: String?, userId: String?) {
+        val token = authRepository.getValidToken()
+        apiService.addNoteCollaborator(token, noteId, AddCollaboratorRequest(userId, email))
+    }
+
+    override suspend fun removeCollaborator(noteId: String, collaboratorId: String) {
+        val token = authRepository.getValidToken()
+        apiService.removeNoteCollaborator(token, noteId, collaboratorId)
+    }
+
+    override suspend fun addNoteToGroup(noteId: String, groupId: Long, accessType: String) {
+        val token = authRepository.getValidToken()
+        apiService.addNoteToGroup(token, noteId, AddNoteToGroupRequest(groupId, accessType))
+    }
+
+    override suspend fun removeNoteFromGroup(noteId: String, groupId: Long) {
+        val token = authRepository.getValidToken()
+        apiService.removeNoteFromGroup(token, noteId, RemoveNoteFromGroupRequest(groupId))
     }
 
     private fun getMimeTypeFromUri(uri: Uri): String? {
