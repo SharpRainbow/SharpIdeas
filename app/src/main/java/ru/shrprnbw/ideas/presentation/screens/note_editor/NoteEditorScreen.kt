@@ -11,6 +11,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,6 +67,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -93,6 +95,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -100,6 +103,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -662,29 +666,11 @@ fun FormattingToolbar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FormatButton(
-            icon = Icons.Outlined.FormatBold,
-            contentDescription = "Bold",
-            onClick = { onFormatClick(FormatType.BOLD) }
-        )
-        FormatButton(
-            icon = Icons.Outlined.FormatItalic,
-            contentDescription = "Italic",
-            onClick = { onFormatClick(FormatType.ITALIC) }
-        )
-        FormatButton(
-            icon = Icons.Outlined.FormatStrikethrough,
-            contentDescription = "Strikethrough",
-            onClick = { onFormatClick(FormatType.STRIKETHROUGH) }
-        )
-        FormatButton(
-            icon = Icons.Outlined.Code,
-            contentDescription = "Monospace",
-            onClick = { onFormatClick(FormatType.MONOSPACE) }
-        )
+        Spacer(Modifier.width(8.dp))
         IconButton(
             onClick = onTextAddClick,
             modifier = Modifier.size(40.dp)
@@ -705,12 +691,49 @@ fun FormattingToolbar(
                 tint = MaterialTheme.colorScheme.onSurface
             )
         }
+        FormatButton(
+            painter = painterResource(R.drawable.outline_format_h1_40),
+            contentDescription = "Heading1",
+            onClick = { onFormatClick(FormatType.HEADING_1) }
+        )
+        FormatButton(
+            painter = painterResource(R.drawable.outline_format_h2_40),
+            contentDescription = "Heading1",
+            onClick = { onFormatClick(FormatType.HEADING_2) }
+        )
+        FormatButton(
+            painter = painterResource(R.drawable.outline_format_h3_40),
+            contentDescription = "Heading1",
+            onClick = { onFormatClick(FormatType.HEADING_3) }
+        )
+        FormatButton(
+            icon = Icons.Outlined.FormatBold,
+            contentDescription = "Bold",
+            onClick = { onFormatClick(FormatType.BOLD) }
+        )
+        FormatButton(
+            icon = Icons.Outlined.FormatItalic,
+            contentDescription = "Italic",
+            onClick = { onFormatClick(FormatType.ITALIC) }
+        )
+        FormatButton(
+            icon = Icons.Outlined.FormatStrikethrough,
+            contentDescription = "Strikethrough",
+            onClick = { onFormatClick(FormatType.STRIKETHROUGH) }
+        )
+        FormatButton(
+            icon = Icons.Outlined.Code,
+            contentDescription = "Monospace",
+            onClick = { onFormatClick(FormatType.MONOSPACE) }
+        )
+        Spacer(Modifier.width(8.dp))
     }
 }
 
 @Composable
 private fun FormatButton(
-    icon: ImageVector,
+    icon: ImageVector? = null,
+    painter: Painter? = null,
     contentDescription: String,
     onClick: () -> Unit
 ) {
@@ -718,11 +741,20 @@ private fun FormatButton(
         onClick = onClick,
         modifier = Modifier.size(40.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.onSurface
-        )
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        } else if (painter != null) {
+            Icon(
+                modifier = Modifier.size(IconButtonDefaults.largeIconSize),
+                painter = painter,
+                contentDescription = contentDescription,
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 

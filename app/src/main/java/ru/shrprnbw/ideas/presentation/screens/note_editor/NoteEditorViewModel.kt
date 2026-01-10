@@ -418,35 +418,62 @@ class NoteEditorViewModel @AssistedInject constructor(
                     val start = currentState.selection.start
                     val end = currentState.selection.end
                     val contentItem = currentState.note.contents[currentState.focusedContentIndex]
-                    if (contentItem.type != ContentType.TEXT || start == end) {
+                    if (contentItem.type != ContentType.TEXT) {
                         return
                     }
                     val content = contentItem.data
                     val formatType = command.formatType
-                    val newText = when (formatType) {
-                        FormatType.BOLD -> applyBold(
-                            content, start, end
-                        )
+                    var isHeading = false
+                    val formatSymbol = when (formatType) {
+                        FormatType.BOLD -> "**"
 
-                        FormatType.ITALIC -> applyItalics(
-                            content, start, end
-                        )
+                        FormatType.ITALIC -> "~~"
 
-                        FormatType.STRIKETHROUGH -> applyStrikethrough(
-                            content, start, end
-                        )
+                        FormatType.STRIKETHROUGH -> "*"
 
-                        FormatType.MONOSPACE -> applyMonospace(
-                            content, start, end
-                        )
+                        FormatType.MONOSPACE -> "```"
+
+                        FormatType.HEADING_1 -> {
+                            isHeading = true
+                            "# "
+                        }
+
+                        FormatType.HEADING_2 -> {
+                            isHeading = true
+                            "## "
+                        }
+
+                        FormatType.HEADING_3 -> {
+                            isHeading = true
+                            "### "
+                        }
                     }
-                    val lengthDiff = (newText.length - content.length)
+                    if (start == end && !isHeading) {
+                        return
+                    }
+                    var selectionStart = start
+                    var selectionEnd = end
+                    val newText = if (isHeading) {
+                        applyHeading(formatSymbol, content, start, end).also { newText ->
+                            selectionStart += (newText.length - content.length)
+                            selectionEnd = selectionStart
+                        }
+                    } else {
+                        applyTextStyle(
+                            formatSymbol,
+                            content,
+                            start,
+                            end
+                        ).also { newText ->
+                            selectionEnd += (newText.length - content.length)
+                        }
+                    }
                     _state.update {
                         if (it is NoteEditorState.Editing) {
                             it.copy(
                                 selection = TextRange(
-                                    it.selection.start,
-                                    it.selection.end + lengthDiff
+                                    selectionStart,
+                                    selectionEnd
                                 )
                             )
                         } else {
@@ -795,14 +822,7 @@ class NoteEditorViewModel @AssistedInject constructor(
         }
     }
 
-    private fun applyBold(text: String, selectionStart: Int, selectionEnd: Int): String {
-
-        /**
-         * Function to apply $annotation around the selected text
-         */
-
-        val annotation = "**"
-
+    private fun applyTextStyle(annotation: String, text: String, selectionStart: Int, selectionEnd: Int): String {
         val start = minOf(selectionStart, selectionEnd)
         val end = maxOf(selectionStart, selectionEnd)
 
@@ -815,7 +835,7 @@ class NoteEditorViewModel @AssistedInject constructor(
                 val cleanText = selectedText.removeSurrounding(annotation)
                 "$beforeSelection$cleanText$afterSelection"
             } else {
-                "$beforeSelection**$selectedText**$afterSelection"
+                "$beforeSelection${annotation}$selectedText${annotation}$afterSelection"
             }
 
             return result
@@ -823,92 +843,30 @@ class NoteEditorViewModel @AssistedInject constructor(
             val beforeCursor = text.substring(0, start)
             val afterCursor = text.substring(start)
 
-            val result = "$beforeCursor**$afterCursor**"
+            val result = "$beforeCursor${annotation}$afterCursor${annotation}"
 
             return result
         }
     }
 
-    private fun applyStrikethrough(text: String, selectionStart: Int, selectionEnd: Int): String {
-        val annotation = "~~"
-        val start = minOf(selectionStart, selectionEnd)
-        val end = maxOf(selectionStart, selectionEnd)
-
-        if (start != end) {
-            val beforeSelection = text.substring(0, start)
-            val selectedText = text.substring(start, end)
-            val afterSelection = text.substring(end)
-
-            val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
-                val cleanText = selectedText.removeSurrounding(annotation)
-                "$beforeSelection$cleanText$afterSelection"
-            } else {
-                "$beforeSelection~~$selectedText~~$afterSelection"
+    private fun applyHeading(symbol: String, content: String, start: Int, end: Int): String {
+        val lines = content.lines().toMutableList()
+        var charCount = 0
+        for (i in lines.indices) {
+            val line = lines[i]
+            val lineStart = charCount
+            val lineEnd = charCount + line.length
+            if (lineStart <= start && lineEnd >= end) {
+                lines[i] = if (line.startsWith(symbol)) {
+                    line.removePrefix(symbol)
+                } else {
+                    "${symbol}$line"
+                }
+                break
             }
-
-            return result
-        } else {
-            val beforeCursor = text.substring(0, start)
-            val afterCursor = text.substring(start)
-
-            return "$beforeCursor~~$afterCursor~~"
+            charCount += line.length + 1
         }
-    }
-
-    private fun applyItalics(text: String, selectionStart: Int, selectionEnd: Int): String {
-        val annotation = "*"
-        val start = minOf(selectionStart, selectionEnd)
-        val end = maxOf(selectionStart, selectionEnd)
-
-        if (start != end) {
-            val beforeSelection = text.substring(0, start)
-            val selectedText = text.substring(start, end)
-            val afterSelection = text.substring(end)
-
-            val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
-                val cleanText = selectedText.removeSurrounding(annotation)
-                "$beforeSelection$cleanText$afterSelection"
-            } else {
-                "${beforeSelection}*${selectedText}*${afterSelection}"
-            }
-
-            return result
-        } else {
-            val beforeCursor = text.substring(0, start)
-            val afterCursor = text.substring(start)
-
-            return "${beforeCursor}*${afterCursor}*"
-        }
-    }
-
-    private fun applyMonospace(text: String, selectionStart: Int, selectionEnd: Int): String {
-
-        /**
-         * Function to apply $annotation around the selected text
-         */
-        val annotation = "```"
-        val start = minOf(selectionStart, selectionEnd)
-        val end = maxOf(selectionStart, selectionEnd)
-
-        if (start != end) {
-            val beforeSelection = text.substring(0, start)
-            val selectedText = text.substring(start, end)
-            val afterSelection = text.substring(end)
-
-            val result = if (selectedText.startsWith(annotation) && selectedText.endsWith(annotation)) {
-                val cleanText = selectedText.removeSurrounding(annotation)
-                "$beforeSelection$cleanText$afterSelection"
-            } else {
-                "$beforeSelection```$selectedText```$afterSelection"
-            }
-
-            return result
-        } else {
-            val beforeCursor = text.substring(0, start)
-            val afterCursor = text.substring(start)
-
-            return "$beforeCursor```$afterCursor```"
-        }
+        return lines.joinToString("\n")
     }
 
     @AssistedFactory
@@ -979,7 +937,10 @@ enum class FormatType {
     BOLD,
     ITALIC,
     STRIKETHROUGH,
-    MONOSPACE
+    MONOSPACE,
+    HEADING_1,
+    HEADING_2,
+    HEADING_3
 }
 
 sealed interface NoteEditorState {
