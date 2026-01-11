@@ -130,6 +130,7 @@ import coil3.compose.AsyncImage
 import com.colintheshots.twain.MarkdownText
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.domain.entity.AccessType
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
 import ru.shrprnbw.ideas.domain.entity.Group
@@ -1428,6 +1429,9 @@ private fun NoteEditorTopAppBar(
                 )
             },
             actions = {
+                if (currentState.note.accessType != AccessType.EDITOR) {
+                    return@TopAppBar
+                }
                 if (currentState.note.audioNote && currentState.note.contents.isEmpty()) {
                     Icon(
                         modifier = Modifier

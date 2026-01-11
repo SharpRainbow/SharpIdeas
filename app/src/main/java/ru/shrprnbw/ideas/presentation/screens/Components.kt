@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Label
+import androidx.compose.material.icons.filled.FolderShared
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
@@ -365,7 +366,8 @@ fun NavigationDrawerContent(
     selectedScreen: NavigationScreen = NavigationScreen.Home,
     onHomeClicked: () -> Unit = {},
     onTagManagementClicked: () -> Unit = {},
-    onGroupManagementClicked: () -> Unit = {}
+    onGroupManagementClicked: () -> Unit = {},
+    onSharedNotesClicked: () -> Unit = {}
 ) {
     ModalDrawerSheet(modifier = modifier) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -400,11 +402,20 @@ fun NavigationDrawerContent(
             onClick = onGroupManagementClicked,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Filled.FolderShared, contentDescription = null) },
+            label = { Text("Общие заметки") },
+            selected = selectedScreen == NavigationScreen.SharedNotes,
+            onClick = onSharedNotesClicked,
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
     }
 }
 
 enum class NavigationScreen {
     Home,
     TagManagement,
-    GroupManagement
+    GroupManagement,
+    SharedNotes
 }

@@ -75,6 +75,22 @@ class NoteRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getSharedNotes(): Flow<PagingData<NotePreview>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                NotePagingSource(
+                    apiService,
+                    authRepository,
+                    personal = false
+                )
+            }
+        ).flow
+    }
+
     override fun searchNotes(
         globalSearch: Boolean,
         title: String,

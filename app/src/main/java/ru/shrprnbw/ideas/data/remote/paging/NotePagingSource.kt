@@ -11,7 +11,8 @@ import ru.shrprnbw.ideas.domain.repository.AuthRepository
 
 class NotePagingSource(
     private val apiService: IdeasApiService,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val personal: Boolean = true
 ): PagingSource<Int, NotePreview>() {
 
     override fun getRefreshKey(state: PagingState<Int, NotePreview>): Int? {
@@ -25,11 +26,19 @@ class NotePagingSource(
         val position = params.key ?: ApiModule.FIRST_PAGE_INDEX
         return try {
             val token = authRepository.getValidToken()
-            val response = apiService.getUserNotes(
-                token = token,
-                page = position,
-                limit = params.loadSize
-            )
+            val response = if (personal) {
+                apiService.getUserNotes(
+                    token = token,
+                    page = position,
+                    limit = params.loadSize
+                )
+            } else {
+                apiService.getSharedNotes(
+                    token = token,
+                    page = position,
+                    limit = params.loadSize
+                )
+            }
             val nextKey =
                 if (response.page >= response.totalPages - 1) {
                     null

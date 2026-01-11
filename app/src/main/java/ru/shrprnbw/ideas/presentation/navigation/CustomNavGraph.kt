@@ -27,6 +27,7 @@ import ru.shrprnbw.ideas.presentation.screens.profile.ProfileScreen
 import ru.shrprnbw.ideas.presentation.screens.profile_edit.ProfileEditScreen
 import ru.shrprnbw.ideas.presentation.screens.register.RegisterScreen
 import ru.shrprnbw.ideas.presentation.screens.search.SearchScreen
+import ru.shrprnbw.ideas.presentation.screens.shared_notes.SharedNotesScreen
 import ru.shrprnbw.ideas.presentation.screens.tag_management.TagManagementScreen
 import ru.shrprnbw.ideas.presentation.screens.transcription_detail.TranscriptionDetailScreen
 import ru.shrprnbw.ideas.presentation.screens.transcriptions.TranscriptionsScreen
@@ -130,6 +131,9 @@ fun NavGraph() {
                         onNavigateToGroups = {
                             navController.navigate(Screen.Groups.route)
                         },
+                        onNavigateToSharedNotes = {
+                            navController.navigate(Screen.SharedNotes.route)
+                        },
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         NoteListScreen(
@@ -176,6 +180,9 @@ fun NavGraph() {
                         onNavigateToGroups = {
                             navController.navigate(Screen.Groups.route)
                         },
+                        onNavigateToSharedNotes = {
+                            navController.navigate(Screen.SharedNotes.route)
+                        },
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         TagManagementScreen(
@@ -200,6 +207,9 @@ fun NavGraph() {
                         },
                         onNavigateToGroups = {
                             navController.navigate(Screen.Groups.route)
+                        },
+                        onNavigateToSharedNotes = {
+                            navController.navigate(Screen.SharedNotes.route)
                         },
                         gesturesEnabled = true
                     ) { drawerState, scope ->
@@ -282,6 +292,39 @@ fun NavGraph() {
                         }
                     )
                 }
+
+                composable(
+                    route = Screen.SharedNotes.route
+                ) {
+                    MainScreenWithDrawer(
+                        selectedScreen = NavigationScreen.SharedNotes,
+                        currentRoute = Screen.SharedNotes,
+                        onNavigateToNotes = {
+                            navController.navigate(Screen.Notes.route) {
+                                popUpTo(Screen.Notes.route) { inclusive = true }
+                            }
+                        },
+                        onNavigateToTags = {
+                            navController.navigate(Screen.Tags.route)
+                        },
+                        onNavigateToGroups = {
+                            navController.navigate(Screen.Groups.route)
+                        },
+                        onNavigateToSharedNotes = {
+                            navController.navigate(Screen.SharedNotes.route)
+                        },
+                        gesturesEnabled = true
+                    ) { drawerState, scope ->
+                        SharedNotesScreen(
+                            onMenuClicked = {
+                                scope.launch { drawerState.open() }
+                            },
+                            onNoteClicked = { noteId ->
+                                navController.navigate(Screen.EditNote.createRoute(noteId))
+                            }
+                        )
+                    }
+                }
             }
         }
     }
@@ -296,6 +339,8 @@ sealed class Screen(val route: String) {
     data object Register : Screen("register")
     data object Login : Screen("login")
     data object Notes : Screen("notes")
+
+    data object SharedNotes : Screen("shared_notes")
     data object Search : Screen("search")
     data object Tags : Screen("tags")
     data object Groups : Screen("groups")

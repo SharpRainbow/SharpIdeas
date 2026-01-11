@@ -21,6 +21,7 @@ fun MainScreenWithDrawer(
     onNavigateToNotes: () -> Unit,
     onNavigateToTags: () -> Unit,
     onNavigateToGroups: () -> Unit,
+    onNavigateToSharedNotes: () -> Unit,
     gesturesEnabled: Boolean = true,
     content: @Composable (DrawerState, CoroutineScope) -> Unit
 ) {
@@ -59,6 +60,16 @@ fun MainScreenWithDrawer(
                         scope.launch {
                             drawerState.close()
                             onNavigateToGroups()
+                        }
+                    } else {
+                        scope.launch { drawerState.close() }
+                    }
+                },
+                onSharedNotesClicked = {
+                    if (currentRoute != Screen.SharedNotes) {
+                        scope.launch {
+                            drawerState.close()
+                            onNavigateToSharedNotes()
                         }
                     } else {
                         scope.launch { drawerState.close() }

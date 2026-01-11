@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.domain.entity.AccessType
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
 import ru.shrprnbw.ideas.domain.entity.Group
@@ -238,7 +239,8 @@ class NoteEditorViewModel @AssistedInject constructor(
                 viewModelScope.launch {
                     try {
                         _state.update { previousState ->
-                            if (previousState is NoteEditorState.Editing) {
+                            if (previousState is NoteEditorState.Editing
+                                && previousState.note.accessType == AccessType.EDITOR) {
                                 previousState.copy(
                                     showTagsDialog = true,
                                     tagError = null
@@ -358,7 +360,8 @@ class NoteEditorViewModel @AssistedInject constructor(
 
             NoteEditorCommand.TogglePreviewMode -> {
                 _state.update { previousState ->
-                    if (previousState is NoteEditorState.Editing) {
+                    if (previousState is NoteEditorState.Editing
+                        && previousState.note.accessType == AccessType.EDITOR) {
                         previousState.copy(
                             isPreviewMode = !previousState.isPreviewMode
                         )
@@ -954,7 +957,7 @@ sealed interface NoteEditorState {
         val availableTags: Set<Long> = emptySet(),
         val error: Int? = null,
         val tagError: Int? = null,
-        val isPreviewMode: Boolean = false,
+        val isPreviewMode: Boolean = note.accessType != AccessType.EDITOR,
         val uploadProgress: Float? = null,
         val showDeleteDialog: Boolean = false,
         val focusedContentIndex: Int = -1,

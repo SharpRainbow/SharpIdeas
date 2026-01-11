@@ -86,6 +86,13 @@ interface IdeasApiService {
         @Query("size") limit: Int,
     ): PagedResponse<NotePreviewDto>
 
+    @GET("$VERSION_1/notes/shared")
+    suspend fun getSharedNotes(
+        @Header("Authorization") token: String,
+        @Query("page") page: Int,
+        @Query("size") limit: Int,
+    ): PagedResponse<NotePreviewDto>
+
     @GET("$VERSION_1/notes/search")
     suspend fun searchNotes(
         @Header("Authorization") token: String,
