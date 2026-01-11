@@ -153,7 +153,7 @@ fun NoteEditorScreen(
         }
     ),
     onBackClicked: () -> Unit = { },
-    onTranscriptionsClicked: () -> Unit = { }
+    onTranscriptionsClicked: (Boolean) -> Unit = { }
 ) {
 
     val imagePicker = rememberLauncherForActivityResult(
@@ -273,7 +273,9 @@ fun NoteEditorScreen(
                             NoteEditorCommand.DeleteContentItem(idx)
                         )
                     },
-                    onTranscriptionsClicked = onTranscriptionsClicked,
+                    onTranscriptionsClicked = {
+                        onTranscriptionsClicked(currentState.note.accessType == AccessType.OWNER)
+                    },
                     onTagsClicked = {
                         viewModel.processCommand(NoteEditorCommand.OpenTagsDialog)
                     }
@@ -1429,7 +1431,7 @@ private fun NoteEditorTopAppBar(
                 )
             },
             actions = {
-                if (currentState.note.accessType != AccessType.EDITOR) {
+                if (currentState.note.accessType == AccessType.VIEWER) {
                     return@TopAppBar
                 }
                 if (currentState.note.audioNote && currentState.note.contents.isEmpty()) {

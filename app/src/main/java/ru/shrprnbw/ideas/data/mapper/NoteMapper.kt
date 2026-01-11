@@ -23,14 +23,14 @@ fun NotePreviewDto.toEntity(): NotePreview {
     )
 }
 
-fun NoteDto.toEntity(): Note {
+fun NoteDto.toEntity(accessType: String = this.accessType): Note {
     return Note(
         id = this.id,
         owner = this.owner.toEntity(),
         title = this.title,
         contents = this.contents.map { it.toEntity() },
         tags = this.tags,
-        accessType = AccessType.valueOf(this.accessType),
+        accessType = AccessType.valueOf(accessType),
         audioNote = this.audioNote,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,

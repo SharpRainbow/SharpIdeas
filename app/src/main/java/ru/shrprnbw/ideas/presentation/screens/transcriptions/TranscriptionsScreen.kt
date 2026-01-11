@@ -67,11 +67,12 @@ private fun getStatusColor(status: String): Color {
 fun TranscriptionsScreen(
     modifier: Modifier = Modifier,
     noteId: String,
+    hasAccess: Boolean,
     onBackClicked: () -> Unit,
     onTranscriptionClicked: (String) -> Unit,
     viewModel: TranscriptionsViewModel = hiltViewModel(
         creationCallback = { factory: TranscriptionsViewModel.Factory ->
-            factory.create(noteId)
+            factory.create(noteId, hasAccess)
         }
     )
 ) {
@@ -116,17 +117,19 @@ fun TranscriptionsScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    viewModel.processCommand(
-                        TranscriptionsCommand.ShowAddTranscriptionDialog(true)
+            if (state.canCreateTranscriptions) {
+                FloatingActionButton(
+                    onClick = {
+                        viewModel.processCommand(
+                            TranscriptionsCommand.ShowAddTranscriptionDialog(true)
+                        )
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.GraphicEq,
+                        contentDescription = stringResource(R.string.transcription_headline)
                     )
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.GraphicEq,
-                    contentDescription = stringResource(R.string.transcription_headline)
-                )
             }
         },
         snackbarHost = {

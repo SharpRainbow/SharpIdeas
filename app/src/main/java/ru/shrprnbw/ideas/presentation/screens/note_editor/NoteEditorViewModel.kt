@@ -240,7 +240,7 @@ class NoteEditorViewModel @AssistedInject constructor(
                     try {
                         _state.update { previousState ->
                             if (previousState is NoteEditorState.Editing
-                                && previousState.note.accessType == AccessType.EDITOR) {
+                                && previousState.note.accessType != AccessType.VIEWER) {
                                 previousState.copy(
                                     showTagsDialog = true,
                                     tagError = null
@@ -361,7 +361,7 @@ class NoteEditorViewModel @AssistedInject constructor(
             NoteEditorCommand.TogglePreviewMode -> {
                 _state.update { previousState ->
                     if (previousState is NoteEditorState.Editing
-                        && previousState.note.accessType == AccessType.EDITOR) {
+                        && previousState.note.accessType != AccessType.VIEWER) {
                         previousState.copy(
                             isPreviewMode = !previousState.isPreviewMode
                         )
@@ -957,7 +957,7 @@ sealed interface NoteEditorState {
         val availableTags: Set<Long> = emptySet(),
         val error: Int? = null,
         val tagError: Int? = null,
-        val isPreviewMode: Boolean = note.accessType != AccessType.EDITOR,
+        val isPreviewMode: Boolean = note.accessType == AccessType.VIEWER,
         val uploadProgress: Float? = null,
         val showDeleteDialog: Boolean = false,
         val focusedContentIndex: Int = -1,

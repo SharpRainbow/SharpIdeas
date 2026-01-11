@@ -21,29 +21,39 @@ import ru.shrprnbw.ideas.domain.usecase.RequestNoteTranscriptionUseCase
 @HiltViewModel(assistedFactory = TranscriptionsViewModel.Factory::class)
 class TranscriptionsViewModel @AssistedInject constructor(
     @Assisted("noteId") private val noteId: String,
+    @Assisted("hasAccess") private val hasAccess: Boolean,
     private val requestNoteTranscriptionUseCase: RequestNoteTranscriptionUseCase,
     getTranscriptionsUseCase: GetTranscriptionsUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TranscriptionsScreenState())
+    private val _state = MutableStateFlow(TranscriptionsScreenState(
+        canCreateTranscriptions = hasAccess
+    ))
     val state = _state.asStateFlow()
     val transcriptions: Flow<PagingData<Transcription>> =
         getTranscriptionsUseCase(noteId).cachedIn(viewModelScope)
 
     @AssistedFactory
     interface Factory {
-        fun create(@Assisted("noteId") noteId: String): TranscriptionsViewModel
+        fun create(
+            @Assisted("noteId") noteId: String,
+            @Assisted("hasAccess") hasAccess: Boolean
+        ): TranscriptionsViewModel
     }
 
     fun processCommand(command: TranscriptionsCommand) {
         when (command) {
             is TranscriptionsCommand.ShowAddTranscriptionDialog -> {
+                if (!hasAccess)
+                    return
                 _state.update {
                     it.copy(showAddTranscriptionDialog = command.show)
                 }
             }
 
             TranscriptionsCommand.AddTranscriptionTask -> {
+                if (!hasAccess)
+                    return
                 viewModelScope.launch {
                     _state.update { previousState ->
                         try {
@@ -87,6 +97,7 @@ sealed interface TranscriptionsCommand {
 }
 
 data class TranscriptionsScreenState(
+    val canCreateTranscriptions: Boolean,
     val showAddTranscriptionDialog: Boolean = false,
     val error: Int? = null
 )

@@ -253,8 +253,13 @@ fun NavGraph() {
                         onBackClicked = {
                             navController.popBackStack()
                         },
-                        onTranscriptionsClicked = {
-                            navController.navigate(Screen.Transcriptions.createRoute(noteId))
+                        onTranscriptionsClicked = { hasAccess ->
+                            navController.navigate(
+                                Screen.Transcriptions.createRoute(
+                                    noteId,
+                                    hasAccess = hasAccess
+                                )
+                            )
                         }
                     )
                 }
@@ -264,8 +269,10 @@ fun NavGraph() {
                     arguments = Screen.Transcriptions.arguments
                 ) { navBackStackEntry ->
                     val noteId = Screen.Transcriptions.getNoteId(navBackStackEntry.arguments)
+                    val hasAccess = Screen.Transcriptions.getHasAccess(navBackStackEntry.arguments)
                     TranscriptionsScreen(
                         noteId = noteId,
+                        hasAccess = hasAccess,
                         onBackClicked = {
                             navController.popBackStack()
                         },
@@ -362,18 +369,27 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object Transcriptions : Screen("transcriptions/{note_id}") {
+    data object Transcriptions : Screen("transcriptions/{note_id}?has_access={has_access}") {
         private const val noteIdArg = "note_id"
+        private const val accessArg = "has_access"
         val arguments = listOf(
-            navArgument(noteIdArg) { type = NavType.StringType }
+            navArgument(noteIdArg) { type = NavType.StringType },
+            navArgument(accessArg) {
+                type = NavType.BoolType
+                defaultValue = false
+            }
         )
 
-        fun createRoute(noteId: String): String {
-            return "transcriptions/$noteId"
+        fun createRoute(noteId: String, hasAccess: Boolean = false): String {
+            return "transcriptions/$noteId?has_access=$hasAccess"
         }
 
         fun getNoteId(arguments: Bundle?): String {
             return arguments?.getString(noteIdArg) ?: ""
+        }
+
+        fun getHasAccess(arguments: Bundle?): Boolean {
+            return arguments?.getBoolean(accessArg) ?: false
         }
     }
 

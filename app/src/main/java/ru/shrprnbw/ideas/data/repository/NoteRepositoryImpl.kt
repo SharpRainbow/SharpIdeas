@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onStart
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -36,17 +37,20 @@ import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NoteSearchPagingSource
 import ru.shrprnbw.ideas.data.remote.paging.TranscriptionPagingSource
+import ru.shrprnbw.ideas.domain.entity.AccessType
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.domain.entity.Transcription
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
+import ru.shrprnbw.ideas.domain.repository.CredentialsRepository
 import ru.shrprnbw.ideas.domain.repository.NoteRepository
 import java.io.IOException
 
 class NoteRepositoryImpl @Inject constructor(
     private val apiService: IdeasApiService,
     private val authRepository: AuthRepository,
+    private val credentialsRepository: CredentialsRepository,
     @param:ApplicationContext private val context: Context
 ) : NoteRepository {
 
@@ -119,7 +123,15 @@ class NoteRepositoryImpl @Inject constructor(
 
     override suspend fun getNoteInfo(noteId: String): Note {
         val token = authRepository.getValidToken()
-        return apiService.getNoteDetail(token, noteId).toEntity()
+        val noteInfo = apiService.getNoteDetail(token, noteId)
+        val userEmail = credentialsRepository.getSavedLogin().first()
+        return noteInfo.toEntity(
+            accessType = if (noteInfo.owner.email == userEmail) {
+                AccessType.OWNER.name
+            } else {
+                noteInfo.accessType
+            }
+        )
     }
 
     override suspend fun updateNote(noteId: String, title: String) {
