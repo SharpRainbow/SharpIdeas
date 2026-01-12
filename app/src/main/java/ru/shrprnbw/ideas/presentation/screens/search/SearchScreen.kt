@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -76,7 +77,7 @@ fun SearchScreen(
     val tagsLazyList = viewModel.tagsFlow.collectAsLazyPagingItems()
 
     Scaffold(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().imePadding(),
     ) { innerPadding ->
         val focusRequester = remember { FocusRequester() }
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -122,7 +123,7 @@ fun SearchScreen(
                                     onClick = onBackClicked
                                 ),
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back_button_description)
                         )
                     },
                     colors = TextFieldDefaults.colors(
@@ -131,7 +132,8 @@ fun SearchScreen(
                         disabledIndicatorColor = Color.Transparent,
                         focusedContainerColor = MaterialTheme.colorScheme.background,
                         unfocusedContainerColor = MaterialTheme.colorScheme.background
-                    )
+                    ),
+                    singleLine = true
                 )
             }
 
@@ -245,7 +247,7 @@ private fun NoteFilterChip(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Done,
-                    contentDescription = "Selected",
+                    contentDescription = stringResource(R.string.selected_icon_description),
                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                 )
             }

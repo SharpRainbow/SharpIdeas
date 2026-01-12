@@ -19,6 +19,7 @@ import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.presentation.screens.NavigationScreen
 import ru.shrprnbw.ideas.presentation.screens.group_management.GroupManagementScreen
+import ru.shrprnbw.ideas.presentation.screens.keywords.KeywordsScreen
 import ru.shrprnbw.ideas.presentation.screens.login.LoginScreen
 import ru.shrprnbw.ideas.presentation.screens.main.MainScreenWithDrawer
 import ru.shrprnbw.ideas.presentation.screens.note_editor.NoteEditorScreen
@@ -28,6 +29,8 @@ import ru.shrprnbw.ideas.presentation.screens.profile_edit.ProfileEditScreen
 import ru.shrprnbw.ideas.presentation.screens.register.RegisterScreen
 import ru.shrprnbw.ideas.presentation.screens.search.SearchScreen
 import ru.shrprnbw.ideas.presentation.screens.shared_notes.SharedNotesScreen
+import ru.shrprnbw.ideas.presentation.screens.summaries.SummariesScreen
+import ru.shrprnbw.ideas.presentation.screens.summary_detail.SummaryDetailScreen
 import ru.shrprnbw.ideas.presentation.screens.tag_management.TagManagementScreen
 import ru.shrprnbw.ideas.presentation.screens.transcription_detail.TranscriptionDetailScreen
 import ru.shrprnbw.ideas.presentation.screens.transcriptions.TranscriptionsScreen
@@ -260,6 +263,22 @@ fun NavGraph() {
                                     hasAccess = hasAccess
                                 )
                             )
+                        },
+                        onKeywordsClicked = { hasAccess ->
+                            navController.navigate(
+                                Screen.Keywords.createRoute(
+                                    noteId,
+                                    hasAccess = hasAccess
+                                )
+                            )
+                        },
+                        onSummariesClicked = { hasAccess ->
+                            navController.navigate(
+                                Screen.Summaries.createRoute(
+                                    noteId,
+                                    hasAccess = hasAccess
+                                )
+                            )
                         }
                     )
                 }
@@ -294,6 +313,56 @@ fun NavGraph() {
                     TranscriptionDetailScreen(
                         noteId = noteId,
                         transcriptionId = transcriptionId,
+                        onBackClicked = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+
+                composable(
+                    route = Screen.Keywords.route,
+                    arguments = Screen.Keywords.arguments
+                ) { navBackStackEntry ->
+                    val noteId = Screen.Keywords.getNoteId(navBackStackEntry.arguments)
+                    val hasAccess = Screen.Keywords.getHasAccess(navBackStackEntry.arguments)
+                    KeywordsScreen(
+                        noteId = noteId,
+                        hasAccess = hasAccess,
+                        onBackClicked = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+
+                composable(
+                    route = Screen.Summaries.route,
+                    arguments = Screen.Summaries.arguments
+                ) { navBackStackEntry ->
+                    val noteId = Screen.Summaries.getNoteId(navBackStackEntry.arguments)
+                    val hasAccess = Screen.Summaries.getHasAccess(navBackStackEntry.arguments)
+                    SummariesScreen(
+                        noteId = noteId,
+                        hasAccess = hasAccess,
+                        onBackClicked = {
+                            navController.popBackStack()
+                        },
+                        onSummaryClicked = { summaryId ->
+                            navController.navigate(
+                                Screen.SummaryDetail.createRoute(noteId, summaryId)
+                            )
+                        }
+                    )
+                }
+
+                composable(
+                    route = Screen.SummaryDetail.route,
+                    arguments = Screen.SummaryDetail.arguments
+                ) { navBackStackEntry ->
+                    val noteId = Screen.SummaryDetail.getNoteId(navBackStackEntry.arguments)
+                    val summaryId = Screen.SummaryDetail.getSummaryId(navBackStackEntry.arguments)
+                    SummaryDetailScreen(
+                        noteId = noteId,
+                        summaryId = summaryId,
                         onBackClicked = {
                             navController.popBackStack()
                         }
@@ -411,6 +480,75 @@ sealed class Screen(val route: String) {
 
         fun getTranscriptionId(arguments: Bundle?): String {
             return arguments?.getString(transcriptionIdArg) ?: ""
+        }
+    }
+
+    data object Keywords : Screen("keywords/{note_id}?has_access={has_access}") {
+        private const val noteIdArg = "note_id"
+        private const val accessArg = "has_access"
+        val arguments = listOf(
+            navArgument(noteIdArg) { type = NavType.StringType },
+            navArgument(accessArg) {
+                type = NavType.BoolType
+                defaultValue = false
+            }
+        )
+
+        fun createRoute(noteId: String, hasAccess: Boolean = false): String {
+            return "keywords/$noteId?has_access=$hasAccess"
+        }
+
+        fun getNoteId(arguments: Bundle?): String {
+            return arguments?.getString(noteIdArg) ?: ""
+        }
+
+        fun getHasAccess(arguments: Bundle?): Boolean {
+            return arguments?.getBoolean(accessArg) ?: false
+        }
+    }
+
+    data object Summaries : Screen("summaries/{note_id}?has_access={has_access}") {
+        private const val noteIdArg = "note_id"
+        private const val accessArg = "has_access"
+        val arguments = listOf(
+            navArgument(noteIdArg) { type = NavType.StringType },
+            navArgument(accessArg) {
+                type = NavType.BoolType
+                defaultValue = false
+            }
+        )
+
+        fun createRoute(noteId: String, hasAccess: Boolean = false): String {
+            return "summaries/$noteId?has_access=$hasAccess"
+        }
+
+        fun getNoteId(arguments: Bundle?): String {
+            return arguments?.getString(noteIdArg) ?: ""
+        }
+
+        fun getHasAccess(arguments: Bundle?): Boolean {
+            return arguments?.getBoolean(accessArg) ?: false
+        }
+    }
+
+    data object SummaryDetail : Screen("summary/{note_id}/{summary_id}") {
+        private const val noteIdArg = "note_id"
+        private const val summaryIdArg = "summary_id"
+        val arguments = listOf(
+            navArgument(noteIdArg) { type = NavType.StringType },
+            navArgument(summaryIdArg) { type = NavType.StringType }
+        )
+
+        fun createRoute(noteId: String, summaryId: String): String {
+            return "summary/$noteId/$summaryId"
+        }
+
+        fun getNoteId(arguments: Bundle?): String {
+            return arguments?.getString(noteIdArg) ?: ""
+        }
+
+        fun getSummaryId(arguments: Bundle?): String {
+            return arguments?.getString(summaryIdArg) ?: ""
         }
     }
 }

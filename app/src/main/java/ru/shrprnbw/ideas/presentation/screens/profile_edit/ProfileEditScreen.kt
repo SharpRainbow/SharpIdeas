@@ -5,7 +5,6 @@ package ru.shrprnbw.ideas.presentation.screens.profile_edit
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -70,7 +69,7 @@ fun ProfileEditScreen(
                     TopAppBar(
                         title = {
                             Text(
-                                text = "Редактирование профиля",
+                                text = stringResource(R.string.profile_edit_title),
                                 fontWeight = FontWeight.Bold
                             )
                         },
@@ -127,12 +126,12 @@ fun ProfileEditScreen(
                                     ProfileEditCommand.InputEmail(text)
                                 )
                             },
-                            label = { Text("Электронная почта") },
+                            label = { Text(stringResource(R.string.email_label)) },
                             leadingIcon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Email,
-                                    contentDescription = "Email Icon"
+                                    contentDescription = stringResource(R.string.email_icon_description)
                                 )
                             },
                         )
@@ -145,12 +144,12 @@ fun ProfileEditScreen(
                                     ProfileEditCommand.InputUsername(text)
                                 )
                             },
-                            label = { Text("Имя пользователя") },
+                            label = { Text(stringResource(R.string.username_label)) },
                             leadingIcon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Abc,
-                                    contentDescription = "Username Icon"
+                                    contentDescription = stringResource(R.string.username_icon_description)
                                 )
                             },
                         )
@@ -162,7 +161,7 @@ fun ProfileEditScreen(
                             viewModel.processCommand(ProfileEditCommand.SaveProfile)
                         }
                     ) {
-                        Text("Сохранить")
+                        Text(stringResource(R.string.profile_save_button))
                     }
                 }
 

@@ -88,7 +88,7 @@ fun TagManagementScreen(
                         IconButton(onClick = onMenuClicked) {
                             Icon(
                                 imageVector = Icons.Rounded.Menu,
-                                contentDescription = "Menu"
+                                contentDescription = stringResource(R.string.menu_icon_description)
                             )
                         }
                     }
@@ -192,7 +192,7 @@ fun TagManagementScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Check,
-                                        contentDescription = "Create"
+                                        contentDescription = stringResource(R.string.create_icon_description)
                                     )
                                 }
                             }
@@ -314,7 +314,7 @@ private fun TagListItem(
         ) {
             Icon(
                 imageVector = if (isEditing) Icons.Outlined.Check else Icons.Outlined.Edit,
-                contentDescription = if (isEditing) "Save" else "Edit"
+                contentDescription = if (isEditing) stringResource(R.string.save_icon_description) else stringResource(R.string.edit_icon_description)
             )
         }
 

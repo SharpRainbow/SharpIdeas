@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
-package ru.shrprnbw.ideas.presentation.screens.transcriptions
+package ru.shrprnbw.ideas.presentation.screens.summaries
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -47,9 +48,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
-import ru.shrprnbw.ideas.domain.entity.Transcription
+import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
-import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.utils.DateFormatter
 
 @Composable
@@ -64,28 +64,28 @@ private fun getStatusColor(status: String): Color {
 }
 
 @Composable
-fun TranscriptionsScreen(
+fun SummariesScreen(
     modifier: Modifier = Modifier,
     noteId: String,
     hasAccess: Boolean,
     onBackClicked: () -> Unit,
-    onTranscriptionClicked: (String) -> Unit,
-    viewModel: TranscriptionsViewModel = hiltViewModel(
-        creationCallback = { factory: TranscriptionsViewModel.Factory ->
+    onSummaryClicked: (String) -> Unit,
+    viewModel: SummariesViewModel = hiltViewModel(
+        creationCallback = { factory: SummariesViewModel.Factory ->
             factory.create(noteId, hasAccess)
         }
     )
 ) {
 
     val state by viewModel.state.collectAsState()
-    val transcriptions = viewModel.transcriptions.collectAsLazyPagingItems()
+    val summaries = viewModel.summaries.collectAsLazyPagingItems()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val errorMessage = state.error?.let { stringResource(it) }
     LaunchedEffect(state.error) {
         errorMessage?.let {
             snackbarHostState.showSnackbar(errorMessage)
-            viewModel.processCommand(TranscriptionsCommand.ResetError)
+            viewModel.processCommand(SummariesCommand.ResetError)
         }
     }
 
@@ -95,7 +95,7 @@ fun TranscriptionsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.transcriptions),
+                        text = stringResource(R.string.summaries),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -106,28 +106,27 @@ fun TranscriptionsScreen(
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 navigationIcon = {
-                    Icon(
-                        modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp)
-                            .clickable(onClick = onBackClicked),
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.back)
-                    )
+                    IconButton(onClick = onBackClicked) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
                 }
             )
         },
         floatingActionButton = {
-            if (state.canCreateTranscriptions) {
+            if (state.canCreateSummaries) {
                 FloatingActionButton(
                     onClick = {
                         viewModel.processCommand(
-                            TranscriptionsCommand.ShowAddTranscriptionDialog(true)
+                            SummariesCommand.ShowAddSummaryDialog(true)
                         )
                     }
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.GraphicEq,
-                        contentDescription = stringResource(R.string.transcription_headline)
+                        imageVector = Icons.Filled.Description,
+                        contentDescription = stringResource(R.string.summaries)
                     )
                 }
             }
@@ -138,28 +137,28 @@ fun TranscriptionsScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             PagedItemsTemplate(
-                items = transcriptions,
+                items = summaries,
                 paddingValues = innerPadding,
                 errorText = stringResource(R.string.error_network),
-                keyProducer = { index -> transcriptions[index]?.id ?: index },
+                keyProducer = { index -> summaries[index]?.id ?: index },
                 screenContent = {},
-            ) { transcription ->
-                TranscriptionItem(
-                    transcription = transcription,
-                    onClick = { onTranscriptionClicked(transcription.id) }
+            ) { summary ->
+                SummaryItem(
+                    summary = summary,
+                    onClick = { onSummaryClicked(summary.id) }
                 )
             }
 
-            if (state.showAddTranscriptionDialog) {
-                AddTranscriptionDialog(
+            if (state.showAddSummaryDialog) {
+                AddSummaryDialog(
                     onDismissRequest = {
                         viewModel.processCommand(
-                            TranscriptionsCommand.ShowAddTranscriptionDialog(false)
+                            SummariesCommand.ShowAddSummaryDialog(false)
                         )
                     },
                     onConfirmClick = {
                         viewModel.processCommand(
-                            TranscriptionsCommand.AddTranscriptionTask
+                            SummariesCommand.AddSummaryTask
                         )
                     }
                 )
@@ -169,9 +168,9 @@ fun TranscriptionsScreen(
 }
 
 @Composable
-fun TranscriptionItem(
+fun SummaryItem(
     modifier: Modifier = Modifier,
-    transcription: Transcription,
+    summary: Summary,
     onClick: () -> Unit
 ) {
     Card(
@@ -191,27 +190,27 @@ fun TranscriptionItem(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = if (transcription.autoGenerated) {
-                    stringResource(R.string.auto_generated_transcription)
+                text = if (summary.autoGenerated) {
+                    stringResource(R.string.auto_generated_summary)
                 } else {
-                    stringResource(R.string.manual_transcription)
+                    stringResource(R.string.manual_summary)
                 },
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
 
             Text(
-                text = DateFormatter.formatDateToString(transcription.createdAt),
+                text = DateFormatter.formatDateToString(summary.createdAt),
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            if (transcription.generationStatus.isNotBlank()) {
+            if (summary.generationStatus.isNotBlank()) {
                 Text(
-                    text = stringResource(R.string.status) + stringResource(R.string.status_separator) + transcription.generationStatus,
+                    text = stringResource(R.string.status) + stringResource(R.string.status_separator) + summary.generationStatus,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = getStatusColor(transcription.generationStatus)
+                    color = getStatusColor(summary.generationStatus)
                 )
             }
         }
@@ -219,7 +218,7 @@ fun TranscriptionItem(
 }
 
 @Composable
-private fun AddTranscriptionDialog(
+private fun AddSummaryDialog(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit
@@ -229,20 +228,20 @@ private fun AddTranscriptionDialog(
         onDismissRequest = onDismissRequest,
         icon = {
             Icon(
-                imageVector = Icons.Filled.GraphicEq,
+                imageVector = Icons.Filled.Description,
                 contentDescription = null,
-                tint = AudioGreen
+                tint = MaterialTheme.colorScheme.primary
             )
         },
         title = {
             Text(
-                text = stringResource(R.string.transcription_headline),
+                text = stringResource(R.string.summaries),
                 textAlign = TextAlign.Center
             )
         },
         text = {
             Text(
-                text = stringResource(R.string.transcription_supporting_text),
+                text = stringResource(R.string.summary_supporting_text),
                 style = TextStyle(lineBreak = LineBreak.Simple)
             )
         },

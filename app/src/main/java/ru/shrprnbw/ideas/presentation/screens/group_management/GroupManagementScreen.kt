@@ -100,7 +100,7 @@ fun GroupManagementScreen(
                         IconButton(onClick = onMenuClicked) {
                             Icon(
                                 imageVector = Icons.Rounded.Menu,
-                                contentDescription = "Menu"
+                                contentDescription = stringResource(R.string.menu_icon_description)
                             )
                         }
                     }
@@ -202,7 +202,7 @@ fun GroupManagementScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.Check,
-                                        contentDescription = "Create"
+                                        contentDescription = stringResource(R.string.create_icon_description)
                                     )
                                 }
                             }
@@ -351,7 +351,7 @@ private fun GroupListItem(
         ) {
             Icon(
                 imageVector = if (isEditing) Icons.Outlined.Check else Icons.Outlined.Edit,
-                contentDescription = if (isEditing) "Save" else "Edit"
+                contentDescription = if (isEditing) stringResource(R.string.save_icon_description) else stringResource(R.string.edit_icon_description)
             )
         }
     }
@@ -399,12 +399,12 @@ private fun GroupUsersBottomSheet(
             FilterChip(
                 selected = addUserByEmail,
                 onClick = { onToggleByEmail(true) },
-                label = { Text("Email") }
+                label = { Text(stringResource(R.string.filter_email)) }
             )
             FilterChip(
                 selected = !addUserByEmail,
                 onClick = { onToggleByEmail(false) },
-                label = { Text("UUID") }
+                label = { Text(stringResource(R.string.filter_uuid)) }
             )
         }
 
@@ -439,7 +439,7 @@ private fun GroupUsersBottomSheet(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.PersonAdd,
-                    contentDescription = "Add user"
+                    contentDescription = stringResource(R.string.add_user_icon_description)
                 )
             }
         }
@@ -490,7 +490,7 @@ private fun GroupUsersBottomSheet(
                     IconButton(onClick = { onRemoveUser(user.id) }) {
                         Icon(
                             imageVector = Icons.Outlined.PersonRemove,
-                            contentDescription = "Remove user",
+                            contentDescription = stringResource(R.string.remove_user_icon_description),
                             tint = MaterialTheme.colorScheme.error
                         )
                     }

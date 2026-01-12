@@ -1,17 +1,24 @@
 <resources>
     <string name="app_name">SharpIdeas</string>
-    <string name="back">Go back</string>
+    <string name="google_mobile_client_id" translatable="false">972869100739-2rqvqodr2a7ckifre80c8etv8spi6rig.apps.googleusercontent.com</string>
 
+    <!-- Language Names -->
+    <string name="language_name_en" translatable="false">English</string>
+    <string name="language_name_ru" translatable="false">Русский</string>
+
+    <!-- Common Strings -->
+    <string name="back">Go back</string>
     <string name="error_network">Unknown network error occurred</string>
     <string name="error_unknown">Unknown error occurred</string>
-    <string name="login_error_user_not_found">User not found</string>
-    <string name="login_error_invalid_credentials">Wrong password</string>
     <string name="profile_invalid_data">Wrong email</string>
     <string name="profile_data_conflict">Duplicate profile info</string>
+
+    <!-- Registration Screen -->
     <string name="registration_error_user_exists">User already exists</string>
     <string name="registration_error_invalid_data">Invalid registration data</string>
     <string name="registration_error_google_error">Google sign in failed, check email confirmation</string>
-    <string name="google_mobile_client_id">972869100739-2rqvqodr2a7ckifre80c8etv8spi6rig.apps.googleusercontent.com</string>
+
+    <!-- Note Editor Screen -->
     <string name="create_note">Create note</string>
     <string name="add_photo">Add photo</string>
     <string name="add_audio">Add audio</string>
@@ -28,35 +35,14 @@
     <string name="delete_note_request">Permanently delete?</string>
     <string name="edit_note_delete_error">Unable to delete note</string>
     <string name="edit_note_load_error">Unable to load note. Maybe it was deleted or server experiencing troubles</string>
-    <string name="transcriptions">Transcriptions</string>
-    <string name="transcription">Transcription</string>
-    <string name="no_transcriptions">No transcriptions available</string>
-    <string name="auto_generated_transcription">Auto-generated transcription</string>
-    <string name="manual_transcription">Manual transcription</string>
     <string name="status">Status</string>
-    <string name="note_list_error_load">Ошибка загрузки заметок. Пожалуйста, попробуйте еще раз позже.</string>
-    <string name="note_list_add_note">Создать текстовую заметку</string>
-    <string name="note_list_add_audio">Создать аудиозаметку</string>
-    <string name="search_screen_hint_search">Поиск заметок</string>
-    <string name="search_filter_all">Все</string>
-    <string name="search_filter_audio">Аудио</string>
-    <string name="search_filter_text">Текст</string>
-    <string name="note_tags">Теги</string>
-    <string name="note_tags_manage">Управление тегами</string>
-    <string name="note_tags_add">Добавить тег</string>
-    <string name="note_tags_input_hint">Введите название тега</string>
-    <string name="note_tags_error_add">Не удалось добавить тег</string>
-    <string name="note_tags_error_remove">Не удалось удалить тег</string>
-    <string name="note_tags_empty">Нет тегов</string>
-    <string name="tag_management_title">Edit labels</string>
-    <string name="tag_management_create_hint">Create new label</string>
-    <string name="tag_management_error_create">Не удалось создать тег</string>
-    <string name="tag_management_error_update">Не удалось обновить тег</string>
-    <string name="tag_management_error_delete">Не удалось удалить тег</string>
-    <string name="tag_management_error_load">Не удалось загрузить теги</string>
-    <string name="tag_management_error_create_duplicate">Tag already exist</string>
-    <string name="note_tags_error_duplicate">Note tag already exist</string>
-    <string name="tags_list_error_loading">Unable to load tags list</string>
+    <string name="note_tags">Tags</string>
+    <string name="note_tags_manage">Manage tags</string>
+    <string name="note_tags_add">Add tag</string>
+    <string name="note_tags_input_hint">Enter tag name</string>
+    <string name="note_tags_error_add">Unable to add tag</string>
+    <string name="note_tags_error_remove">Unable to remove tag</string>
+    <string name="note_tags_empty">No tags</string>
     <string name="preview_mode">Preview mode</string>
     <string name="edit_mode">Edit mode</string>
     <string name="edit_note_audio_upload_error">Unable to upload audio</string>
@@ -64,60 +50,188 @@
     <string name="delete_note_confirmation">This will make current note inaccessible on all devices</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="transcriptions_error_rate_limit">Transcription task is alredy in progress</string>
+
+    <!-- Keywords Screen -->
+    <string name="keywords">Keywords</string>
+    <string name="keywords_supporting_text">Your note will be analyzed by AI to extract key topics and terms. Keyword generation may take a few moments.</string>
+    <string name="add_keywords_to_note">Add Keywords to Note</string>
+    <string name="keywords_dialog_description">Tap on keywords to add them as tags to your note</string>
+
+    <!-- Summary Screen -->
+    <string name="summaries">Summaries</string>
+    <string name="summary">Summary</string>
+    <string name="auto_generated_summary">Auto-generated summary</string>
+    <string name="manual_summary">Manual summary</string>
+    <string name="summary_supporting_text">Your note will be summarized by AI to highlight the main points. Summary generation may take a few moments.</string>
+
+    <!-- Note List Screen -->
+    <string name="note_list_error_load">Error loading notes. Please try again later.</string>
+    <string name="note_list_add_note">Create text note</string>
+    <string name="note_list_add_audio">Create audio note</string>
+
+    <!-- Search Screen -->
+    <string name="search_screen_hint_search">Search notes</string>
+    <string name="search_filter_all">All</string>
+    <string name="search_filter_audio">Audio</string>
+    <string name="search_filter_text">Text</string>
+
+    <!-- Note Tags Screen -->
+    <string name="tag_management_title">Edit labels</string>
+    <string name="tag_management_create_hint">Create new label</string>
+    <string name="tag_management_error_create">Unable to create tag</string>
+    <string name="tag_management_error_update">Unable to update tag</string>
+    <string name="tag_management_error_delete">Unable to delete tag</string>
+    <string name="tag_management_error_load">Unable to load tags</string>
+    <string name="tag_management_error_create_duplicate">Tag already exist</string>
+    <string name="note_tags_error_duplicate">Note tag already exist</string>
+    <string name="tags_list_error_loading">Unable to load tags list</string>
+
+    <!-- Transcription Screen -->
+    <string name="transcriptions">Transcriptions</string>
+    <string name="transcription">Transcription</string>
+    <string name="no_transcriptions">No transcriptions available</string>
+    <string name="auto_generated_transcription">Auto-generated transcription</string>
+    <string name="manual_transcription">Manual transcription</string>
+    <string name="transcriptions_error_rate_limit">Transcription task is already in progress</string>
     <string name="transcriptions_error_unknown">Unable to add transcription</string>
     <string name="accept">Accept</string>
     <string name="transcription_headline">Generate transcription?</string>
     <string name="transcription_supporting_text">Your audio will be processed by AI. Transcription generation may take several minutes depending on the length of the audio.</string>
-    <string name="enter_with_google">Войти c Google</string>
-    <string name="enter">Войти</string>
-    <string name="register">Зарегистрироваться</string>
-    <string name="create_account_hint">Нет аккаунта?\n</string>
-    <string name="password_hint">Пароль</string>
-    <string name="email_hint">Электронная почта</string>
-    <string name="login_title">Войдите в свой аккаунт</string>
-    <string name="welcome_title">Добро пожаловать\n</string>
+
+    <!-- Login Screen -->
+    <string name="enter_with_google">Sign in with Google</string>
+    <string name="enter">Sign in</string>
+    <string name="register">Register</string>
+    <string name="create_account_hint">Don\'t have an account?\n</string>
+    <string name="password_hint">Password</string>
+    <string name="email_hint">Email</string>
+    <string name="login_title">Sign in to your account</string>
+    <string name="welcome_title">Welcome\n</string>
     <string name="email_icon_description">Email Icon</string>
     <string name="app_icon_description">App launcher</string>
     <string name="server_icon_description">Server icon</string>
     <string name="server_url_hint">Server url</string>
+    <string name="login_error_user_not_found">User not found</string>
+    <string name="login_error_invalid_credentials">Wrong password</string>
     <string name="login_error_invalid_server_url">Server is not responding! Check url!</string>
 
     <!-- Group Management -->
-    <string name="group_management_title">Управление группами</string>
-    <string name="group_management_create_hint">Создать новую группу</string>
-    <string name="group_management_error_create">Не удалось создать группу</string>
-    <string name="group_management_error_update">Не удалось обновить группу</string>
-    <string name="group_management_error_delete">Не удалось удалить группу</string>
-    <string name="group_management_error_load">Не удалось загрузить группы</string>
-    <string name="group_management_error_load_users">Не удалось загрузить пользователей группы</string>
-    <string name="group_management_error_add_user">Не удалось добавить пользователя</string>
-    <string name="group_management_error_remove_user">Не удалось удалить пользователя</string>
-    <string name="group_management_error_user_not_found">Пользователь не найден</string>
-    <string name="group_management_error_user_already_in_group">Пользователь уже в группе</string>
-    <string name="group_management_add_user">Добавить пользователя</string>
-    <string name="group_management_enter_email">Введите email пользователя</string>
-    <string name="group_management_enter_uuid">Введите UUID пользователя</string>
-    <string name="group_management_members">Участники группы</string>
-    <string name="group_management_no_members">Нет участников</string>
+    <string name="group_management_title">Group management</string>
+    <string name="group_management_create_hint">Create new group</string>
+    <string name="group_management_error_create">Unable to create group</string>
+    <string name="group_management_error_update">Unable to update group</string>
+    <string name="group_management_error_delete">Unable to delete group</string>
+    <string name="group_management_error_load">Unable to load groups</string>
+    <string name="group_management_error_load_users">Unable to load group users</string>
+    <string name="group_management_error_add_user">Unable to add user</string>
+    <string name="group_management_error_remove_user">Unable to remove user</string>
+    <string name="group_management_error_user_not_found">User not found</string>
+    <string name="group_management_error_user_already_in_group">User already in group</string>
+    <string name="group_management_add_user">Add user</string>
+    <string name="group_management_enter_email">Enter user email</string>
+    <string name="group_management_enter_uuid">Enter user UUID</string>
+    <string name="group_management_members">Group members</string>
+    <string name="group_management_no_members">No members</string>
 
     <!-- Note Sharing -->
-    <string name="share_note">Поделиться заметкой</string>
-    <string name="share_note_title">Поделиться</string>
-    <string name="share_with_group">Поделиться с группой</string>
-    <string name="share_with_users">Поделиться с пользователями</string>
-    <string name="share_email_hint">Введите email пользователя</string>
-    <string name="share_add_collaborator">Добавить</string>
-    <string name="share_remove_collaborator">Удалить пользователя</string>
-    <string name="share_collaborators">Пользователи с доступом</string>
-    <string name="share_no_groups">Нет доступных групп</string>
-    <string name="share_remove_from_group">Убрать из группы</string>
-    <string name="share_error_add_collaborator">Не удалось добавить пользователя</string>
-    <string name="share_error_remove_collaborator">Не удалось удалить пользователя</string>
-    <string name="share_error_add_to_group">Не удалось добавить в группу</string>
-    <string name="share_error_remove_from_group">Не удалось убрать из группы</string>
-    <string name="share_error_collaborator_not_found">Пользователь не найден</string>
-    <string name="share_error_collaborator_already_added">Пользователь уже имеет доступ к заметке</string>
+    <string name="share_note">Share note</string>
+    <string name="share_note_title">Share</string>
+    <string name="share_with_group">Share with group</string>
+    <string name="share_with_users">Share with users</string>
+    <string name="share_email_hint">Enter user email</string>
+    <string name="share_add_collaborator">Add</string>
+    <string name="share_remove_collaborator">Remove user</string>
+    <string name="share_collaborators">Users with access</string>
+    <string name="share_no_groups">No available groups</string>
+    <string name="share_remove_from_group">Remove from group</string>
+    <string name="share_error_add_collaborator">Unable to add user</string>
+    <string name="share_error_remove_collaborator">Unable to remove user</string>
+    <string name="share_error_add_to_group">Unable to add to group</string>
+    <string name="share_error_remove_from_group">Unable to remove from group</string>
+    <string name="share_error_collaborator_not_found">User not found</string>
+    <string name="share_error_collaborator_already_added">User already has access to the note</string>
     <string name="close">Close</string>
     <string name="shared_notes_screen_title">Shared notes</string>
+    <string name="keywords_placeholder">Keywords will be here...</string>
+
+    <!-- Content Descriptions -->
+    <string name="google_icon_description">Google Icon</string>
+    <string name="back_icon_description">Back Icon</string>
+    <string name="username_icon_description">Username Icon</string>
+    <string name="name_icon_description">Name Icon</string>
+    <string name="surname_icon_description">Surname Icon</string>
+    <string name="password_icon_description">Password Icon</string>
+    <string name="menu_icon_description">Menu</string>
+    <string name="search_icon_description">Search Icon</string>
+    <string name="account_icon_description">Account Icon</string>
+    <string name="create_icon_description">Create</string>
+    <string name="save_icon_description">Save</string>
+    <string name="edit_icon_description">Edit</string>
+    <string name="add_user_icon_description">Add user</string>
+    <string name="remove_user_icon_description">Remove user</string>
+    <string name="selected_icon_description">Selected</string>
+    <string name="heading1_description">Heading1</string>
+    <string name="bold_description">Bold</string>
+    <string name="italic_description">Italic</string>
+    <string name="strikethrough_description">Strikethrough</string>
+    <string name="monospace_description">Monospace</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Create account\n</string>
+    <string name="register_subtitle">Join SharpIdeas</string>
+    <string name="username_label">Username</string>
+    <string name="first_name_label">First name</string>
+    <string name="last_name_label">Last name</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+    <string name="register_button">Register</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_greeting">Hello, %1$s!</string>
+    <string name="profile_edit_data">Edit profile</string>
+    <string name="profile_logout">Sign out</string>
+    <string name="profile_error_load">Error loading profile</string>
+
+    <!-- Profile Edit Screen -->
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_save_button">Save</string>
+
+    <!-- Note Editor Screen -->
+    <string name="transcriptions_action">Transcriptions</string>
+    <string name="keywords_action">Keywords</string>
+    <string name="summary_action">Summary</string>
+    <string name="available_tags_title">Available tags</string>
+    <string name="uploading_audio">Uploading audio...</string>
+
+    <!-- Note List Screen -->
+    <string name="text_note_label">Text note</string>
+    <string name="audio_note_label">Audio note</string>
+    <string name="toggle_menu">Toggle menu</string>
+    <string name="close_menu">Close menu</string>
+    <string name="create_button">Create</string>
+
+    <!-- Search Screen -->
+    <string name="back_button_description">Back</string>
+
+    <!-- Keywords Screen -->
+    <string name="add_keywords_button">Add keywords to note</string>
+    <string name="status_separator">": "</string>
+
+    <!-- Filter Chips -->
+    <string name="filter_email">Email</string>
+    <string name="filter_uuid">UUID</string>
+
+    <!-- Password Component -->
+    <string name="password_placeholder">Password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
+    <string name="password_error_length">Password must be at least 8 characters long</string>
+    <string name="password_error_wrong">Wrong password</string>
+
+    <!-- Navigation Drawer -->
+    <string name="drawer_home">Home</string>
+    <string name="drawer_tag_management">Tag management</string>
+    <string name="drawer_group_management">Group management</string>
+    <string name="drawer_shared_notes">Shared notes</string>
 </resources>

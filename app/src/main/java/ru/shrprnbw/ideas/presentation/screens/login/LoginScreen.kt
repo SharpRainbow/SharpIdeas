@@ -15,7 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Domain
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -146,7 +146,7 @@ fun LoginScreen(
                             icon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
-                                    imageVector = Icons.Default.Domain,
+                                    imageVector = Icons.Default.Dns,
                                     contentDescription = stringResource(R.string.server_icon_description)
                                 )
                             },
@@ -232,7 +232,7 @@ fun LoginScreen(
                     ) {
                         Icon(
                             imageVector = CustomIcons.Google,
-                            contentDescription = "Google Icon",
+                            contentDescription = stringResource(R.string.google_icon_description),
                             modifier = Modifier.size(ButtonDefaults.IconSize)
                         )
                         Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))

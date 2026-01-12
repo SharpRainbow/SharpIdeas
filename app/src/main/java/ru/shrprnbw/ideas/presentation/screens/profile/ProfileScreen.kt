@@ -69,7 +69,7 @@ fun ProfileScreen(
                     TopAppBar(
                         title = {
                             Text(
-                                text = "Профиль",
+                                text = stringResource(R.string.profile_title),
                                 fontWeight = FontWeight.Bold
                             )
                         },
@@ -127,18 +127,18 @@ fun ProfileScreen(
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Привет, ${currentState.firstName}!",
+                            text = stringResource(R.string.profile_greeting, currentState.firstName),
                             style = MaterialTheme.typography.headlineSmall
                         )
                         Spacer(Modifier.height(16.dp))
                         OutlinedButton(onClick = onEditProfile) {
-                            Text("Изменить данные")
+                            Text(stringResource(R.string.profile_edit_data))
                         }
                         Spacer(Modifier.height(4.dp))
                         TextButton(onClick = {
                             viewModel.processCommand(ProfileScreenCommand.Logout)
                         }) {
-                            Text("Выйти из аккаунта")
+                            Text(stringResource(R.string.profile_logout))
                         }
                     }
                 }
@@ -156,14 +156,14 @@ fun ProfileScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Ошибка загрузки профиля",
+                    text = stringResource(R.string.profile_error_load),
                     color = MaterialTheme.colorScheme.error
                 )
                 Spacer(Modifier.height(4.dp))
                 OutlinedButton(onClick = {
                     viewModel.processCommand(ProfileScreenCommand.Logout)
                 }) {
-                    Text("Выйти из аккаунта")
+                    Text(stringResource(R.string.profile_logout))
                 }
             }
         }

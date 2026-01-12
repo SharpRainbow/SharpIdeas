@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SharpIdeas</string>
+
+    <!-- Common Strings -->
+    <string name="back">Назад</string>
+    <string name="error_network">Произошла неизвестная ошибка сети</string>
+    <string name="error_unknown">Произошла неизвестная ошибка</string>
+    <string name="profile_invalid_data">Неверный email</string>
+    <string name="profile_data_conflict">Дублирование данных профиля</string>
+
+    <!-- Registration Screen -->
+    <string name="registration_error_user_exists">Пользователь уже существует</string>
+    <string name="registration_error_invalid_data">Неверные данные регистрации</string>
+    <string name="registration_error_google_error">Вход через Google не удался, проверьте подтверждение email</string>
+
+    <!-- Note Editor Screen -->
+    <string name="create_note">Создать заметку</string>
+    <string name="add_photo">Добавить фото</string>
+    <string name="add_audio">Добавить аудио</string>
+    <string name="add_text">Добавить текст</string>
+    <string name="note_title">Название</string>
+    <string name="save_note">Сохранить заметку</string>
+    <string name="add_text_hint">Запишите что-нибудь</string>
+    <string name="edit_note">Редактировать заметку</string>
+    <string name="edit_note_error">Не удалось сохранить заметку</string>
+    <string name="remove_image">Удалить изображение</string>
+    <string name="edit_note_image_upload_error">Не удалось загрузить изображение</string>
+    <string name="edit_note_content_delete_error">Не удалось удалить содержимое</string>
+    <string name="delete_note">Удалить заметку</string>
+    <string name="delete_note_request">Удалить навсегда?</string>
+    <string name="edit_note_delete_error">Не удалось удалить заметку</string>
+    <string name="edit_note_load_error">Не удалось загрузить заметку. Возможно, она была удалена или сервер испытывает проблемы</string>
+    <string name="status">Статус</string>
+    <string name="note_tags">Теги</string>
+    <string name="note_tags_manage">Управление тегами</string>
+    <string name="note_tags_add">Добавить тег</string>
+    <string name="note_tags_input_hint">Введите название тега</string>
+    <string name="note_tags_error_add">Не удалось добавить тег</string>
+    <string name="note_tags_error_remove">Не удалось удалить тег</string>
+    <string name="note_tags_empty">Нет тегов</string>
+    <string name="preview_mode">Режим просмотра</string>
+    <string name="edit_mode">Режим редактирования</string>
+    <string name="edit_note_audio_upload_error">Не удалось загрузить аудио</string>
+    <string name="note_name">Название заметки</string>
+    <string name="delete_note_confirmation">Заметка станет недоступной на всех устройствах</string>
+    <string name="delete">Удалить</string>
+    <string name="cancel">Отмена</string>
+
+    <!-- Keywords Screen -->
+    <string name="keywords">Ключевые слова</string>
+    <string name="keywords_supporting_text">Ваша заметка будет проанализирована ИИ для извлечения ключевых тем и терминов. Генерация ключевых слов может занять некоторое время.</string>
+    <string name="add_keywords_to_note">Добавить ключевые слова в заметку</string>
+    <string name="keywords_dialog_description">Нажмите на ключевые слова, чтобы добавить их в качестве тегов к вашей заметке</string>
+
+    <!-- Summary Screen -->
+    <string name="summaries">Резюме</string>
+    <string name="summary">Резюме</string>
+    <string name="auto_generated_summary">Автоматически созданное резюме</string>
+    <string name="manual_summary">Ручное резюме</string>
+    <string name="summary_supporting_text">Ваша заметка будет сокращена ИИ для выделения основных моментов. Генерация резюме может занять некоторое время.</string>
+
+    <!-- Note List Screen -->
+    <string name="note_list_error_load">Ошибка загрузки заметок. Пожалуйста, попробуйте еще раз позже.</string>
+    <string name="note_list_add_note">Создать текстовую заметку</string>
+    <string name="note_list_add_audio">Создать аудиозаметку</string>
+
+    <!-- Search Screen -->
+    <string name="search_screen_hint_search">Поиск заметок</string>
+    <string name="search_filter_all">Все</string>
+    <string name="search_filter_audio">Аудио</string>
+    <string name="search_filter_text">Текст</string>
+
+    <!-- Note Tags Screen -->
+    <string name="tag_management_title">Редактировать метки</string>
+    <string name="tag_management_create_hint">Создать новую метку</string>
+    <string name="tag_management_error_create">Не удалось создать тег</string>
+    <string name="tag_management_error_update">Не удалось обновить тег</string>
+    <string name="tag_management_error_delete">Не удалось удалить тег</string>
+    <string name="tag_management_error_load">Не удалось загрузить теги</string>
+    <string name="tag_management_error_create_duplicate">Тег уже существует</string>
+    <string name="note_tags_error_duplicate">Тег заметки уже существует</string>
+    <string name="tags_list_error_loading">Не удалось загрузить список тегов</string>
+
+    <!-- Transcription Screen -->
+    <string name="transcriptions">Транскрипции</string>
+    <string name="transcription">Транскрипция</string>
+    <string name="no_transcriptions">Транскрипции недоступны</string>
+    <string name="auto_generated_transcription">Автоматически созданная транскрипция</string>
+    <string name="manual_transcription">Ручная транскрипция</string>
+    <string name="transcriptions_error_rate_limit">Задача транскрипции уже выполняется</string>
+    <string name="transcriptions_error_unknown">Не удалось добавить транскрипцию</string>
+    <string name="accept">Принять</string>
+    <string name="transcription_headline">Создать транскрипцию?</string>
+    <string name="transcription_supporting_text">Ваше аудио будет обработано ИИ. Генерация транскрипции может занять несколько минут в зависимости от длительности аудио.</string>
+
+    <!-- Login Screen -->
+    <string name="enter_with_google">Войти с Google</string>
+    <string name="enter">Войти</string>
+    <string name="register">Зарегистрироваться</string>
+    <string name="create_account_hint">Нет аккаунта?\n</string>
+    <string name="password_hint">Пароль</string>
+    <string name="email_hint">Электронная почта</string>
+    <string name="login_title">Войдите в свой аккаунт</string>
+    <string name="welcome_title">Добро пожаловать\n</string>
+    <string name="email_icon_description">Значок Email</string>
+    <string name="app_icon_description">Значок приложения</string>
+    <string name="server_icon_description">Значок сервера</string>
+    <string name="server_url_hint">URL сервера</string>
+    <string name="login_error_user_not_found">Пользователь не найден</string>
+    <string name="login_error_invalid_credentials">Неверный пароль</string>
+    <string name="login_error_invalid_server_url">Сервер не отвечает! Проверьте URL!</string>
+
+    <!-- Group Management -->
+    <string name="group_management_title">Управление группами</string>
+    <string name="group_management_create_hint">Создать новую группу</string>
+    <string name="group_management_error_create">Не удалось создать группу</string>
+    <string name="group_management_error_update">Не удалось обновить группу</string>
+    <string name="group_management_error_delete">Не удалось удалить группу</string>
+    <string name="group_management_error_load">Не удалось загрузить группы</string>
+    <string name="group_management_error_load_users">Не удалось загрузить пользователей группы</string>
+    <string name="group_management_error_add_user">Не удалось добавить пользователя</string>
+    <string name="group_management_error_remove_user">Не удалось удалить пользователя</string>
+    <string name="group_management_error_user_not_found">Пользователь не найден</string>
+    <string name="group_management_error_user_already_in_group">Пользователь уже в группе</string>
+    <string name="group_management_add_user">Добавить пользователя</string>
+    <string name="group_management_enter_email">Введите email пользователя</string>
+    <string name="group_management_enter_uuid">Введите UUID пользователя</string>
+    <string name="group_management_members">Участники группы</string>
+    <string name="group_management_no_members">Нет участников</string>
+
+    <!-- Note Sharing -->
+    <string name="share_note">Поделиться заметкой</string>
+    <string name="share_note_title">Поделиться</string>
+    <string name="share_with_group">Поделиться с группой</string>
+    <string name="share_with_users">Поделиться с пользователями</string>
+    <string name="share_email_hint">Введите email пользователя</string>
+    <string name="share_add_collaborator">Добавить</string>
+    <string name="share_remove_collaborator">Удалить пользователя</string>
+    <string name="share_collaborators">Пользователи с доступом</string>
+    <string name="share_no_groups">Нет доступных групп</string>
+    <string name="share_remove_from_group">Убрать из группы</string>
+    <string name="share_error_add_collaborator">Не удалось добавить пользователя</string>
+    <string name="share_error_remove_collaborator">Не удалось удалить пользователя</string>
+    <string name="share_error_add_to_group">Не удалось добавить в группу</string>
+    <string name="share_error_remove_from_group">Не удалось убрать из группы</string>
+    <string name="share_error_collaborator_not_found">Пользователь не найден</string>
+    <string name="share_error_collaborator_already_added">Пользователь уже имеет доступ к заметке</string>
+    <string name="close">Закрыть</string>
+    <string name="shared_notes_screen_title">Общие заметки</string>
+    <string name="keywords_placeholder">Ключевые слова будут здесь...</string>
+
+    <!-- Content Descriptions -->
+    <string name="google_icon_description">Значок Google</string>
+    <string name="back_icon_description">Значок назад</string>
+    <string name="username_icon_description">Значок имени пользователя</string>
+    <string name="name_icon_description">Значок имени</string>
+    <string name="surname_icon_description">Значок фамилии</string>
+    <string name="password_icon_description">Значок пароля</string>
+    <string name="menu_icon_description">Меню</string>
+    <string name="search_icon_description">Значок поиска</string>
+    <string name="account_icon_description">Значок аккаунта</string>
+    <string name="create_icon_description">Создать</string>
+    <string name="save_icon_description">Сохранить</string>
+    <string name="edit_icon_description">Редактировать</string>
+    <string name="add_user_icon_description">Добавить пользователя</string>
+    <string name="remove_user_icon_description">Удалить пользователя</string>
+    <string name="selected_icon_description">Выбрано</string>
+    <string name="heading1_description">Заголовок1</string>
+    <string name="bold_description">Жирный</string>
+    <string name="italic_description">Курсив</string>
+    <string name="strikethrough_description">Зачеркнутый</string>
+    <string name="monospace_description">Моноширинный</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Создать аккаунт\n</string>
+    <string name="register_subtitle">Присоединяйтесь к SharpIdeas</string>
+    <string name="username_label">Имя пользователя</string>
+    <string name="first_name_label">Имя</string>
+    <string name="last_name_label">Фамилия</string>
+    <string name="email_label">Электронная почта</string>
+    <string name="password_label">Пароль</string>
+    <string name="register_button">Зарегистрироваться</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_title">Профиль</string>
+    <string name="profile_greeting">Привет, %1$s!</string>
+    <string name="profile_edit_data">Изменить данные</string>
+    <string name="profile_logout">Выйти из аккаунта</string>
+    <string name="profile_error_load">Ошибка загрузки профиля</string>
+
+    <!-- Profile Edit Screen -->
+    <string name="profile_edit_title">Редактирование профиля</string>
+    <string name="profile_save_button">Сохранить</string>
+
+    <!-- Note Editor Screen -->
+    <string name="transcriptions_action">Транскрипции</string>
+    <string name="keywords_action">Ключевые слова</string>
+    <string name="summary_action">Резюме</string>
+    <string name="available_tags_title">Доступные теги</string>
+    <string name="uploading_audio">Загрузка аудио...</string>
+
+    <!-- Note List Screen -->
+    <string name="text_note_label">Текстовая заметка</string>
+    <string name="audio_note_label">Аудиозаметка</string>
+    <string name="toggle_menu">Переключить меню</string>
+    <string name="close_menu">Закрыть меню</string>
+    <string name="create_button">Создать</string>
+
+    <!-- Search Screen -->
+    <string name="back_button_description">Назад</string>
+
+    <!-- Keywords Screen -->
+    <string name="add_keywords_button">Добавить ключевые слова в заметку</string>
+    <string name="status_separator">": "</string>
+
+    <!-- Filter Chips -->
+    <string name="filter_email">Email</string>
+    <string name="filter_uuid">UUID</string>
+
+    <!-- Password Component -->
+    <string name="password_placeholder">Пароль</string>
+    <string name="hide_password">Скрыть пароль</string>
+    <string name="show_password">Показать пароль</string>
+    <string name="password_error_length">Пароль должен быть не менее 8 символов</string>
+    <string name="password_error_wrong">Неверный пароль</string>
+
+    <!-- Navigation Drawer -->
+    <string name="drawer_home">Главный экран</string>
+    <string name="drawer_tag_management">Управление тегами</string>
+    <string name="drawer_group_management">Управление группами</string>
+    <string name="drawer_shared_notes">Общие заметки</string>
+</resources>

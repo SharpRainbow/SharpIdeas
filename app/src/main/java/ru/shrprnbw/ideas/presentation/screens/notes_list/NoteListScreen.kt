@@ -78,6 +78,7 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -218,7 +219,7 @@ fun NoteListScreen(
 @Composable
 private fun SearchBar(
     modifier: Modifier = Modifier,
-    searchPlaceholder: String = "Поиск заметок",
+    searchPlaceholder: String = stringResource(R.string.search_screen_hint_search),
     onSearchTriggered: () -> Unit = {},
     onProfileClicked: () -> Unit = {},
     onMenuClicked: () -> Unit = {},
@@ -239,7 +240,7 @@ private fun SearchBar(
                     onClick = onMenuClicked
                 ),
             imageVector = Icons.Rounded.Menu,
-            contentDescription = "Menu Icon",
+            contentDescription = stringResource(R.string.menu_icon_description),
             tint = SearchBarDefaults.appBarWithSearchColors().appBarNavigationIconColor
         )
         with(sharedTransitionScope ?: return) {
@@ -273,7 +274,7 @@ private fun SearchBar(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Rounded.Search,
-                        contentDescription = "Search Icon",
+                        contentDescription = stringResource(R.string.search_icon_description),
                         tint = SearchBarDefaults.inputFieldColors().unfocusedLeadingIconColor
                     )
                 },
@@ -292,7 +293,7 @@ private fun SearchBar(
                     onClick = onProfileClicked
                 ),
             imageVector = Icons.Rounded.AccountCircle,
-            contentDescription = "Account Icon",
+            contentDescription = stringResource(R.string.account_icon_description),
             tint = SearchBarDefaults.appBarWithSearchColors().appBarActionIconColor
         )
     }
@@ -305,6 +306,7 @@ fun BoxScope.FloatingActionButtonWithMenu(
     onAudioNoteClicked: () -> Unit = {},
     listState: LazyListState = rememberLazyListState()
 ) {
+    val context = LocalContext.current
     val fabVisible by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex == 0 || !listState.canScrollForward
@@ -313,8 +315,8 @@ fun BoxScope.FloatingActionButtonWithMenu(
     val focusRequester = remember { FocusRequester() }
     val items =
         listOf(
-            Icons.Filled.TextFields to "Text note",
-            Icons.Rounded.AudioFile to "Audio note"
+            Icons.Filled.TextFields to stringResource(R.string.text_note_label),
+            Icons.Rounded.AudioFile to stringResource(R.string.audio_note_label)
         )
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
     BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
@@ -327,7 +329,7 @@ fun BoxScope.FloatingActionButtonWithMenu(
                     TooltipDefaults.rememberTooltipPositionProvider(
                         TooltipAnchorPosition.Above
                     ),
-                tooltip = { PlainTooltip { Text("Toggle menu") } },
+                tooltip = { PlainTooltip { Text(stringResource(R.string.toggle_menu)) } },
                 state = rememberTooltipState(),
             ) {
                 ToggleFloatingActionButton(
@@ -365,7 +367,7 @@ fun BoxScope.FloatingActionButtonWithMenu(
                                 customActions =
                                     listOf(
                                         CustomAccessibilityAction(
-                                            label = "Close menu",
+                                            label = context.getString(R.string.close_menu),
                                             action = {
                                                 fabMenuExpanded = false
                                                 true
@@ -431,12 +433,12 @@ private fun CreateNoteDialog(
         },
         confirmButton = {
             TextButton(onClick = onCreateNoteRequest) {
-                Text("Create")
+                Text(stringResource(R.string.create_button))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

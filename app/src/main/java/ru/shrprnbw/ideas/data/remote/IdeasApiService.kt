@@ -32,7 +32,9 @@ import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
 import ru.shrprnbw.ideas.data.remote.dto.response.GroupDto
 import ru.shrprnbw.ideas.data.remote.dto.response.LoginResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NoteDto
+import ru.shrprnbw.ideas.data.remote.dto.response.NoteKeywordDto
 import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
+import ru.shrprnbw.ideas.data.remote.dto.response.NoteSummaryDto
 import ru.shrprnbw.ideas.data.remote.dto.response.PagedResponse
 import ru.shrprnbw.ideas.data.remote.dto.response.StatusResponse
 import ru.shrprnbw.ideas.data.remote.dto.response.TagDto
@@ -199,6 +201,41 @@ interface IdeasApiService {
 
     @POST("$VERSION_1/notes/{noteId}/transcriptions")
     suspend fun generateNoteTranscription(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String
+    )
+
+    @GET("$VERSION_1/notes/{noteId}/keywords")
+    suspend fun getKeywords(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Query("page") page: Int,
+        @Query("size") limit: Int
+    ): PagedResponse<NoteKeywordDto>
+
+    @POST("$VERSION_1/notes/{noteId}/keywords")
+    suspend fun generateNoteKeywords(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String
+    )
+
+    @GET("$VERSION_1/notes/{noteId}/summaries")
+    suspend fun getSummaries(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Query("page") page: Int,
+        @Query("size") limit: Int
+    ): PagedResponse<NoteSummaryDto>
+
+    @GET("$VERSION_1/notes/{noteId}/summaries/{summaryId}")
+    suspend fun getSummary(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Path("summaryId") summaryId: String
+    ): NoteSummaryDto
+
+    @POST("$VERSION_1/notes/{noteId}/summaries")
+    suspend fun generateNoteSummary(
         @Header("Authorization") token: String,
         @Path("noteId") noteId: String
     )

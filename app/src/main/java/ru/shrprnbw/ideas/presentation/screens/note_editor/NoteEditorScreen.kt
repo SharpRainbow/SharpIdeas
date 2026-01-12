@@ -153,7 +153,9 @@ fun NoteEditorScreen(
         }
     ),
     onBackClicked: () -> Unit = { },
-    onTranscriptionsClicked: (Boolean) -> Unit = { }
+    onTranscriptionsClicked: (Boolean) -> Unit = { },
+    onKeywordsClicked: (Boolean) -> Unit = { },
+    onSummariesClicked: (Boolean) -> Unit = { }
 ) {
 
     val imagePicker = rememberLauncherForActivityResult(
@@ -278,6 +280,12 @@ fun NoteEditorScreen(
                     },
                     onTagsClicked = {
                         viewModel.processCommand(NoteEditorCommand.OpenTagsDialog)
+                    },
+                    onKeywordsClicked = {
+                        onKeywordsClicked(currentState.note.accessType == AccessType.OWNER)
+                    },
+                    onSummariesClicked = {
+                        onSummariesClicked(currentState.note.accessType == AccessType.OWNER)
                     }
                 )
 
@@ -379,6 +387,8 @@ fun Content(
     onDeleteTextRequested: (Int) -> Unit,
     onTranscriptionsClicked: () -> Unit = { },
     onTagsClicked: () -> Unit = { },
+    onKeywordsClicked: () -> Unit = { },
+    onSummariesClicked: () -> Unit = { }
 ) {
     var viewingImageUrl by remember { mutableStateOf<String?>(null) }
 
@@ -397,7 +407,7 @@ fun Content(
                 if (note.audioNote) {
                     NoteTransformation(
                         modifier = Modifier.weight(1f),
-                        actionName = "Transcriptions",
+                        actionName = stringResource(R.string.transcriptions_action),
                         color = AudioGreen,
                         imageVector = Icons.Rounded.GraphicEq,
                         onClick = onTranscriptionsClicked
@@ -405,15 +415,17 @@ fun Content(
                 } else {
                     NoteTransformation(
                         modifier = Modifier.weight(1f),
-                        actionName = "Keywords",
+                        actionName = stringResource(R.string.keywords_action),
                         color = Color(0xFF7B1FA2),
-                        imageVector = Icons.Rounded.Discount
+                        imageVector = Icons.Rounded.Discount,
+                        onClick = onKeywordsClicked
                     )
                     NoteTransformation(
                         modifier = Modifier.weight(1f),
-                        actionName = "Summary",
+                        actionName = stringResource(R.string.summary_action),
                         color = TextBlue,
-                        imageVector = Icons.Rounded.AutoFixHigh
+                        imageVector = Icons.Rounded.AutoFixHigh,
+                        onClick = onSummariesClicked
                     )
                 }
             }
@@ -725,37 +737,37 @@ fun FormattingToolbar(
         }
         FormatButton(
             painter = painterResource(R.drawable.outline_format_h1_40),
-            contentDescription = "Heading1",
+            contentDescription = stringResource(R.string.heading1_description),
             onClick = { onFormatClick(FormatType.HEADING_1) }
         )
         FormatButton(
             painter = painterResource(R.drawable.outline_format_h2_40),
-            contentDescription = "Heading1",
+            contentDescription = stringResource(R.string.heading1_description),
             onClick = { onFormatClick(FormatType.HEADING_2) }
         )
         FormatButton(
             painter = painterResource(R.drawable.outline_format_h3_40),
-            contentDescription = "Heading1",
+            contentDescription = stringResource(R.string.heading1_description),
             onClick = { onFormatClick(FormatType.HEADING_3) }
         )
         FormatButton(
             icon = Icons.Outlined.FormatBold,
-            contentDescription = "Bold",
+            contentDescription = stringResource(R.string.bold_description),
             onClick = { onFormatClick(FormatType.BOLD) }
         )
         FormatButton(
             icon = Icons.Outlined.FormatItalic,
-            contentDescription = "Italic",
+            contentDescription = stringResource(R.string.italic_description),
             onClick = { onFormatClick(FormatType.ITALIC) }
         )
         FormatButton(
             icon = Icons.Outlined.FormatStrikethrough,
-            contentDescription = "Strikethrough",
+            contentDescription = stringResource(R.string.strikethrough_description),
             onClick = { onFormatClick(FormatType.STRIKETHROUGH) }
         )
         FormatButton(
             icon = Icons.Outlined.Code,
-            contentDescription = "Monospace",
+            contentDescription = stringResource(R.string.monospace_description),
             onClick = { onFormatClick(FormatType.MONOSPACE) }
         )
         Spacer(Modifier.width(8.dp))
@@ -966,7 +978,7 @@ fun TagsBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
             if (availableTags.itemCount > 0) {
                 Text(
-                    text = "Доступные теги",
+                    text = stringResource(R.string.available_tags_title),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1015,7 +1027,7 @@ fun UploadProgressOverlay(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Uploading audio...",
+                text = stringResource(R.string.uploading_audio),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )

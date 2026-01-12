@@ -62,6 +62,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -73,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.Utils
@@ -81,7 +83,7 @@ import ru.shrprnbw.ideas.utils.Utils
 fun PasswordInputField(
     modifier: Modifier = Modifier,
     value: String,
-    placeHolderText: String = "Password",
+    placeHolderText: String = stringResource(R.string.password_placeholder),
     insufficientChars: Boolean = false,
     wrongPassword: Boolean = false,
     onValueChange: (String) -> Unit,
@@ -99,14 +101,14 @@ fun PasswordInputField(
             Icon(
                 modifier = Modifier.size(20.dp),
                 imageVector = Icons.Filled.Password,
-                contentDescription = "Password Icon"
+                contentDescription = stringResource(R.string.password_icon_description)
             )
         },
         trailingIcon = {
             val image = if (passwordVisible)
                 Icons.Filled.Visibility
             else Icons.Filled.VisibilityOff
-            val description = if (passwordVisible) "Hide password" else "Show password"
+            val description = if (passwordVisible) stringResource(R.string.hide_password) else stringResource(R.string.show_password)
             IconButton(
                 onClick = { passwordVisible = !passwordVisible }
             ) {
@@ -120,8 +122,8 @@ fun PasswordInputField(
         singleLine = true,
         isError = insufficientChars || wrongPassword,
         supportingText = {
-            if (insufficientChars) Text(text = "Password must be at least 8 characters long")
-            else if (wrongPassword) Text(text = "Wrong password")
+            if (insufficientChars) Text(text = stringResource(R.string.password_error_length))
+            else if (wrongPassword) Text(text = stringResource(R.string.password_error_wrong))
         }
     )
 }
@@ -299,13 +301,13 @@ fun NoteItem(
                     ) {
                         if (type == NoteType.Text) {
                             NoteLabel(
-                                label = "Текст",
+                                label = stringResource(R.string.search_filter_text),
                                 color = TextBlue,
                                 imageVector = Icons.Rounded.TextFields
                             )
                         } else {
                             NoteLabel(
-                                label = "Аудио",
+                                label = stringResource(R.string.search_filter_audio),
                                 color = AudioGreen,
                                 imageVector = Icons.Rounded.AudioFile
                             )
@@ -372,7 +374,7 @@ fun NavigationDrawerContent(
     ModalDrawerSheet(modifier = modifier) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "SharpIdeas",
+            text = stringResource(R.string.app_name),
             modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
             style = MaterialTheme.typography.titleLarge
         )
@@ -381,7 +383,7 @@ fun NavigationDrawerContent(
 
         NavigationDrawerItem(
             icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
-            label = { Text("Главный экран") },
+            label = { Text(stringResource(R.string.drawer_home)) },
             selected = selectedScreen == NavigationScreen.Home,
             onClick = onHomeClicked,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -389,7 +391,7 @@ fun NavigationDrawerContent(
 
         NavigationDrawerItem(
             icon = { Icon(Icons.AutoMirrored.Rounded.Label, contentDescription = null) },
-            label = { Text("Управление тегами") },
+            label = { Text(stringResource(R.string.drawer_tag_management)) },
             selected = selectedScreen == NavigationScreen.TagManagement,
             onClick = onTagManagementClicked,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -397,7 +399,7 @@ fun NavigationDrawerContent(
 
         NavigationDrawerItem(
             icon = { Icon(Icons.Filled.Group, contentDescription = null) },
-            label = { Text("Управление группами") },
+            label = { Text(stringResource(R.string.drawer_group_management)) },
             selected = selectedScreen == NavigationScreen.GroupManagement,
             onClick = onGroupManagementClicked,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -405,7 +407,7 @@ fun NavigationDrawerContent(
 
         NavigationDrawerItem(
             icon = { Icon(Icons.Filled.FolderShared, contentDescription = null) },
-            label = { Text("Общие заметки") },
+            label = { Text(stringResource(R.string.drawer_shared_notes)) },
             selected = selectedScreen == NavigationScreen.SharedNotes,
             onClick = onSharedNotesClicked,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)

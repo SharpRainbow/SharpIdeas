@@ -34,13 +34,17 @@ import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RemoveNoteFromGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
+import ru.shrprnbw.ideas.data.remote.paging.KeywordPagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NoteSearchPagingSource
+import ru.shrprnbw.ideas.data.remote.paging.SummaryPagingSource
 import ru.shrprnbw.ideas.data.remote.paging.TranscriptionPagingSource
 import ru.shrprnbw.ideas.domain.entity.AccessType
 import ru.shrprnbw.ideas.domain.entity.ContentItem
+import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
+import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.domain.entity.Transcription
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.CredentialsRepository
@@ -57,6 +61,8 @@ class NoteRepositoryImpl @Inject constructor(
     // TODO: Add flow for single note updates
     private val notesRefreshTrigger = MutableSharedFlow<Unit>()
     private val transcriptionsRefreshTrigger = MutableSharedFlow<Unit>()
+    private val keywordsRefreshTrigger = MutableSharedFlow<Unit>()
+    private val summariesRefreshTrigger = MutableSharedFlow<Unit>()
 
     override fun getUserNotes(): Flow<PagingData<NotePreview>> {
         return notesRefreshTrigger.onStart {
@@ -287,6 +293,67 @@ class NoteRepositoryImpl @Inject constructor(
         val token = authRepository.getValidToken()
         apiService.generateNoteTranscription(token, noteId)
         transcriptionsRefreshTrigger.emit(Unit)
+    }
+
+    override fun getKeywords(noteId: String): Flow<PagingData<Keyword>> {
+        return keywordsRefreshTrigger.onStart {
+            emit(Unit)
+        }.debounce(
+            timeoutMillis = 1000
+        ).flatMapLatest {
+            Pager(
+                config = PagingConfig(
+                    pageSize = 10,
+                    enablePlaceholders = false
+                ),
+                pagingSourceFactory = {
+                    KeywordPagingSource(
+                        apiService,
+                        authRepository,
+                        noteId
+                    )
+                }
+            ).flow
+        }
+    }
+
+    override suspend fun requestKeywords(noteId: String) {
+        val token = authRepository.getValidToken()
+        apiService.generateNoteKeywords(token, noteId)
+        keywordsRefreshTrigger.emit(Unit)
+    }
+
+    override fun getSummaries(noteId: String): Flow<PagingData<Summary>> {
+        return summariesRefreshTrigger.onStart {
+            emit(Unit)
+        }.debounce(
+            timeoutMillis = 1000
+        ).flatMapLatest {
+            Pager(
+                config = PagingConfig(
+                    pageSize = 10,
+                    enablePlaceholders = false
+                ),
+                pagingSourceFactory = {
+                    SummaryPagingSource(
+                        apiService,
+                        authRepository,
+                        noteId
+                    )
+                }
+            ).flow
+        }
+    }
+
+    override suspend fun getSummary(noteId: String, summaryId: String): Summary {
+        val token = authRepository.getValidToken()
+        return apiService.getSummary(token, noteId, summaryId).toEntity()
+    }
+
+    override suspend fun requestSummary(noteId: String) {
+        val token = authRepository.getValidToken()
+        apiService.generateNoteSummary(token, noteId)
+        summariesRefreshTrigger.emit(Unit)
     }
 
     override suspend fun addNoteTag(noteId: String, tag: String) {

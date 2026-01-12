@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -75,7 +76,7 @@ fun RegisterScreen(
                 }
             }
             Scaffold(
-                modifier = modifier.fillMaxSize(),
+                modifier = modifier.fillMaxSize().imePadding(),
                 topBar = {
                     RegisterScreenTopBar(
                         onBackClicked = onBackClicked,
@@ -113,7 +114,7 @@ fun RegisterScreen(
                                 .size(72.dp)
                                 .clip(RoundedCornerShape(16.dp)),
                             painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                            contentDescription = "App launcher"
+                            contentDescription = stringResource(R.string.app_icon_description)
                         )
                     }
                     Text(
@@ -128,9 +129,9 @@ fun RegisterScreen(
                                         fontWeight = FontWeight.Bold
                                     )
                             ) {
-                                append("Создать аккаунт\n")
+                                append(stringResource(R.string.register_title))
                             }
-                            append("Присоединяйтесь к SharpIdeas")
+                            append(stringResource(R.string.register_subtitle))
                         },
                         textAlign = TextAlign.Center,
                         style = TextStyle(
@@ -150,12 +151,12 @@ fun RegisterScreen(
                                     RegisterCommand.InputUsername(text)
                                 )
                             },
-                            label = "Имя пользователя",
+                            label = stringResource(R.string.username_label),
                             icon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Abc,
-                                    contentDescription = "Username Icon"
+                                    contentDescription = stringResource(R.string.username_icon_description)
                                 )
                             },
                         )
@@ -166,12 +167,12 @@ fun RegisterScreen(
                                     RegisterCommand.InputFirstName(text)
                                 )
                             },
-                            label = "Имя",
+                            label = stringResource(R.string.first_name_label),
                             icon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Person,
-                                    contentDescription = "Name Icon"
+                                    contentDescription = stringResource(R.string.name_icon_description)
                                 )
                             },
                         )
@@ -182,12 +183,12 @@ fun RegisterScreen(
                                     RegisterCommand.InputLastName(text)
                                 )
                             },
-                            label = "Фамилия",
+                            label = stringResource(R.string.last_name_label),
                             icon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Person,
-                                    contentDescription = "Surname Icon"
+                                    contentDescription = stringResource(R.string.surname_icon_description)
                                 )
                             },
                         )
@@ -198,19 +199,19 @@ fun RegisterScreen(
                                     RegisterCommand.InputEmail(text)
                                 )
                             },
-                            label = "Электронная почта",
+                            label = stringResource(R.string.email_label),
                             icon = {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Filled.Email,
-                                    contentDescription = "Email Icon"
+                                    contentDescription = stringResource(R.string.email_icon_description)
                                 )
                             }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         PasswordInputField(
                             value = currentState.password,
-                            placeHolderText = "Пароль",
+                            placeHolderText = stringResource(R.string.password_label),
                             insufficientChars = currentState.errorInputPassword
                         ) { text ->
                             viewModel.processCommand(
@@ -229,7 +230,7 @@ fun RegisterScreen(
                             viewModel.processCommand(RegisterCommand.Submit)
                         }
                     ) {
-                        Text("Зарегистрироваться")
+                        Text(stringResource(R.string.register_button))
                     }
                 }
 
@@ -263,7 +264,7 @@ private fun RegisterScreenTopBar(
                         onClick = onBackClicked
                     ),
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = "Back Icon"
+                contentDescription = stringResource(R.string.back_icon_description)
             )
         },
         scrollBehavior = scrollBehavior

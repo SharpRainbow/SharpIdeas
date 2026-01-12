@@ -4,8 +4,10 @@ import android.net.Uri
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.domain.entity.ContentItem
+import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
+import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.domain.entity.Transcription
 
 interface NoteRepository {
@@ -47,6 +49,16 @@ interface NoteRepository {
     suspend fun getTranscription(noteId: String, transcriptionId: String): Transcription
 
     suspend fun requestTranscription(noteId: String)
+
+    fun getKeywords(noteId: String): Flow<PagingData<Keyword>>
+
+    suspend fun requestKeywords(noteId: String)
+
+    fun getSummaries(noteId: String): Flow<PagingData<Summary>>
+
+    suspend fun getSummary(noteId: String, summaryId: String): Summary
+
+    suspend fun requestSummary(noteId: String)
 
     suspend fun addNoteTag(noteId: String, tag: String)
 
