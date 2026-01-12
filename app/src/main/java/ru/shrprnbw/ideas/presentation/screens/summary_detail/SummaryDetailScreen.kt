@@ -2,7 +2,6 @@
 
 package ru.shrprnbw.ideas.presentation.screens.summary_detail
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,6 +17,7 @@ import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.colintheshots.twain.MarkdownText
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.utils.DateFormatter
@@ -69,13 +70,14 @@ fun SummaryDetailScreen(
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 navigationIcon = {
-                    Icon(
-                        modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp)
-                            .clickable(onClick = onBackClicked),
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.back)
-                    )
+                    IconButton(
+                        onClick = onBackClicked
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
                 }
             )
         }
@@ -163,10 +165,9 @@ private fun SummaryContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = summary.summary,
+        MarkdownText(
+            markdown = summary.summary,
             fontSize = 16.sp,
-            lineHeight = 24.sp,
             color = MaterialTheme.colorScheme.onSurface
         )
 

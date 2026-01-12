@@ -25,8 +25,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -42,6 +40,7 @@ import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -228,21 +227,19 @@ private fun SearchBar(
 ) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(20.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-                .clickable(
-                    onClick = onMenuClicked
-                ),
-            imageVector = Icons.Rounded.Menu,
-            contentDescription = stringResource(R.string.menu_icon_description),
-            tint = SearchBarDefaults.appBarWithSearchColors().appBarNavigationIconColor
-        )
+        IconButton(
+            onClick = onMenuClicked
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Menu,
+                contentDescription = stringResource(R.string.menu_icon_description),
+                tint = SearchBarDefaults.appBarWithSearchColors().appBarNavigationIconColor
+            )
+        }
         with(sharedTransitionScope ?: return) {
             TextField(
                 modifier = Modifier
@@ -286,16 +283,15 @@ private fun SearchBar(
                 )
             )
         }
-        Icon(
-            modifier = Modifier
-                .clip(CircleShape)
-                .clickable(
-                    onClick = onProfileClicked
-                ),
-            imageVector = Icons.Rounded.AccountCircle,
-            contentDescription = stringResource(R.string.account_icon_description),
-            tint = SearchBarDefaults.appBarWithSearchColors().appBarActionIconColor
-        )
+        IconButton(
+            onClick = onProfileClicked
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.AccountCircle,
+                contentDescription = stringResource(R.string.account_icon_description),
+                tint = SearchBarDefaults.appBarWithSearchColors().appBarActionIconColor
+            )
+        }
     }
 }
 

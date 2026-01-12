@@ -139,6 +139,7 @@ import ru.shrprnbw.ideas.domain.entity.Tag
 import ru.shrprnbw.ideas.domain.entity.User
 import ru.shrprnbw.ideas.presentation.components.AudioNotePlayer
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
+import ru.shrprnbw.ideas.presentation.ui.theme.KeywordPurple
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.DateFormatter
 import ru.shrprnbw.ideas.utils.Utils
@@ -416,7 +417,7 @@ fun Content(
                     NoteTransformation(
                         modifier = Modifier.weight(1f),
                         actionName = stringResource(R.string.keywords_action),
-                        color = Color(0xFF7B1FA2),
+                        color = KeywordPurple,
                         imageVector = Icons.Rounded.Discount,
                         onClick = onKeywordsClicked
                     )
@@ -1432,15 +1433,14 @@ private fun NoteEditorTopAppBar(
                 navigationIconContentColor = MaterialTheme.colorScheme.onSurface
             ),
             navigationIcon = {
-                Icon(
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp)
-                        .clickable(
-                            onClick = onBackClicked
-                        ),
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = stringResource(R.string.back)
-                )
+                IconButton(
+                    onClick = onBackClicked
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = stringResource(R.string.back)
+                    )
+                }
             },
             actions = {
                 if (currentState.note.accessType == AccessType.VIEWER) {
@@ -1466,58 +1466,58 @@ private fun NoteEditorTopAppBar(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 } else if (!currentState.note.audioNote) {
-                    Icon(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .clickable(
-                                onClick = {
-                                    viewModel.processCommand(
-                                        NoteEditorCommand.TogglePreviewMode
-                                    )
-                                }
-                            ),
-                        imageVector = if (currentState.isPreviewMode)
-                            Icons.Rounded.Edit
-                        else
-                            Icons.Outlined.RemoveRedEye,
-                        contentDescription = if (currentState.isPreviewMode)
-                            stringResource(R.string.edit_mode)
-                        else
-                            stringResource(R.string.preview_mode),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                    IconButton(
+                        onClick = {
+                            viewModel.processCommand(
+                                NoteEditorCommand.TogglePreviewMode
+                            )
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (currentState.isPreviewMode)
+                                Icons.Rounded.Edit
+                            else
+                                Icons.Outlined.RemoveRedEye,
+                            contentDescription = if (currentState.isPreviewMode)
+                                stringResource(R.string.edit_mode)
+                            else
+                                stringResource(R.string.preview_mode),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
                 AnimatedVisibility(!currentState.isPreviewMode) {
-                    Icon(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .clickable(
-                                onClick = {
-                                    viewModel.processCommand(
-                                        NoteEditorCommand.OpenShareSheet
-                                    )
-                                }
-                            ),
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = stringResource(R.string.share_note),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                    IconButton(
+                        onClick = {
+                            viewModel.processCommand(
+                                NoteEditorCommand.OpenShareSheet
+                            )
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = stringResource(R.string.share_note),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
                 AnimatedVisibility(!currentState.isPreviewMode) {
-                    Icon(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .clickable(
-                                onClick = {
-                                    viewModel.processCommand(
-                                        NoteEditorCommand.ShowDeletionDialog
-                                    )
-                                }
-                            ),
-                        imageVector = Icons.Outlined.DeleteOutline,
-                        contentDescription = stringResource(R.string.delete_note),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                    IconButton(
+                        onClick = {
+                            viewModel.processCommand(
+                                NoteEditorCommand.ShowDeletionDialog
+                            )
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = stringResource(R.string.delete_note),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         )

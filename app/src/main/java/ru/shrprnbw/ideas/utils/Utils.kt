@@ -1,5 +1,7 @@
 package ru.shrprnbw.ideas.utils
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import java.net.URLDecoder
 
@@ -45,6 +47,17 @@ object Utils {
             URLDecoder.decode(matchResult?.groupValues?.getOrNull(1) ?: fileNameWithUuid, "UTF-8")
         } catch (e: Exception) {
             "Аудиозапись"
+        }
+    }
+
+    @Composable
+    fun getStatusColor(status: String): Color {
+        return when (status.uppercase()) {
+            "SCHEDULED" -> Color(0xFFFF9800) // Orange
+            "IN_PROGRESS" -> Color(0xFF2196F3) // Blue
+            "COMPLETED" -> Color(0xFF4CAF50) // Green
+            "FAILED" -> Color(0xFFF44336) // Red
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
     }
 

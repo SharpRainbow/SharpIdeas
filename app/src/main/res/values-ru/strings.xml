@@ -49,7 +49,7 @@
 
     <!-- Keywords Screen -->
     <string name="keywords">Ключевые слова</string>
-    <string name="keywords_supporting_text">Ваша заметка будет проанализирована ИИ для извлечения ключевых тем и терминов. Генерация ключевых слов может занять некоторое время.</string>
+    <string name="keywords_supporting_text">Ваша заметка будет обработана ИИ для извлечения ключевых тем и терминов. Генерация ключевых слов может занять некоторое время.</string>
     <string name="add_keywords_to_note">Добавить ключевые слова в заметку</string>
     <string name="keywords_dialog_description">Нажмите на ключевые слова, чтобы добавить их в качестве тегов к вашей заметке</string>
 
@@ -58,7 +58,7 @@
     <string name="summary">Резюме</string>
     <string name="auto_generated_summary">Автоматически созданное резюме</string>
     <string name="manual_summary">Ручное резюме</string>
-    <string name="summary_supporting_text">Ваша заметка будет сокращена ИИ для выделения основных моментов. Генерация резюме может занять некоторое время.</string>
+    <string name="summary_supporting_text">Ваша заметка будет обработана ИИ для выделения основных моментов. Генерация резюме может занять некоторое время.</string>
 
     <!-- Note List Screen -->
     <string name="note_list_error_load">Ошибка загрузки заметок. Пожалуйста, попробуйте еще раз позже.</string>

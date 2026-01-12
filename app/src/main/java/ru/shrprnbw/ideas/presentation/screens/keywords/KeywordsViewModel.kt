@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetKeywordsUseCase
+import ru.shrprnbw.ideas.domain.usecase.RemoveNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.RequestNoteKeywordsUseCase
 
 @HiltViewModel(assistedFactory = KeywordsViewModel.Factory::class)
@@ -25,6 +26,7 @@ class KeywordsViewModel @AssistedInject constructor(
     @Assisted("hasAccess") private val hasAccess: Boolean,
     private val requestNoteKeywordsUseCase: RequestNoteKeywordsUseCase,
     private val addNoteTagUseCase: AddNoteTagUseCase,
+    private val removeNoteTagUseCase: RemoveNoteTagUseCase,
     getKeywordsUseCase: GetKeywordsUseCase
 ) : ViewModel() {
 
@@ -112,7 +114,27 @@ class KeywordsViewModel @AssistedInject constructor(
                                     e.message?.contains("409") == true ->
                                         ru.shrprnbw.ideas.R.string.note_tags_error_duplicate
                                     else -> ru.shrprnbw.ideas.R.string.note_tags_error_add
-                                }
+                                },
+                                showKeywordChipsDialog = false
+                            )
+                        }
+                    }
+                }
+            }
+
+            is KeywordsCommand.RemoveNoteTag -> {
+                viewModelScope.launch {
+                    _state.update { previousState ->
+                        try {
+                            removeNoteTagUseCase(noteId, command.keyword)
+                            previousState.copy(
+                                addedKeywords = previousState.addedKeywords - command.keyword
+                            )
+                        } catch (e: Exception) {
+                            Log.d("KeywordsViewModel", "Error removing note tag", e)
+                            previousState.copy(
+                                error = ru.shrprnbw.ideas.R.string.note_tags_error_remove,
+                                showKeywordChipsDialog = false
                             )
                         }
                     }
@@ -144,6 +166,8 @@ sealed interface KeywordsCommand {
     data object DismissKeywordChipsDialog : KeywordsCommand
 
     data class AddKeywordAsTag(val keyword: String) : KeywordsCommand
+
+    data class RemoveNoteTag(val keyword: String) : KeywordsCommand
 }
 
 data class KeywordsScreenState(

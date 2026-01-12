@@ -2,6 +2,9 @@
 
 package ru.shrprnbw.ideas.presentation.screens.keywords
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,11 +17,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +34,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -41,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -56,18 +64,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
+import ru.shrprnbw.ideas.presentation.ui.theme.KeywordPurple
 import ru.shrprnbw.ideas.utils.DateFormatter
-
-@Composable
-private fun getStatusColor(status: String): Color {
-    return when (status.uppercase()) {
-        "SCHEDULED" -> Color(0xFFFF9800) // Orange
-        "IN_PROGRESS" -> Color(0xFF2196F3) // Blue
-        "COMPLETED" -> Color(0xFF4CAF50) // Green
-        "FAILED" -> Color(0xFFF44336) // Red
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-}
+import ru.shrprnbw.ideas.utils.Utils.getStatusColor
 
 @Composable
 fun KeywordsScreen(
@@ -111,7 +110,7 @@ fun KeywordsScreen(
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 navigationIcon = {
-                    androidx.compose.material3.IconButton(onClick = onBackClicked) {
+                    IconButton(onClick = onBackClicked) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -165,10 +164,16 @@ fun KeywordsScreen(
                     onDismissRequest = {
                         viewModel.processCommand(KeywordsCommand.DismissKeywordChipsDialog)
                     },
-                    onKeywordClick = { keywordText ->
-                        viewModel.processCommand(
-                            KeywordsCommand.AddKeywordAsTag(keywordText)
-                        )
+                    onKeywordClick = { keywordText, isAdded ->
+                        if (!isAdded) {
+                            viewModel.processCommand(
+                                KeywordsCommand.AddKeywordAsTag(keywordText)
+                            )
+                        } else {
+                            viewModel.processCommand(
+                                KeywordsCommand.RemoveNoteTag(keywordText)
+                            )
+                        }
                     }
                 )
             }
@@ -253,7 +258,7 @@ private fun AddKeywordsDialog(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Label,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = KeywordPurple
             )
         },
         title = {
@@ -287,7 +292,7 @@ private fun KeywordChipsDialog(
     keyword: Keyword,
     addedKeywords: Set<String>,
     onDismissRequest: () -> Unit,
-    onKeywordClick: (String) -> Unit
+    onKeywordClick: (String, Boolean) -> Unit
 ) {
     val keywordList = keyword.keyword.split(",").map { it.trim() }.filter { it.isNotBlank() }
 
@@ -308,7 +313,9 @@ private fun KeywordChipsDialog(
             )
         },
         text = {
-            Column {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 Text(
                     text = stringResource(R.string.keywords_dialog_description),
                     style = MaterialTheme.typography.bodyMedium,
@@ -319,28 +326,29 @@ private fun KeywordChipsDialog(
 
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     keywordList.forEach { keywordText ->
                         val isAdded = addedKeywords.contains(keywordText)
                         FilterChip(
                             selected = isAdded,
                             onClick = {
-                                if (!isAdded) {
-                                    onKeywordClick(keywordText)
-                                }
+                                onKeywordClick(keywordText, isAdded)
                             },
                             label = { Text(keywordText) },
-                            leadingIcon = if (isAdded) {
-                                {
+                            leadingIcon = {
+                                AnimatedVisibility(
+                                    visible = isAdded,
+                                    enter = expandHorizontally(expandFrom = Alignment.Start),
+                                    exit = shrinkHorizontally(shrinkTowards = Alignment.Start)
+                                ) {
                                     Icon(
-                                        imageVector = Icons.Filled.Check,
-                                        contentDescription = null,
-                                        modifier = Modifier.padding(end = 4.dp)
+                                        imageVector = Icons.Rounded.Done,
+                                        contentDescription = stringResource(R.string.selected_icon_description),
+                                        modifier = Modifier.size(FilterChipDefaults.IconSize)
                                     )
                                 }
-                            } else null,
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer

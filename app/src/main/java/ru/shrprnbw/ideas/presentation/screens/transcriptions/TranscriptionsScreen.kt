@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -51,17 +52,7 @@ import ru.shrprnbw.ideas.domain.entity.Transcription
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.utils.DateFormatter
-
-@Composable
-private fun getStatusColor(status: String): Color {
-    return when (status.uppercase()) {
-        "SCHEDULED" -> Color(0xFFFF9800) // Orange
-        "IN_PROGRESS" -> Color(0xFF2196F3) // Blue
-        "COMPLETED" -> Color(0xFF4CAF50) // Green
-        "FAILED" -> Color(0xFFF44336) // Red
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-}
+import ru.shrprnbw.ideas.utils.Utils.getStatusColor
 
 @Composable
 fun TranscriptionsScreen(
@@ -106,13 +97,14 @@ fun TranscriptionsScreen(
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 navigationIcon = {
-                    Icon(
-                        modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp)
-                            .clickable(onClick = onBackClicked),
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.back)
-                    )
+                    IconButton(
+                        onClick = onBackClicked
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
                 }
             )
         },

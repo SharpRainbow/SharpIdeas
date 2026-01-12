@@ -4,7 +4,6 @@ package ru.shrprnbw.ideas.presentation.screens.register
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +24,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -257,15 +257,14 @@ private fun RegisterScreenTopBar(
         modifier = modifier,
         title = {},
         navigationIcon = {
-            Icon(
-                modifier = Modifier
-                    .padding(start = 8.dp, end = 8.dp)
-                    .clickable(
-                        onClick = onBackClicked
-                    ),
-                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = stringResource(R.string.back_icon_description)
-            )
+            IconButton(
+                onClick = onBackClicked
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = stringResource(R.string.back_icon_description)
+                )
+            }
         },
         scrollBehavior = scrollBehavior
     )
