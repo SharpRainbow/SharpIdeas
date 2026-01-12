@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTagUseCase
+import ru.shrprnbw.ideas.domain.usecase.DeleteKeywordsUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetKeywordsUseCase
 import ru.shrprnbw.ideas.domain.usecase.RemoveNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.RequestNoteKeywordsUseCase
@@ -27,6 +28,7 @@ class KeywordsViewModel @AssistedInject constructor(
     private val requestNoteKeywordsUseCase: RequestNoteKeywordsUseCase,
     private val addNoteTagUseCase: AddNoteTagUseCase,
     private val removeNoteTagUseCase: RemoveNoteTagUseCase,
+    private val deleteKeywordsUseCase: DeleteKeywordsUseCase,
     getKeywordsUseCase: GetKeywordsUseCase
 ) : ViewModel() {
 
@@ -140,15 +142,34 @@ class KeywordsViewModel @AssistedInject constructor(
                     }
                 }
             }
+
+            is KeywordsCommand.DeleteKeywords -> {
+                if (!hasAccess)
+                    return
+                viewModelScope.launch {
+                    try {
+                        deleteKeywordsUseCase(noteId, command.keywordId)
+                    } catch (e: Exception) {
+                        Log.d("KeywordsViewModel", "Error deleting keywords", e)
+                        _state.update {
+                            it.copy(error = ru.shrprnbw.ideas.R.string.keywords_error_delete)
+                        }
+                    }
+                }
+            }
         }
     }
 
     private fun parseErrorMessage(e: Exception): Int {
         Log.d("KeywordsViewModel", "Error requesting keywords", e)
         return when {
+            e.message?.contains("400") == true ->
+                ru.shrprnbw.ideas.R.string.keywords_error_content_invalid
+            e.message?.contains("409") == true ->
+                ru.shrprnbw.ideas.R.string.keywords_error_rate_limit
             e.message?.contains("429") == true ->
-                ru.shrprnbw.ideas.R.string.transcriptions_error_rate_limit
-            else -> ru.shrprnbw.ideas.R.string.transcriptions_error_unknown
+                ru.shrprnbw.ideas.R.string.keywords_error_limit_reached
+            else -> ru.shrprnbw.ideas.R.string.keywords_error_unknown
         }
     }
 
@@ -168,6 +189,8 @@ sealed interface KeywordsCommand {
     data class AddKeywordAsTag(val keyword: String) : KeywordsCommand
 
     data class RemoveNoteTag(val keyword: String) : KeywordsCommand
+
+    data class DeleteKeywords(val keywordId: Long) : KeywordsCommand
 }
 
 data class KeywordsScreenState(

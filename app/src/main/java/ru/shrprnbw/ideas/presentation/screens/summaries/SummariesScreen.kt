@@ -50,6 +50,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
+import ru.shrprnbw.ideas.presentation.screens.SwipeToDeleteBox
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.DateFormatter
 import ru.shrprnbw.ideas.utils.Utils.getStatusColor
@@ -133,11 +134,28 @@ fun SummariesScreen(
                 errorText = stringResource(R.string.error_network),
                 keyProducer = { index -> summaries[index]?.id ?: index },
                 screenContent = {},
+                emptyListPlaceholder = {
+                    Text(
+                        text = stringResource(R.string.summaries_list_placeholder),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
             ) { summary ->
-                SummaryItem(
-                    summary = summary,
-                    onClick = { onSummaryClicked(summary.id) }
-                )
+                SwipeToDeleteBox(
+                    onDelete = {
+                        viewModel.processCommand(
+                            SummariesCommand.DeleteSummary(summary.id)
+                        )
+                    }
+                ) {
+                    SummaryItem(
+                        summary = summary,
+                        onClick = { onSummaryClicked(summary.id) }
+                    )
+                }
             }
 
             if (state.showAddSummaryDialog) {

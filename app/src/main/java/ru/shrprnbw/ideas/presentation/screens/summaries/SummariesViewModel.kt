@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.domain.entity.Summary
+import ru.shrprnbw.ideas.domain.usecase.DeleteSummaryUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetSummariesUseCase
 import ru.shrprnbw.ideas.domain.usecase.RequestNoteSummaryUseCase
 
@@ -23,6 +24,7 @@ class SummariesViewModel @AssistedInject constructor(
     @Assisted("noteId") private val noteId: String,
     @Assisted("hasAccess") private val hasAccess: Boolean,
     private val requestNoteSummaryUseCase: RequestNoteSummaryUseCase,
+    private val deleteSummaryUseCase: DeleteSummaryUseCase,
     getSummariesUseCase: GetSummariesUseCase
 ) : ViewModel() {
 
@@ -74,15 +76,34 @@ class SummariesViewModel @AssistedInject constructor(
                     it.copy(error = null)
                 }
             }
+
+            is SummariesCommand.DeleteSummary -> {
+                if (!hasAccess)
+                    return
+                viewModelScope.launch {
+                    try {
+                        deleteSummaryUseCase(noteId, command.summaryId)
+                    } catch (e: Exception) {
+                        Log.d("SummariesViewModel", "Error deleting summary", e)
+                        _state.update {
+                            it.copy(error = ru.shrprnbw.ideas.R.string.summary_error_delete)
+                        }
+                    }
+                }
+            }
         }
     }
 
     private fun parseErrorMessage(e: Exception): Int {
         Log.d("SummariesViewModel", "Error requesting summary", e)
         return when {
+            e.message?.contains("400") == true ->
+                ru.shrprnbw.ideas.R.string.summaries_error_content_invalid
+            e.message?.contains("409") == true ->
+                ru.shrprnbw.ideas.R.string.summaries_error_rate_limit
             e.message?.contains("429") == true ->
-                ru.shrprnbw.ideas.R.string.transcriptions_error_rate_limit
-            else -> ru.shrprnbw.ideas.R.string.transcriptions_error_unknown
+                ru.shrprnbw.ideas.R.string.summaries_error_limit_reached
+            else -> ru.shrprnbw.ideas.R.string.summaries_error_unknown
         }
     }
 
@@ -94,6 +115,8 @@ sealed interface SummariesCommand {
     data object AddSummaryTask : SummariesCommand
 
     data object ResetError : SummariesCommand
+
+    data class DeleteSummary(val summaryId: String) : SummariesCommand
 }
 
 data class SummariesScreenState(

@@ -50,6 +50,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Transcription
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
+import ru.shrprnbw.ideas.presentation.screens.SwipeToDeleteBox
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.utils.DateFormatter
 import ru.shrprnbw.ideas.utils.Utils.getStatusColor
@@ -135,11 +136,28 @@ fun TranscriptionsScreen(
                 errorText = stringResource(R.string.error_network),
                 keyProducer = { index -> transcriptions[index]?.id ?: index },
                 screenContent = {},
+                emptyListPlaceholder = {
+                    Text(
+                        text = stringResource(R.string.transcriptions_list_placeholder),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
             ) { transcription ->
-                TranscriptionItem(
-                    transcription = transcription,
-                    onClick = { onTranscriptionClicked(transcription.id) }
-                )
+                SwipeToDeleteBox(
+                    onDelete = {
+                        viewModel.processCommand(
+                            TranscriptionsCommand.DeleteTranscription(transcription.id)
+                        )
+                    }
+                ) {
+                    TranscriptionItem(
+                        transcription = transcription,
+                        onClick = { onTranscriptionClicked(transcription.id) }
+                    )
+                }
             }
 
             if (state.showAddTranscriptionDialog) {

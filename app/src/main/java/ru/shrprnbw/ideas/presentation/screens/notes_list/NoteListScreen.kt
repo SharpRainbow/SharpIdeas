@@ -41,6 +41,7 @@ import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -147,7 +148,16 @@ fun NoteListScreen(
                     errorText = stringResource(R.string.note_list_error_load),
                     keyProducer = { index -> noteItems[index]?.id ?: index },
                     listState = listState,
-                    screenContent = {}
+                    screenContent = {},
+                    emptyListPlaceholder = {
+                        Text(
+                            text = stringResource(R.string.create_your_first_note),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(16.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 ) { item ->
                     NoteItem(
                         title = item.title,

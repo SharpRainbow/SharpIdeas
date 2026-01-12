@@ -64,6 +64,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
+import ru.shrprnbw.ideas.presentation.screens.SwipeToDeleteBox
 import ru.shrprnbw.ideas.presentation.ui.theme.KeywordPurple
 import ru.shrprnbw.ideas.utils.DateFormatter
 import ru.shrprnbw.ideas.utils.Utils.getStatusColor
@@ -146,15 +147,32 @@ fun KeywordsScreen(
                 errorText = stringResource(R.string.error_network),
                 keyProducer = { index -> keywords[index]?.id ?: index },
                 screenContent = {},
+                emptyListPlaceholder = {
+                    Text(
+                        text = stringResource(R.string.keywords_list_placeholder),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
             ) { keyword ->
-                KeywordItem(
-                    keyword = keyword,
-                    onClick = {
+                SwipeToDeleteBox(
+                    onDelete = {
                         viewModel.processCommand(
-                            KeywordsCommand.ShowKeywordChipsDialog(keyword)
+                            KeywordsCommand.DeleteKeywords(keyword.id)
                         )
                     }
-                )
+                ) {
+                    KeywordItem(
+                        keyword = keyword,
+                        onClick = {
+                            viewModel.processCommand(
+                                KeywordsCommand.ShowKeywordChipsDialog(keyword)
+                            )
+                        }
+                    )
+                }
             }
 
             if (state.showKeywordChipsDialog && state.selectedKeyword != null) {

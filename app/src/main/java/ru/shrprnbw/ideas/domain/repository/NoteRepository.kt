@@ -52,15 +52,21 @@ interface NoteRepository {
 
     suspend fun requestTranscription(noteId: String)
 
+    suspend fun deleteTranscription(noteId: String, transcriptionId: Long)
+
     fun getKeywords(noteId: String): Flow<PagingData<Keyword>>
 
     suspend fun requestKeywords(noteId: String)
+
+    suspend fun deleteKeywords(noteId: String, keywordId: Long)
 
     fun getSummaries(noteId: String): Flow<PagingData<Summary>>
 
     suspend fun getSummary(noteId: String, summaryId: String): Summary
 
     suspend fun requestSummary(noteId: String)
+
+    suspend fun deleteSummary(noteId: String, summaryId: Long)
 
     suspend fun addNoteTag(noteId: String, tag: String)
 

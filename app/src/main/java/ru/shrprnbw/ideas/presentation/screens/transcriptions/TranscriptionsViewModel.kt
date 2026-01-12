@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.domain.entity.Transcription
+import ru.shrprnbw.ideas.domain.usecase.DeleteTranscriptionUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetTranscriptionsUseCase
 import ru.shrprnbw.ideas.domain.usecase.RequestNoteTranscriptionUseCase
 
@@ -23,6 +24,7 @@ class TranscriptionsViewModel @AssistedInject constructor(
     @Assisted("noteId") private val noteId: String,
     @Assisted("hasAccess") private val hasAccess: Boolean,
     private val requestNoteTranscriptionUseCase: RequestNoteTranscriptionUseCase,
+    private val deleteTranscriptionUseCase: DeleteTranscriptionUseCase,
     getTranscriptionsUseCase: GetTranscriptionsUseCase
 ) : ViewModel() {
 
@@ -74,14 +76,33 @@ class TranscriptionsViewModel @AssistedInject constructor(
                     it.copy(error = null)
                 }
             }
+
+            is TranscriptionsCommand.DeleteTranscription -> {
+                if (!hasAccess)
+                    return
+                viewModelScope.launch {
+                    try {
+                        deleteTranscriptionUseCase(noteId, command.transcriptionId)
+                    } catch (e: Exception) {
+                        Log.d("TranscriptionsViewModel", "Error deleting transcription", e)
+                        _state.update {
+                            it.copy(error = ru.shrprnbw.ideas.R.string.transcriptions_error_delete)
+                        }
+                    }
+                }
+            }
         }
     }
 
     private fun parseErrorMessage(e: Exception): Int {
         Log.d("TranscriptionsViewModel", "Error requesting transcription", e)
         return when {
-            e.message?.contains("429") == true ->
+            e.message?.contains("400") == true ->
+                ru.shrprnbw.ideas.R.string.transcriptions_error_content_invalid
+            e.message?.contains("409") == true ->
                 ru.shrprnbw.ideas.R.string.transcriptions_error_rate_limit
+            e.message?.contains("429") == true ->
+                ru.shrprnbw.ideas.R.string.transcriptions_error_limit_reached
             else -> ru.shrprnbw.ideas.R.string.transcriptions_error_unknown
         }
     }
@@ -94,6 +115,8 @@ sealed interface TranscriptionsCommand {
     data object AddTranscriptionTask : TranscriptionsCommand
 
     data object ResetError : TranscriptionsCommand
+
+    data class DeleteTranscription(val transcriptionId: String) : TranscriptionsCommand
 }
 
 data class TranscriptionsScreenState(

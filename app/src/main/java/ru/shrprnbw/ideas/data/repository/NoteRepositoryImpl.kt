@@ -319,6 +319,12 @@ class NoteRepositoryImpl @Inject constructor(
         transcriptionsRefreshTrigger.emit(Unit)
     }
 
+    override suspend fun deleteTranscription(noteId: String, transcriptionId: Long) {
+        val token = authRepository.getValidToken()
+        apiService.deleteTranscription(token, noteId, transcriptionId)
+        transcriptionsRefreshTrigger.emit(Unit)
+    }
+
     override fun getKeywords(noteId: String): Flow<PagingData<Keyword>> {
         return keywordsRefreshTrigger.onStart {
             emit(Unit)
@@ -344,6 +350,12 @@ class NoteRepositoryImpl @Inject constructor(
     override suspend fun requestKeywords(noteId: String) {
         val token = authRepository.getValidToken()
         apiService.generateNoteKeywords(token, noteId)
+        keywordsRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun deleteKeywords(noteId: String, keywordId: Long) {
+        val token = authRepository.getValidToken()
+        apiService.deleteKeywords(token, noteId, keywordId)
         keywordsRefreshTrigger.emit(Unit)
     }
 
@@ -377,6 +389,12 @@ class NoteRepositoryImpl @Inject constructor(
     override suspend fun requestSummary(noteId: String) {
         val token = authRepository.getValidToken()
         apiService.generateNoteSummary(token, noteId)
+        summariesRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun deleteSummary(noteId: String, summaryId: Long) {
+        val token = authRepository.getValidToken()
+        apiService.deleteSummary(token, noteId, summaryId)
         summariesRefreshTrigger.emit(Unit)
     }
 

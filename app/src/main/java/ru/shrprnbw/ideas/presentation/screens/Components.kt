@@ -1,9 +1,11 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@file:Suppress("DEPRECATION")
 
 package ru.shrprnbw.ideas.presentation.screens
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Label
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FolderShared
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Password
@@ -39,6 +42,7 @@ import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,7 +52,10 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,6 +85,60 @@ import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.Utils
+
+@Composable
+fun SwipeToDeleteBox(
+    modifier: Modifier = Modifier,
+    onDelete: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    var hasBeenDeleted by remember { mutableStateOf(false) }
+
+    val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold = { distance ->
+            distance * 0.9f
+        },
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> true
+                SwipeToDismissBoxValue.Settled -> !hasBeenDeleted
+                else -> true
+            }
+        }
+    )
+
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart && !hasBeenDeleted) {
+            hasBeenDeleted = true
+            onDelete()
+        }
+    }
+
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.error)
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.delete),
+                    tint = MaterialTheme.colorScheme.onError,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    ) {
+        content()
+    }
+}
 
 @Composable
 fun PasswordInputField(
@@ -180,6 +241,7 @@ fun <T : Any> PagedItemsTemplate(
     showLoading: Boolean = true,
     keyProducer: ((Int) -> Any)? = null,
     listState: LazyListState = rememberLazyListState(),
+    emptyListPlaceholder: @Composable (() -> Unit)? = null,
     screenContent: @Composable () -> Unit,
     itemContent: @Composable (item: T) -> Unit
 ) {
@@ -215,34 +277,47 @@ fun <T : Any> PagedItemsTemplate(
         }
 
         else -> {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = listPadding),
-                contentPadding = listContentPadding,
-                verticalArrangement = listVerticalArrangement,
-                state = listState
-            ) {
-                item {
-                    screenContent()
+            if (items.itemCount == 0 && emptyListPlaceholder != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    emptyListPlaceholder()
                 }
-
-                items(items.itemCount, keyProducer) { index ->
-                    items[index]?.let { item ->
-                        itemContent(item)
-                    }
-                }
-
-                if (items.loadState.append is LoadState.Loading) {
+                return
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = listPadding),
+                    contentPadding = listContentPadding,
+                    verticalArrangement = listVerticalArrangement,
+                    state = listState
+                ) {
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ContainedLoadingIndicator()
+                        screenContent()
+                    }
+
+                    items(items.itemCount, keyProducer) { index ->
+                        items[index]?.let { item ->
+                            itemContent(item)
+                        }
+                    }
+
+                    if (items.loadState.append is LoadState.Loading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ContainedLoadingIndicator()
+                            }
                         }
                     }
                 }

@@ -237,6 +237,7 @@ interface IdeasApiService {
     @DELETE("$VERSION_1/notes/{noteId}/keywords/{keywordId}")
     suspend fun deleteKeywords(
         @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
         @Path("keywordId") keywordId: Long,
     )
 

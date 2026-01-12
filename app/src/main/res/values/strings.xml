@@ -56,6 +56,8 @@
     <string name="keywords_supporting_text">Your note will be analyzed by AI to extract key topics and terms. Keyword generation may take a few moments.</string>
     <string name="add_keywords_to_note">Add Keywords to Note</string>
     <string name="keywords_dialog_description">Tap on keywords to add them as tags to your note</string>
+    <string name="keywords_error_delete">Unable to delete keywords</string>
+    <string name="keywords_list_placeholder">No keywords generated</string>
 
     <!-- Summary Screen -->
     <string name="summaries">Summaries</string>
@@ -63,6 +65,12 @@
     <string name="auto_generated_summary">Auto-generated summary</string>
     <string name="manual_summary">Manual summary</string>
     <string name="summary_supporting_text">Your note will be summarized by AI to highlight the main points. Summary generation may take a few moments.</string>
+    <string name="summary_error_delete">Unable to delete summary</string>
+    <string name="summaries_error_unknown">Unable to add summary</string>
+    <string name="summaries_error_rate_limit">Summary task is already in progress</string>
+    <string name="summaries_error_content_invalid">Note does not contain content for summarry generation</string>
+    <string name="summaries_error_limit_reached">Summary limit reached</string>
+    <string name="summaries_list_placeholder">No summaries generated</string>
 
     <!-- Note List Screen -->
     <string name="note_list_error_load">Error loading notes. Please try again later.</string>
@@ -94,6 +102,10 @@
     <string name="manual_transcription">Manual transcription</string>
     <string name="transcriptions_error_rate_limit">Transcription task is already in progress</string>
     <string name="transcriptions_error_unknown">Unable to add transcription</string>
+    <string name="transcriptions_error_delete">Unable to delete transcription</string>
+    <string name="transcriptions_error_content_invalid">Note does not contain audio content for transcription generation</string>
+    <string name="transcriptions_error_limit_reached">Transcription limit reached</string>
+    <string name="transcriptions_list_placeholder">No transcriptions generated</string>
     <string name="accept">Accept</string>
     <string name="transcription_headline">Generate transcription?</string>
     <string name="transcription_supporting_text">Your audio will be processed by AI. Transcription generation may take several minutes depending on the length of the audio.</string>
@@ -217,6 +229,10 @@
     <!-- Keywords Screen -->
     <string name="add_keywords_button">Add keywords to note</string>
     <string name="status_separator">": "</string>
+    <string name="keywords_error_unknown">Unable to add keyword</string>
+    <string name="keywords_error_rate_limit">Keywords task is already in progress</string>
+    <string name="keywords_error_content_invalid">Note does not contain content for keyword generation</string>
+    <string name="keywords_error_limit_reached">Keywords limit reached</string>
 
     <!-- Filter Chips -->
     <string name="filter_email">Email</string>
@@ -234,4 +250,7 @@
     <string name="drawer_tag_management">Tag management</string>
     <string name="drawer_group_management">Group management</string>
     <string name="drawer_shared_notes">Shared notes</string>
+    <string name="shared_notes_placeholder">No shared notes available</string>
+    <string name="group_notes_list_placeholder">No notes in group</string>
+    <string name="create_your_first_note">Create you first note!</string>
 </resources>
