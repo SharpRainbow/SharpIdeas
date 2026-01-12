@@ -19,6 +19,7 @@ import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.presentation.screens.NavigationScreen
 import ru.shrprnbw.ideas.presentation.screens.group_management.GroupManagementScreen
+import ru.shrprnbw.ideas.presentation.screens.group_notes.GroupNotesScreen
 import ru.shrprnbw.ideas.presentation.screens.keywords.KeywordsScreen
 import ru.shrprnbw.ideas.presentation.screens.login.LoginScreen
 import ru.shrprnbw.ideas.presentation.screens.main.MainScreenWithDrawer
@@ -123,20 +124,7 @@ fun NavGraph() {
                     MainScreenWithDrawer(
                         selectedScreen = NavigationScreen.Home,
                         currentRoute = Screen.Notes,
-                        onNavigateToNotes = {
-                            navController.navigate(Screen.Notes.route) {
-                                popUpTo(Screen.Notes.route) { inclusive = true }
-                            }
-                        },
-                        onNavigateToTags = {
-                            navController.navigate(Screen.Tags.route)
-                        },
-                        onNavigateToGroups = {
-                            navController.navigate(Screen.Groups.route)
-                        },
-                        onNavigateToSharedNotes = {
-                            navController.navigate(Screen.SharedNotes.route)
-                        },
+                        navController = navController,
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         NoteListScreen(
@@ -172,20 +160,7 @@ fun NavGraph() {
                     MainScreenWithDrawer(
                         selectedScreen = NavigationScreen.TagManagement,
                         currentRoute = Screen.Tags,
-                        onNavigateToNotes = {
-                            navController.navigate(Screen.Notes.route) {
-                                popUpTo(Screen.Notes.route) { inclusive = true }
-                            }
-                        },
-                        onNavigateToTags = {
-                            navController.navigate(Screen.Tags.route)
-                        },
-                        onNavigateToGroups = {
-                            navController.navigate(Screen.Groups.route)
-                        },
-                        onNavigateToSharedNotes = {
-                            navController.navigate(Screen.SharedNotes.route)
-                        },
+                        navController = navController,
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         TagManagementScreen(
@@ -200,25 +175,20 @@ fun NavGraph() {
                     MainScreenWithDrawer(
                         selectedScreen = NavigationScreen.GroupManagement,
                         currentRoute = Screen.Groups,
-                        onNavigateToNotes = {
-                            navController.navigate(Screen.Notes.route) {
-                                popUpTo(Screen.Notes.route) { inclusive = true }
-                            }
-                        },
-                        onNavigateToTags = {
-                            navController.navigate(Screen.Tags.route)
-                        },
-                        onNavigateToGroups = {
-                            navController.navigate(Screen.Groups.route)
-                        },
-                        onNavigateToSharedNotes = {
-                            navController.navigate(Screen.SharedNotes.route)
-                        },
+                        navController = navController,
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         GroupManagementScreen(
                             onMenuClicked = {
                                 scope.launch { drawerState.open() }
+                            },
+                            onGroupClicked = { group ->
+                                navController.navigate(
+                                    Screen.GroupNotes.createRoute(
+                                        group.id,
+                                        group.name
+                                    )
+                                )
                             }
                         )
                     }
@@ -375,20 +345,7 @@ fun NavGraph() {
                     MainScreenWithDrawer(
                         selectedScreen = NavigationScreen.SharedNotes,
                         currentRoute = Screen.SharedNotes,
-                        onNavigateToNotes = {
-                            navController.navigate(Screen.Notes.route) {
-                                popUpTo(Screen.Notes.route) { inclusive = true }
-                            }
-                        },
-                        onNavigateToTags = {
-                            navController.navigate(Screen.Tags.route)
-                        },
-                        onNavigateToGroups = {
-                            navController.navigate(Screen.Groups.route)
-                        },
-                        onNavigateToSharedNotes = {
-                            navController.navigate(Screen.SharedNotes.route)
-                        },
+                        navController = navController,
                         gesturesEnabled = true
                     ) { drawerState, scope ->
                         SharedNotesScreen(
@@ -400,6 +357,44 @@ fun NavGraph() {
                             }
                         )
                     }
+                }
+
+                composable(
+                    route = Screen.SharedNotes.route
+                ) {
+                    MainScreenWithDrawer(
+                        selectedScreen = NavigationScreen.SharedNotes,
+                        currentRoute = Screen.SharedNotes,
+                        navController = navController,
+                        gesturesEnabled = true
+                    ) { drawerState, scope ->
+                        SharedNotesScreen(
+                            onMenuClicked = {
+                                scope.launch { drawerState.open() }
+                            },
+                            onNoteClicked = { noteId ->
+                                navController.navigate(Screen.EditNote.createRoute(noteId))
+                            }
+                        )
+                    }
+                }
+
+                composable(
+                    route = Screen.GroupNotes.route,
+                    arguments = Screen.GroupNotes.arguments
+                ) {
+                    val groupId = Screen.GroupNotes.getGroupId(it.arguments)
+                    val groupName = Screen.GroupNotes.getGroupName(it.arguments)
+                    GroupNotesScreen(
+                        groupId = groupId,
+                        screenTitle = groupName,
+                        onNoteClicked = { noteId ->
+                            navController.navigate(Screen.EditNote.createRoute(noteId))
+                        },
+                        onBackClicked = {
+                            navController.popBackStack()
+                        }
+                    )
                 }
             }
         }
@@ -415,7 +410,6 @@ sealed class Screen(val route: String) {
     data object Register : Screen("register")
     data object Login : Screen("login")
     data object Notes : Screen("notes")
-
     data object SharedNotes : Screen("shared_notes")
     data object Search : Screen("search")
     data object Tags : Screen("tags")
@@ -550,5 +544,30 @@ sealed class Screen(val route: String) {
         fun getSummaryId(arguments: Bundle?): String {
             return arguments?.getString(summaryIdArg) ?: ""
         }
+    }
+
+    data object GroupNotes : Screen("notes/{group_id}?group_name={group_name}") {
+        private const val groupIdArg = "group_id"
+        private const val groupNameArg = "group_name"
+        val arguments = listOf(
+            navArgument(groupIdArg) { type = NavType.LongType },
+            navArgument(groupNameArg) {
+                type = NavType.StringType
+                defaultValue = ""
+            }
+        )
+
+        fun createRoute(groupId: Long, groupName: String): String {
+            return "notes/$groupId?group_name=$groupName"
+        }
+
+        fun getGroupId(arguments: Bundle?): Long {
+            return arguments?.getLong(groupIdArg) ?: -1L
+        }
+
+        fun getGroupName(arguments: Bundle?): String {
+            return arguments?.getString(groupNameArg) ?: ""
+        }
+
     }
 }

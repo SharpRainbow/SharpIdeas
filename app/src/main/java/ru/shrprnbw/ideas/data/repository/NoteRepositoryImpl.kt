@@ -34,9 +34,12 @@ import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RemoveNoteFromGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
+import ru.shrprnbw.ideas.data.remote.paging.FilterNotesSearchStrategy
+import ru.shrprnbw.ideas.data.remote.paging.GroupNotesSearchStrategy
 import ru.shrprnbw.ideas.data.remote.paging.KeywordPagingSource
 import ru.shrprnbw.ideas.data.remote.paging.NotePagingSource
-import ru.shrprnbw.ideas.data.remote.paging.NoteSearchPagingSource
+import ru.shrprnbw.ideas.data.remote.paging.PersonalNotesSearchStrategy
+import ru.shrprnbw.ideas.data.remote.paging.SharedNotesSearchStrategy
 import ru.shrprnbw.ideas.data.remote.paging.SummaryPagingSource
 import ru.shrprnbw.ideas.data.remote.paging.TranscriptionPagingSource
 import ru.shrprnbw.ideas.domain.entity.AccessType
@@ -55,6 +58,8 @@ class NoteRepositoryImpl @Inject constructor(
     private val apiService: IdeasApiService,
     private val authRepository: AuthRepository,
     private val credentialsRepository: CredentialsRepository,
+    private val personalNotesSearchStrategy: PersonalNotesSearchStrategy,
+    private val sharedNotesSearchStrategy: SharedNotesSearchStrategy,
     @param:ApplicationContext private val context: Context
 ) : NoteRepository {
 
@@ -76,10 +81,7 @@ class NoteRepositoryImpl @Inject constructor(
                     enablePlaceholders = false
                 ),
                 pagingSourceFactory = {
-                    NotePagingSource(
-                        apiService,
-                        authRepository
-                    )
+                    NotePagingSource(personalNotesSearchStrategy)
                 }
             ).flow
         }
@@ -92,13 +94,33 @@ class NoteRepositoryImpl @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                NotePagingSource(
-                    apiService,
-                    authRepository,
-                    personal = false
-                )
+                NotePagingSource(sharedNotesSearchStrategy)
             }
         ).flow
+    }
+
+    override fun getGroupNotes(groupId: Long): Flow<PagingData<NotePreview>> {
+        return notesRefreshTrigger.onStart {
+            emit(Unit)
+        }.debounce(
+            timeoutMillis = 1000
+        ).flatMapLatest {
+            Pager(
+                config = PagingConfig(
+                    pageSize = 10,
+                    enablePlaceholders = false
+                ),
+                pagingSourceFactory = {
+                    NotePagingSource(
+                        GroupNotesSearchStrategy(
+                            apiService,
+                            authRepository,
+                            groupId
+                        )
+                    )
+                }
+            ).flow
+        }
     }
 
     override fun searchNotes(
@@ -114,14 +136,16 @@ class NoteRepositoryImpl @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                NoteSearchPagingSource(
-                    apiService,
-                    authRepository,
-                    globalSearch,
-                    title,
-                    content,
-                    tagIds,
-                    audioNote
+                NotePagingSource(
+                    FilterNotesSearchStrategy(
+                        apiService,
+                        authRepository,
+                        globalSearch,
+                        title,
+                        content,
+                        tagIds,
+                        audioNote
+                    )
                 )
             }
         ).flow
@@ -386,6 +410,7 @@ class NoteRepositoryImpl @Inject constructor(
     override suspend fun removeNoteFromGroup(noteId: String, groupId: Long) {
         val token = authRepository.getValidToken()
         apiService.removeNoteFromGroup(token, noteId, RemoveNoteFromGroupRequest(groupId))
+        notesRefreshTrigger.emit(Unit)
     }
 
     private fun getMimeTypeFromUri(uri: Uri): String? {

@@ -3,17 +3,13 @@ package ru.shrprnbw.ideas.data.remote.paging
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import ru.shrprnbw.ideas.data.mapper.toEntity
-import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.dto.response.NotePreviewDto
 import ru.shrprnbw.ideas.di.ApiModule
 import ru.shrprnbw.ideas.domain.entity.NotePreview
-import ru.shrprnbw.ideas.domain.repository.AuthRepository
 
 class NotePagingSource(
-    private val apiService: IdeasApiService,
-    private val authRepository: AuthRepository,
-    private val personal: Boolean = true
-): PagingSource<Int, NotePreview>() {
+    private val noteSearchStrategy: NoteSearchStrategy
+) : PagingSource<Int, NotePreview>() {
 
     override fun getRefreshKey(state: PagingState<Int, NotePreview>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
@@ -25,20 +21,10 @@ class NotePagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, NotePreview> {
         val position = params.key ?: ApiModule.FIRST_PAGE_INDEX
         return try {
-            val token = authRepository.getValidToken()
-            val response = if (personal) {
-                apiService.getUserNotes(
-                    token = token,
-                    page = position,
-                    limit = params.loadSize
-                )
-            } else {
-                apiService.getSharedNotes(
-                    token = token,
-                    page = position,
-                    limit = params.loadSize
-                )
-            }
+            val response = noteSearchStrategy.searchNotes(
+                page = position,
+                size = params.loadSize
+            )
             val nextKey =
                 if (response.page >= response.totalPages - 1) {
                     null

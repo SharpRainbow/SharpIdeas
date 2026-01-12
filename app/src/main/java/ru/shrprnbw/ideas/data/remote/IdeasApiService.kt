@@ -107,6 +107,14 @@ interface IdeasApiService {
         @Query("size") limit: Int,
     ): PagedResponse<NotePreviewDto>
 
+    @GET("$VERSION_1/notes/groups/{groupId}")
+    suspend fun getGroupNotes(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Long,
+        @Query("page") page: Int,
+        @Query("size") limit: Int
+    ): PagedResponse<NotePreviewDto>
+
     @POST("$VERSION_2/auth/login-password")
     suspend fun loginV2(
         @Body request: LoginRequestDto
@@ -205,6 +213,13 @@ interface IdeasApiService {
         @Path("noteId") noteId: String
     )
 
+    @DELETE("$VERSION_1/notes/{noteId}/transcriptions/{transcriptionId}")
+    suspend fun deleteTranscription(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Path("transcriptionId") transcriptionId: Long
+    )
+
     @GET("$VERSION_1/notes/{noteId}/keywords")
     suspend fun getKeywords(
         @Header("Authorization") token: String,
@@ -217,6 +232,12 @@ interface IdeasApiService {
     suspend fun generateNoteKeywords(
         @Header("Authorization") token: String,
         @Path("noteId") noteId: String
+    )
+
+    @DELETE("$VERSION_1/notes/{noteId}/keywords/{keywordId}")
+    suspend fun deleteKeywords(
+        @Header("Authorization") token: String,
+        @Path("keywordId") keywordId: Long,
     )
 
     @GET("$VERSION_1/notes/{noteId}/summaries")
@@ -233,6 +254,13 @@ interface IdeasApiService {
         @Path("noteId") noteId: String,
         @Path("summaryId") summaryId: String
     ): NoteSummaryDto
+
+    @DELETE("$VERSION_1/notes/{noteId}/summaries/{summaryId}")
+    suspend fun deleteSummary(
+        @Header("Authorization") token: String,
+        @Path("noteId") noteId: String,
+        @Path("summaryId") summaryId: Long
+    )
 
     @POST("$VERSION_1/notes/{noteId}/summaries")
     suspend fun generateNoteSummary(

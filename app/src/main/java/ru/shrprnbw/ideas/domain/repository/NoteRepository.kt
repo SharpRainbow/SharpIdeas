@@ -16,6 +16,8 @@ interface NoteRepository {
 
     fun getSharedNotes(): Flow<PagingData<NotePreview>>
 
+    fun getGroupNotes(groupId: Long): Flow<PagingData<NotePreview>>
+
     fun searchNotes(
         globalSearch: Boolean,
         title: String,

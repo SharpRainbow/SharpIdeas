@@ -1,8 +1,8 @@
-package ru.shrprnbw.ideas.presentation.screens.shared_notes
+package ru.shrprnbw.ideas.presentation.screens.group_notes
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,11 +25,17 @@ import ru.shrprnbw.ideas.utils.Utils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SharedNotesScreen(
+fun GroupNotesScreen(
     modifier: Modifier = Modifier,
-    viewModel: SharedNotesViewModel = hiltViewModel(),
+    groupId: Long,
+    screenTitle: String,
+    viewModel: GroupNotesViewModel = hiltViewModel(
+        creationCallback = { factory: GroupNotesViewModel.Factory ->
+            factory.create(groupId)
+        }
+    ),
     onNoteClicked: (noteId: String) -> Unit,
-    onMenuClicked: () -> Unit = {},
+    onBackClicked: () -> Unit,
 ) {
     val noteItems = viewModel.notesFlow.collectAsLazyPagingItems()
 
@@ -39,16 +45,16 @@ fun SharedNotesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.shared_notes_screen_title),
+                        text = screenTitle,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onMenuClicked) {
+                    IconButton(onClick = onBackClicked) {
                         Icon(
-                            imageVector = Icons.Rounded.Menu,
-                            contentDescription = stringResource(R.string.menu_icon_description)
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.back_button_description)
                         )
                     }
                 }

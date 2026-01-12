@@ -7,6 +7,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.presentation.navigation.Screen
@@ -18,10 +19,7 @@ fun MainScreenWithDrawer(
     modifier: Modifier = Modifier,
     selectedScreen: NavigationScreen,
     currentRoute: Screen,
-    onNavigateToNotes: () -> Unit,
-    onNavigateToTags: () -> Unit,
-    onNavigateToGroups: () -> Unit,
-    onNavigateToSharedNotes: () -> Unit,
+    navController: NavController,
     gesturesEnabled: Boolean = true,
     content: @Composable (DrawerState, CoroutineScope) -> Unit
 ) {
@@ -39,7 +37,9 @@ fun MainScreenWithDrawer(
                     if (currentRoute != Screen.Notes) {
                         scope.launch {
                             drawerState.close()
-                            onNavigateToNotes()
+                            navController.navigate(Screen.Notes.route) {
+                                popUpTo(Screen.Notes.route) { inclusive = true }
+                            }
                         }
                     } else {
                         scope.launch { drawerState.close() }
@@ -49,7 +49,7 @@ fun MainScreenWithDrawer(
                     if (currentRoute != Screen.Tags) {
                         scope.launch {
                             drawerState.close()
-                            onNavigateToTags()
+                            navController.navigate(Screen.Tags.route)
                         }
                     } else {
                         scope.launch { drawerState.close() }
@@ -59,7 +59,7 @@ fun MainScreenWithDrawer(
                     if (currentRoute != Screen.Groups) {
                         scope.launch {
                             drawerState.close()
-                            onNavigateToGroups()
+                            navController.navigate(Screen.Groups.route)
                         }
                     } else {
                         scope.launch { drawerState.close() }
@@ -69,7 +69,7 @@ fun MainScreenWithDrawer(
                     if (currentRoute != Screen.SharedNotes) {
                         scope.launch {
                             drawerState.close()
-                            onNavigateToSharedNotes()
+                            navController.navigate(Screen.SharedNotes.route)
                         }
                     } else {
                         scope.launch { drawerState.close() }

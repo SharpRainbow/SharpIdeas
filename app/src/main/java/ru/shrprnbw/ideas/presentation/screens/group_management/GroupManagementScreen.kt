@@ -3,6 +3,7 @@
 package ru.shrprnbw.ideas.presentation.screens.group_management
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,7 +74,8 @@ import ru.shrprnbw.ideas.domain.entity.GroupUser
 fun GroupManagementScreen(
     modifier: Modifier = Modifier,
     viewModel: GroupManagementViewModel = hiltViewModel(),
-    onMenuClicked: () -> Unit = {}
+    onMenuClicked: () -> Unit = {},
+    onGroupClicked: (Group) -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
     val groupsList by viewModel.groupsList.collectAsState()
@@ -215,7 +217,8 @@ fun GroupManagementScreen(
                 GroupListItem(
                     group = group,
                     state = state,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    onNavigateToGroup = onGroupClicked
                 )
             }
         }
@@ -257,7 +260,8 @@ fun GroupManagementScreen(
 private fun GroupListItem(
     group: Group,
     state: GroupManagementState,
-    viewModel: GroupManagementViewModel
+    viewModel: GroupManagementViewModel,
+    onNavigateToGroup: (Group) -> Unit = {}
 ) {
     val isEditing = state.editingGroupId == group.id
 
@@ -267,11 +271,18 @@ private fun GroupListItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                if (!isEditing) {
-                    viewModel.processCommand(GroupManagementCommand.SelectGroup(group))
+            .combinedClickable(
+                onClick = {
+                    if (!isEditing) {
+                        onNavigateToGroup(group)
+                    }
+                },
+                onLongClick = {
+                    if (!isEditing) {
+                        viewModel.processCommand(GroupManagementCommand.SelectGroup(group))
+                    }
                 }
-            }
+            )
             .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
