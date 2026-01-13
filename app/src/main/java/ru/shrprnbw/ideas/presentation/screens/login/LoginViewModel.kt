@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ActivityContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -32,7 +33,8 @@ class LoginViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val getBaseUrlUseCase: GetBaseUrlUseCase,
     private val setBaseUrlUseCase: SetBaseUrlUseCase,
-    private val checkServerConnectionUseCase: CheckServerConnectionUseCase
+    private val checkServerConnectionUseCase: CheckServerConnectionUseCase,
+    private val externalScope: CoroutineScope
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<LoginScreenState>(LoginScreenState.InputData())
@@ -117,7 +119,7 @@ class LoginViewModel @Inject constructor(
             }
 
             is LoginCommand.LoginWithGoogle -> {
-                viewModelScope.launch {
+                externalScope.launch {
                     try {
                         val idToken = getGoogleSignInKey(command.context)
                         if (idToken.isBlank()) {

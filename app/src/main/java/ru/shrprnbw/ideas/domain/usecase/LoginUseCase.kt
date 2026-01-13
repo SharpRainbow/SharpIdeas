@@ -15,8 +15,8 @@ class LoginUseCase @Inject constructor(
     ) {
         val tokens = authRepository.login(email, password)
         credentialsRepository.saveCredentials(email, password)
-        credentialsRepository.saveAccessToken(tokens.accessToken)
         credentialsRepository.saveRefreshToken(tokens.refreshToken, email)
+        credentialsRepository.saveAccessToken(tokens.accessToken)
     }
 
 }

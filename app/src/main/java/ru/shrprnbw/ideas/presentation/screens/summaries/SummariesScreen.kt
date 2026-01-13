@@ -5,8 +5,8 @@ package ru.shrprnbw.ideas.presentation.screens.summaries
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,11 +30,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -46,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Summary
@@ -70,6 +75,7 @@ fun SummariesScreen(
 ) {
 
     val state by viewModel.state.collectAsState()
+    val refreshState = rememberPullToRefreshState()
     val summaries = viewModel.summaries.collectAsLazyPagingItems()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -127,10 +133,26 @@ fun SummariesScreen(
             SnackbarHost(hostState = snackbarHostState)
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        PullToRefreshBox(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            state = refreshState,
+            isRefreshing = summaries.loadState.refresh is LoadState.Loading,
+            onRefresh = {
+                summaries.refresh()
+            },
+            indicator = {
+                PullToRefreshDefaults.LoadingIndicator(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    state = refreshState,
+                    isRefreshing = summaries.loadState.refresh is LoadState.Loading
+                )
+            }
+        ) {
             PagedItemsTemplate(
                 items = summaries,
-                paddingValues = innerPadding,
+                paddingValues = PaddingValues(),
                 errorText = stringResource(R.string.error_network),
                 keyProducer = { index -> summaries[index]?.id ?: index },
                 screenContent = {},
@@ -142,7 +164,8 @@ fun SummariesScreen(
                         modifier = Modifier.padding(16.dp),
                         textAlign = TextAlign.Center
                     )
-                }
+                },
+                showLoading = false
             ) { summary ->
                 SwipeToDeleteBox(
                     onDelete = {

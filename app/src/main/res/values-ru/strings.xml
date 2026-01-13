@@ -53,7 +53,7 @@
     <string name="add_keywords_to_note">Добавить ключевые слова в заметку</string>
     <string name="keywords_dialog_description">Нажмите на ключевые слова, чтобы добавить их в качестве тегов к вашей заметке</string>
     <string name="keywords_error_delete">Не удалось удалить ключевые слова</string>
-    <string name="keywords_list_placeholder">Для текущей заметеки пока нет ключевых слов</string>
+    <string name="keywords_list_placeholder">Для текущей заметки пока нет ключевых слов</string>
 
     <!-- Summary Screen -->
     <string name="summaries">Резюме</string>
@@ -65,7 +65,7 @@
 
     <!-- Note List Screen -->
     <string name="summaries_error_limit_reached">Лимит преобразований исчерпан</string>
-    <string name="summaries_list_placeholder">Для текущей заметеки пока нет резюме</string>
+    <string name="summaries_list_placeholder">Для текущей заметки пока нет резюме</string>
     <string name="note_list_error_load">Ошибка загрузки заметок. Пожалуйста, попробуйте еще раз позже.</string>
     <string name="note_list_add_note">Создать текстовую заметку</string>
     <string name="note_list_add_audio">Создать аудиозаметку</string>
@@ -96,9 +96,9 @@
     <string name="transcriptions_error_rate_limit">Задача транскрипции уже выполняется</string>
     <string name="transcriptions_error_unknown">Не удалось добавить транскрипцию</string>
     <string name="transcriptions_error_delete">Не удалось удалить транскрипцию</string>
-    <string name="transcriptions_error_content_invalid">Заметка не содержит текста для преобразования</string>
+    <string name="transcriptions_error_content_invalid">Заметка не содержит аудио для преобразования</string>
     <string name="transcriptions_error_limit_reached">Лимит преобразований исчерпан</string>
-    <string name="transcriptions_list_placeholder">Для текущей заметеки пока нет транскрипций</string>
+    <string name="transcriptions_list_placeholder">Для текущей заметки пока нет транскрипций</string>
     <string name="accept">Принять</string>
     <string name="transcription_headline">Создать транскрипцию?</string>
     <string name="transcription_supporting_text">Ваше аудио будет обработано ИИ. Генерация транскрипции может занять несколько минут в зависимости от длительности аудио.</string>
@@ -242,10 +242,10 @@
     <string name="drawer_shared_notes">Общие заметки</string>
     <string name="summaries_error_unknown">Не удалось создать резюме</string>
     <string name="summaries_error_rate_limit">Задача уже в обработке</string>
-    <string name="summaries_error_content_invalid">Заметка не содержит текста для преобразования</string>
+    <string name="summaries_error_content_invalid">В заметке недостаточно текста для преобразования</string>
     <string name="keywords_error_unknown">Не удалось сгенерировать ключевые слова</string>
     <string name="keywords_error_rate_limit">Задача уже в обработке</string>
-    <string name="keywords_error_content_invalid">Заметка не содержит текста для преобразования</string>
+    <string name="keywords_error_content_invalid">В заметке недостаточно текста для преобразования</string>
     <string name="shared_notes_placeholder">Нет доступных общих заметок</string>
     <string name="group_notes_list_placeholder">В группе пока нет заметок</string>
     <string name="create_your_first_note">Создайте свою первую заметку!</string>

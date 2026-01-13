@@ -68,7 +68,7 @@
     <string name="summary_error_delete">Unable to delete summary</string>
     <string name="summaries_error_unknown">Unable to add summary</string>
     <string name="summaries_error_rate_limit">Summary task is already in progress</string>
-    <string name="summaries_error_content_invalid">Note does not contain content for summarry generation</string>
+    <string name="summaries_error_content_invalid">Note content is insufficient for summarry generation</string>
     <string name="summaries_error_limit_reached">Summary limit reached</string>
     <string name="summaries_list_placeholder">No summaries generated</string>
 
@@ -231,7 +231,7 @@
     <string name="status_separator">": "</string>
     <string name="keywords_error_unknown">Unable to add keyword</string>
     <string name="keywords_error_rate_limit">Keywords task is already in progress</string>
-    <string name="keywords_error_content_invalid">Note does not contain content for keyword generation</string>
+    <string name="keywords_error_content_invalid">Note content is insufficient for keyword generation</string>
     <string name="keywords_error_limit_reached">Keywords limit reached</string>
 
     <!-- Filter Chips -->

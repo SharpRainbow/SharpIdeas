@@ -209,7 +209,8 @@ fun UserInfoFieldNextFocus(
             onNext = {
                 focusManager.moveFocus(FocusDirection.Down)
             }
-        )
+        ),
+        singleLine = true
     )
 }
 
@@ -246,14 +247,16 @@ fun <T : Any> PagedItemsTemplate(
     itemContent: @Composable (item: T) -> Unit
 ) {
     when {
-        items.loadState.refresh is LoadState.Loading && showLoading && items.itemCount == 0 -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                ContainedLoadingIndicator()
+        items.loadState.refresh is LoadState.Loading && items.itemCount == 0 -> {
+            if (showLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ContainedLoadingIndicator()
+                }
             }
         }
 

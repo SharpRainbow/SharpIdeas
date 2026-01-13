@@ -430,9 +430,9 @@ class NoteEditorViewModel @AssistedInject constructor(
                     val formatSymbol = when (formatType) {
                         FormatType.BOLD -> "**"
 
-                        FormatType.ITALIC -> "~~"
+                        FormatType.ITALIC -> "*"
 
-                        FormatType.STRIKETHROUGH -> "*"
+                        FormatType.STRIKETHROUGH -> "~~"
 
                         FormatType.MONOSPACE -> "```"
 

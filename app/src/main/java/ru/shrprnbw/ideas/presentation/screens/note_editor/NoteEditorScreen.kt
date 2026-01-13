@@ -70,6 +70,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -99,6 +100,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -634,8 +636,9 @@ fun TextContent(
             },
             textStyle = TextStyle(
                 fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface
+                color = LocalContentColor.current
             ),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             onTextLayout = {
                 val cursorRect = it.getCursorRect(textFieldValue.selection.start)
                 coroutineScope.launch {
