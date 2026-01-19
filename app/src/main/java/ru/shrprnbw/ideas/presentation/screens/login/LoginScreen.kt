@@ -1,9 +1,14 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package ru.shrprnbw.ideas.presentation.screens.login
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -19,9 +25,12 @@ import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +40,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -50,7 +60,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.presentation.screens.PasswordInputField
 import ru.shrprnbw.ideas.presentation.screens.UserInfoFieldNextFocus
-import ru.shrprnbw.ideas.presentation.ui.theme.CustomIcons
 
 @Composable
 fun LoginScreen(
@@ -207,10 +216,12 @@ fun LoginScreen(
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.height(24.dp))
+
                     Button(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 16.dp)
+                            .height(48.dp),
                         enabled = currentState.isLoginEnabled,
                         onClick = {
                             viewModel.processCommand(LoginCommand.Login)
@@ -218,26 +229,96 @@ fun LoginScreen(
                     ) {
                         Text(stringResource(R.string.enter))
                     }
-                    Button(
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                        Text(
+                            text = stringResource(R.string.or_divider),
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    OutlinedButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .height(48.dp),
                         onClick = {
                             viewModel.processCommand(
                                 LoginCommand.LoginWithGoogle(
                                     context
                                 )
                             )
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSystemInDarkTheme()) Color(0xFF131314) else Color.White,
+                            contentColor = if (isSystemInDarkTheme()) Color(0xFFE3E3E3) else Color(0xFF1F1F1F)
+                        ),
+                        border = BorderStroke(1.dp, if (isSystemInDarkTheme()) Color(0xFF8E918F) else Color(0xFF747775)),
                     ) {
-                        Icon(
-                            imageVector = CustomIcons.Google,
+                        Image(
+                            painter = painterResource(R.drawable.ic_google_logo),
                             contentDescription = stringResource(R.string.google_icon_description),
-                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                            modifier = Modifier.size(ButtonDefaults.MediumIconSize)
                         )
-                        Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                        Text(stringResource(R.string.enter_with_google))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.enter_with_google),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .height(48.dp),
+                        onClick = {
+                            viewModel.processCommand(
+                                LoginCommand.LoginWithYandex(
+                                    context
+                                )
+                            )
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                            contentColor = if (isSystemInDarkTheme()) Color.Black else Color.White
+                        )
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.ic_yandex_logo),
+                            contentDescription = stringResource(R.string.yandex_icon_description),
+                            modifier = Modifier.size(ButtonDefaults.MediumIconSize)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.enter_with_yandex),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

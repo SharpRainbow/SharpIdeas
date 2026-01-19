@@ -20,11 +20,11 @@ import ru.shrprnbw.ideas.data.remote.dto.request.AddUserToGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateTagRequest
-import ru.shrprnbw.ideas.data.remote.dto.request.GoogleTokenAuthRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RemoveNoteFromGroupRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.TokenExchangeRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateNoteTextBatchRequest
@@ -127,7 +127,12 @@ interface IdeasApiService {
 
     @POST("$VERSION_2/auth/exchange")
     suspend fun loginWithGoogle(
-        @Body request: GoogleTokenAuthRequest
+        @Body request: TokenExchangeRequest
+    ): TokenResponseDto
+
+    @POST("$VERSION_2/auth/exchange-yandex")
+    suspend fun loginWithYandex(
+        @Body request: TokenExchangeRequest
     ): TokenResponseDto
 
     @POST("$VERSION_1/notes")

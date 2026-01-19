@@ -7,10 +7,10 @@ import kotlinx.coroutines.withContext
 import ru.shrprnbw.ideas.data.JwtManager
 import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
-import ru.shrprnbw.ideas.data.remote.dto.request.GoogleTokenAuthRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.LoginRequestDto
 import ru.shrprnbw.ideas.data.remote.dto.request.RefreshRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.RegisterRequest
+import ru.shrprnbw.ideas.data.remote.dto.request.TokenExchangeRequest
 import ru.shrprnbw.ideas.domain.entity.TokenPair
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.CredentialsRepository
@@ -71,8 +71,16 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun loginWithGoogle(idToken: String): TokenPair {
         return apiService.loginWithGoogle(
-            GoogleTokenAuthRequest(
+            TokenExchangeRequest(
                 idToken = idToken
+            )
+        ).toEntity()
+    }
+
+    override suspend fun loginWithYandex(yandexToken: String): TokenPair {
+        return apiService.loginWithYandex(
+            TokenExchangeRequest(
+                idToken = yandexToken
             )
         ).toEntity()
     }

@@ -2,7 +2,9 @@ package ru.shrprnbw.ideas.presentation.screens.login
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.annotation.StringRes
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,10 +21,13 @@ import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.usecase.CheckServerConnectionUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetBaseUrlUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetGoogleSignInKey
+import ru.shrprnbw.ideas.domain.usecase.GetYandexSignInKey
 import ru.shrprnbw.ideas.domain.usecase.IsLoggedInUseCase
 import ru.shrprnbw.ideas.domain.usecase.LoginUseCase
 import ru.shrprnbw.ideas.domain.usecase.LoginWithGoogleUseCase
+import ru.shrprnbw.ideas.domain.usecase.LoginWithYandexUseCase
 import ru.shrprnbw.ideas.domain.usecase.SetBaseUrlUseCase
+import ru.shrprnbw.ideas.utils.OperationCancelledException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,6 +36,8 @@ class LoginViewModel @Inject constructor(
     private val isLoggedInUseCase: IsLoggedInUseCase,
     private val getGoogleSignInKey: GetGoogleSignInKey,
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
+    private val getYandexSignInKey: GetYandexSignInKey,
+    private val loginWithYandexUseCase: LoginWithYandexUseCase,
     private val getBaseUrlUseCase: GetBaseUrlUseCase,
     private val setBaseUrlUseCase: SetBaseUrlUseCase,
     private val checkServerConnectionUseCase: CheckServerConnectionUseCase,
@@ -126,12 +133,41 @@ class LoginViewModel @Inject constructor(
                             throw Exception("No idToken from Google")
                         }
                         loginWithGoogleUseCase(idToken)
+                    } catch (_: GetCredentialCancellationException) {
+
                     } catch (e: Exception) {
+                        Log.d("LoginViewModel", "Google login error: ${e.stackTraceToString()}")
                         _state.update { previousState ->
                             if (previousState is LoginScreenState.InputData) {
                                 previousState.copy(
                                     isLoading = false,
                                     errorMessage = R.string.registration_error_google_error
+                                )
+                            } else {
+                                previousState
+                            }
+                        }
+                    }
+                }
+            }
+
+            is LoginCommand.LoginWithYandex -> {
+                externalScope.launch {
+                    try {
+                        val yandexToken = getYandexSignInKey(command.context)
+                        if (yandexToken.isBlank()) {
+                            throw Exception("No token from Yandex")
+                        }
+                        loginWithYandexUseCase(yandexToken)
+                    } catch (_: OperationCancelledException) {
+
+                    } catch (e: Exception) {
+                        Log.d("LoginViewModel", "Yandex login error: ${e.stackTraceToString()}")
+                        _state.update { previousState ->
+                            if (previousState is LoginScreenState.InputData) {
+                                previousState.copy(
+                                    isLoading = false,
+                                    errorMessage = R.string.error_unknown
                                 )
                             } else {
                                 previousState
@@ -217,6 +253,8 @@ sealed interface LoginCommand {
     data object Login : LoginCommand
 
     data class LoginWithGoogle(@param:ActivityContext val context: Context) : LoginCommand
+
+    data class LoginWithYandex(@param:ActivityContext val context: Context) : LoginCommand
 
     data object ResetErrorMessage : LoginCommand
 

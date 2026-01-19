@@ -19,6 +19,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["YANDEX_CLIENT_ID"] = "2d95225ed81f4ec59623ffc9377f3848"
     }
 
     buildTypes {
@@ -43,6 +44,7 @@ android {
 }
 
 dependencies {
+    implementation("com.yandex.android:authsdk:3.1.3")
     implementation("com.github.jeziellago:compose-markdown:0.5.8") {
         exclude(group = "io.noties.markwon", module = "image-coil")
     }

@@ -253,4 +253,7 @@
     <string name="shared_notes_placeholder">No shared notes available</string>
     <string name="group_notes_list_placeholder">No notes in group</string>
     <string name="create_your_first_note">Create you first note!</string>
+    <string name="enter_with_yandex">Sign in with Yandex ID</string>
+    <string name="yandex_icon_description">Yandex icon</string>
+    <string name="or_divider">or</string>
 </resources>
