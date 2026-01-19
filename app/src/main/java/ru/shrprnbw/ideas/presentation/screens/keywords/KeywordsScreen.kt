@@ -366,7 +366,8 @@ private fun KeywordChipsDialog(
 
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy((-8).dp)
                 ) {
                     keywordList.forEach { keywordText ->
                         val isAdded = addedKeywords.contains(keywordText)

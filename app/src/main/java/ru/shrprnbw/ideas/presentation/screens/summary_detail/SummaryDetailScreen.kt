@@ -30,14 +30,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.colintheshots.twain.MarkdownText
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.utils.DateFormatter
+import ru.shrprnbw.ideas.utils.Utils
 
 @Composable
 fun SummaryDetailScreen(
@@ -159,7 +161,7 @@ private fun SummaryContent(
                 text = stringResource(R.string.status) + ": ${summary.generationStatus}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Utils.getStatusColor(summary.generationStatus)
             )
         }
 
@@ -167,8 +169,12 @@ private fun SummaryContent(
 
         MarkdownText(
             markdown = summary.summary,
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface
+            style = TextStyle(
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            syntaxHighlightColor = MaterialTheme.colorScheme.surfaceVariant
         )
 
         Spacer(modifier = Modifier.height(16.dp))

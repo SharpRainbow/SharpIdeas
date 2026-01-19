@@ -1,6 +1,9 @@
 package ru.shrprnbw.ideas.data.repository
 
+import android.util.Log
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import ru.shrprnbw.ideas.data.JwtManager
 import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
@@ -78,24 +81,29 @@ class AuthRepositoryImpl @Inject constructor(
         return apiService.checkHealth().code() == HttpURLConnection.HTTP_OK
     }
 
-    private suspend fun refreshAccessToken(refreshToken: String) {
+    private suspend fun refreshAccessToken(refreshToken: String) = withContext(NonCancellable) {
+        Log.d("AuthRepositoryImpl", "Refreshing access token")
         val refreshResponse = apiService.refreshAccessToken(
             RefreshRequest(
                 refreshToken = refreshToken
             )
         )
+        Log.d("AuthRepositoryImpl", "Saving new access token")
         val login = credentialsRepository.getSavedLogin().first()
         credentialsRepository.saveRefreshToken(refreshResponse.refreshToken, login)
         credentialsRepository.saveAccessToken(refreshResponse.accessToken)
+        Log.d("AuthRepositoryImpl", "Access token refreshed" )
     }
 
     private suspend fun loginWithCredentials() {
         val login = credentialsRepository.getSavedLogin().first()
         val password = credentialsRepository.getSavedPassword().first()
         if (login.isNotBlank() && password.isNotBlank()) {
-            val loginResponse = login(login, password)
-            credentialsRepository.saveAccessToken(loginResponse.accessToken)
-            credentialsRepository.saveRefreshToken(loginResponse.refreshToken, login)
+            withContext(NonCancellable) {
+                val loginResponse = login(login, password)
+                credentialsRepository.saveAccessToken(loginResponse.accessToken)
+                credentialsRepository.saveRefreshToken(loginResponse.refreshToken, login)
+            }
         }
     }
 

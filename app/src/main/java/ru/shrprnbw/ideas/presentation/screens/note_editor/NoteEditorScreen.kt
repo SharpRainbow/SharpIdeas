@@ -36,6 +36,7 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
@@ -117,6 +118,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.tooling.preview.Preview
@@ -129,7 +131,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
-import com.colintheshots.twain.MarkdownText
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.AccessType
@@ -638,6 +640,9 @@ fun TextContent(
                 fontSize = 16.sp,
                 color = LocalContentColor.current
             ),
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences
+            ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             onTextLayout = {
                 val cursorRect = it.getCursorRect(textFieldValue.selection.start)
@@ -695,11 +700,12 @@ fun TextContent(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 8.dp),
             markdown = text,
-            fontSize = 16.sp,
             style = TextStyle(
                 fontSize = 16.sp,
+                lineHeight = 24.sp,
                 color = MaterialTheme.colorScheme.onSurface
             ),
+            syntaxHighlightColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 }

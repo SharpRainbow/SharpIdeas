@@ -374,7 +374,7 @@ fun NoteItem(
                     modifier = Modifier.weight(1f)
                 ) {
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         if (type == NoteType.Text) {

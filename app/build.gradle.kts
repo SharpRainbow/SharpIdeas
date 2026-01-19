@@ -43,8 +43,12 @@ android {
 }
 
 dependencies {
-    implementation("com.colintheshots:twain:0.3.2")
-    implementation("com.github.donald-okara:TextieMDLibrary:1.0.4")
+    implementation("com.github.jeziellago:compose-markdown:0.5.8") {
+        exclude(group = "io.noties.markwon", module = "image-coil")
+    }
+    implementation("com.colintheshots:twain:0.3.2") {
+        exclude(group = "io.noties.markwon", module = "image-coil")
+    }
     implementation("com.squareup.okhttp3:logging-interceptor:5.3.2")
     implementation(libs.converter.scalars)
     implementation(libs.androidx.credentials)
