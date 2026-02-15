@@ -8,6 +8,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -609,63 +613,87 @@ fun TextContent(
             mutableStateOf(TextFieldValue(text = text, selection = selectionRange))
         }
 
-        BasicTextField(
+        Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp)
-                .onKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
-                        if (text.isEmpty()) {
-                            onDeleteRequest()
-                            true
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BasicTextField(
+                modifier = modifier
+                    .weight(1f)
+                    .onKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyUp && event.key == Key.Backspace) {
+                            if (text.isEmpty()) {
+                                onDeleteRequest()
+                                true
+                            } else {
+                                false
+                            }
                         } else {
                             false
                         }
-                    } else {
-                        false
                     }
-                }
-                .onFocusEvent {
-                    if (it.hasFocus) {
-                        setFocus(textFieldValue.selection)
+                    .onFocusEvent {
+                        if (it.hasFocus) {
+                            setFocus(textFieldValue.selection)
+                        }
+                    },
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    textFieldValue = newValue
+                    onTextInput(newValue.text)
+                    setFocus(textFieldValue.selection)
+                },
+                textStyle = TextStyle(
+                    fontSize = 16.sp,
+                    color = LocalContentColor.current
+                ),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                onTextLayout = {
+                    val cursorRect = it.getCursorRect(textFieldValue.selection.start)
+                    coroutineScope.launch {
+                        bringIntoViewRequester.bringIntoView(cursorRect)
                     }
                 },
-            value = textFieldValue,
-            onValueChange = { newValue ->
-                textFieldValue = newValue
-                onTextInput(newValue.text)
-                setFocus(textFieldValue.selection)
-            },
-            textStyle = TextStyle(
-                fontSize = 16.sp,
-                color = LocalContentColor.current
-            ),
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            onTextLayout = {
-                val cursorRect = it.getCursorRect(textFieldValue.selection.start)
-                coroutineScope.launch {
-                    bringIntoViewRequester.bringIntoView(cursorRect)
-                }
-            },
-            decorationBox = { innerTextField ->
-                Box(
-                    modifier = Modifier
-                        .bringIntoViewRequester(bringIntoViewRequester)
-                ) {
-                    if (textFieldValue.text.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.add_text_hint),
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-                        )
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier
+                            .bringIntoViewRequester(bringIntoViewRequester)
+                    ) {
+                        if (textFieldValue.text.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.add_text_hint),
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                            )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
+                }
+            )
+
+            AnimatedVisibility(
+                visible = textFieldValue.text.isEmpty(),
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally()
+            ) {
+                IconButton(
+                    modifier = Modifier.size(32.dp),
+                    onClick = onDeleteRequest
+                ) {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        imageVector = Icons.Outlined.DeleteOutline,
+                        contentDescription = stringResource(R.string.delete),
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
-        )
+        }
 //            MarkdownEditor(
 //                modifier = Modifier
 //                    .fillMaxWidth()
