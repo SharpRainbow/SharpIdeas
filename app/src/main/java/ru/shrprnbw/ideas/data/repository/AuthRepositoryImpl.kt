@@ -70,18 +70,16 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun loginWithGoogle(idToken: String): TokenPair {
-        return apiService.loginWithGoogle(
-            TokenExchangeRequest(
-                idToken = idToken
-            )
+        return apiService.loginWithProvider(
+            TokenExchangeRequest(idToken = idToken),
+            provider = GOOGLE_PROVIDER
         ).toEntity()
     }
 
     override suspend fun loginWithYandex(yandexToken: String): TokenPair {
-        return apiService.loginWithYandex(
-            TokenExchangeRequest(
-                idToken = yandexToken
-            )
+        return apiService.loginWithProvider(
+            TokenExchangeRequest(idToken = yandexToken),
+            provider = YANDEX_PROVIDER
         ).toEntity()
     }
 
@@ -113,6 +111,11 @@ class AuthRepositoryImpl @Inject constructor(
                 credentialsRepository.saveRefreshToken(loginResponse.refreshToken, login)
             }
         }
+    }
+
+    companion object {
+        private const val GOOGLE_PROVIDER = "google"
+        private const val YANDEX_PROVIDER = "yandex"
     }
 
 }

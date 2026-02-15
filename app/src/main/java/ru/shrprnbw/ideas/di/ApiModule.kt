@@ -20,7 +20,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object ApiModule {
 
-    const val DEFAULT_BASE_URL = "http://192.168.0.18:8080/"//"https://v603193.hosted-by-vdsina.com/"
+    const val DEFAULT_BASE_URL = "http://192.168.0.18:8080/"
     const val FIRST_PAGE_INDEX = 0
 
     @Provides

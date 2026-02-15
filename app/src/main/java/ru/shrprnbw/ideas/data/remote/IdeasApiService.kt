@@ -125,14 +125,10 @@ interface IdeasApiService {
         @Body request: RefreshRequest
     ): TokenResponseDto
 
-    @POST("$VERSION_2/auth/exchange")
-    suspend fun loginWithGoogle(
-        @Body request: TokenExchangeRequest
-    ): TokenResponseDto
-
-    @POST("$VERSION_2/auth/exchange-yandex")
-    suspend fun loginWithYandex(
-        @Body request: TokenExchangeRequest
+    @POST("$VERSION_2/auth/exchange/{provider}")
+    suspend fun loginWithProvider(
+        @Body request: TokenExchangeRequest,
+        @Path("provider") provider: String
     ): TokenResponseDto
 
     @POST("$VERSION_1/notes")
