@@ -47,7 +47,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +65,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Group
 import ru.shrprnbw.ideas.domain.entity.GroupUser
@@ -77,8 +77,8 @@ fun GroupManagementScreen(
     onMenuClicked: () -> Unit = {},
     onGroupClicked: (Group) -> Unit = {}
 ) {
-    val state by viewModel.state.collectAsState()
-    val groupsList by viewModel.groupsList.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val groupsList by viewModel.groupsList.collectAsStateWithLifecycle()
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }

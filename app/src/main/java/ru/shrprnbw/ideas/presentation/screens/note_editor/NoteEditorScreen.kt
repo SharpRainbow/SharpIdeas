@@ -177,7 +177,7 @@ fun NoteEditorScreen(
     }
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(lifecycle) {
+    LaunchedEffect(lifecycle) {//TODO: Load paged
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             viewModel.processCommand(NoteEditorCommand.LoadNote)
         }

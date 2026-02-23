@@ -33,7 +33,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +51,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Tag
@@ -64,7 +64,7 @@ fun TagManagementScreen(
     viewModel: TagManagementViewModel = hiltViewModel(),
     onMenuClicked: () -> Unit = {}
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val tagsList = viewModel.tagsLazyList.collectAsLazyPagingItems()
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
