@@ -8,6 +8,7 @@
 
     <!-- Common Strings -->
     <string name="back">Go back</string>
+    <string name="refresh">Refresh</string>
     <string name="error_network">Unknown network error occurred</string>
     <string name="error_unknown">Unknown error occurred</string>
     <string name="profile_invalid_data">Wrong email</string>
@@ -76,12 +77,14 @@
     <string name="note_list_error_load">Error loading notes. Please try again later.</string>
     <string name="note_list_add_note">Create text note</string>
     <string name="note_list_add_audio">Create audio note</string>
+    <string name="note_list_add_board">Create task board</string>
 
     <!-- Search Screen -->
     <string name="search_screen_hint_search">Search notes</string>
     <string name="search_filter_all">All</string>
     <string name="search_filter_audio">Audio</string>
     <string name="search_filter_text">Text</string>
+    <string name="search_filter_board">Board</string>
 
     <!-- Note Tags Screen -->
     <string name="tag_management_title">Edit labels</string>
@@ -219,9 +222,11 @@
     <!-- Note List Screen -->
     <string name="text_note_label">Text note</string>
     <string name="audio_note_label">Audio note</string>
+    <string name="board_note_label">Task board</string>
     <string name="toggle_menu">Toggle menu</string>
     <string name="close_menu">Close menu</string>
     <string name="create_button">Create</string>
+    <string name="confirm_button">OK</string>
 
     <!-- Search Screen -->
     <string name="back_button_description">Back</string>
@@ -250,10 +255,97 @@
     <string name="drawer_tag_management">Tag management</string>
     <string name="drawer_group_management">Group management</string>
     <string name="drawer_shared_notes">Shared notes</string>
+    <string name="drawer_my_tasks">My tasks</string>
     <string name="shared_notes_placeholder">No shared notes available</string>
     <string name="group_notes_list_placeholder">No notes in group</string>
     <string name="create_your_first_note">Create you first note!</string>
     <string name="enter_with_yandex">Sign in with Yandex ID</string>
     <string name="yandex_icon_description">Yandex icon</string>
     <string name="or_divider">or</string>
+
+    <!-- Board Screen -->
+    <string name="board_rename">Rename board</string>
+    <string name="board_rename_hint">Board name</string>
+    <string name="board_error_load">Unable to load board</string>
+    <string name="board_add_column">Add column</string>
+    <string name="board_column_title_hint">Column title</string>
+    <string name="board_add_task">Add task</string>
+    <string name="board_task_title_hint">Task title</string>
+    <string name="board_task_description_hint">Description</string>
+    <string name="board_empty_columns">No columns yet. Add a column to get started.</string>
+    <string name="board_empty_tasks">No tasks</string>
+    <string name="board_delete_column">Delete column</string>
+    <string name="board_delete_column_confirm">Delete this column and all its tasks?</string>
+    <string name="board_edit_column">Edit column</string>
+    <string name="board_delete_task">Delete task</string>
+    <string name="board_delete_task_confirm">Delete this task?</string>
+    <string name="board_move_task">Move to</string>
+    <string name="board_complete_task">Complete</string>
+    <string name="board_reopen_task">Reopen</string>
+    <string name="board_error_create_column">Unable to create column</string>
+    <string name="board_error_delete_column">Unable to delete column</string>
+    <string name="board_error_create_task">Unable to create task</string>
+    <string name="board_error_update_task">Unable to update task</string>
+    <string name="board_error_delete_task">Unable to delete task</string>
+    <string name="board_error_move_task">Unable to move task</string>
+    <string name="board_task_priority">Priority</string>
+    <string name="board_priority_low">Low</string>
+    <string name="board_priority_medium">Medium</string>
+    <string name="board_priority_high">High</string>
+    <string name="board_priority_critical">Critical</string>
+    <string name="board_task_deadline">Deadline</string>
+    <string name="board_task_start_date">Start date</string>
+    <string name="board_task_due_date">Due date</string>
+    <string name="board_task_select_date">Select date</string>
+    <string name="board_task_no_date">Not set</string>
+    <string name="board_task_clear_date">Clear</string>
+    <string name="board_task_select_time">Select time</string>
+    <string name="board_labels">Labels</string>
+    <string name="board_assignees">Assignees</string>
+    <string name="board_task_detail">Task details</string>
+    <string name="board_save">Save</string>
+    <string name="board_wip_limit">WIP limit</string>
+    <string name="board_tasks_count">%1$d tasks</string>
+    <string name="board_manage_labels">Manage labels</string>
+    <string name="board_create_label">Create label</string>
+    <string name="board_label_name_hint">Label name</string>
+    <string name="board_no_labels">No labels</string>
+    <string name="board_error_create_label">Unable to create label</string>
+    <string name="board_error_delete_label">Unable to delete label</string>
+    <string name="board_error_add_label">Unable to add label to task</string>
+    <string name="board_error_remove_label">Unable to remove label from task</string>
+    <string name="board_error_add_assignee">Unable to add assignee</string>
+    <string name="board_error_remove_assignee">Unable to remove assignee from task</string>
+    <string name="board_add_assignee">Add assignee</string>
+    <string name="board_no_assignees">No assignees available. Share the note to add assignees.</string>
+    <string name="board_attachments">Attachments</string>
+    <string name="board_add_attachment">Add attachment</string>
+    <string name="board_attachment_type_text">Text</string>
+    <string name="board_attachment_type_link">Link</string>
+    <string name="board_attachment_type_note_ref">Note reference</string>
+    <string name="board_attachment_title_hint">Title (optional)</string>
+    <string name="board_attachment_content_hint">Content</string>
+    <string name="board_no_attachments">No attachments</string>
+    <string name="board_error_add_attachment">Unable to add attachment</string>
+    <string name="board_error_delete_attachment">Unable to delete attachment</string>
+    <string name="board_select_note_reference">Select a note</string>
+    <string name="board_no_notes_in_groups">No notes available in board groups</string>
+    <string name="board_loading_notes">Loading notes…</string>
+    <string name="board_move_column_left">Move left</string>
+    <string name="board_move_column_right">Move right</string>
+    <string name="board_move_task_up">Move up</string>
+    <string name="board_move_task_down">Move down</string>
+    <string name="board_error_reorder">Unable to reorder</string>
+    <string name="board_error_delete_board">Unable to delete board</string>
+    <string name="board_available_labels">Available labels</string>
+    <string name="board_available_assignees">Available assignees</string>
+
+    <!-- My Tasks Screen -->
+    <string name="my_tasks_title">My tasks</string>
+    <string name="my_tasks_empty">No tasks assigned to you</string>
+    <string name="my_tasks_open_board">Open board</string>
+    <string name="my_tasks_error_load">Unable to load tasks</string>
+    <string name="my_tasks_error_complete">Unable to complete task</string>
+    <string name="my_tasks_error_delete">Unable to delete task</string>
+    <string name="my_tasks_error_update">Unable to update task</string>
 </resources>

@@ -7,6 +7,7 @@ import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
+import ru.shrprnbw.ideas.domain.entity.NoteType
 import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.domain.entity.Transcription
 
@@ -23,7 +24,7 @@ interface NoteRepository {
         title: String,
         content: String,
         tagIds: List<Long>,
-        audioNote: Boolean?
+        noteType: NoteType?
     ): Flow<PagingData<NotePreview>>
 
     suspend fun getNoteInfo(noteId: String): Note
@@ -40,9 +41,7 @@ interface NoteRepository {
 
     suspend fun deleteNoteContent(noteId: String, contentId: Long)
 
-    suspend fun createTextNote(title: String)
-
-    suspend fun createAudioNote(title: String)
+    suspend fun createNote(title: String, noteType: NoteType)
 
     suspend fun deleteNote(noteId: String)
 
@@ -79,5 +78,7 @@ interface NoteRepository {
     suspend fun addNoteToGroup(noteId: String, groupId: Long, accessType: String)
 
     suspend fun removeNoteFromGroup(noteId: String, groupId: Long)
+
+    suspend fun getGroupNotesSimple(groupId: Long): List<NotePreview>
 
 }

@@ -20,6 +20,7 @@ val GradientEndAlt = Color(0xFFEC4899)
 val AudioGreen = Color(0xFF388E3C)
 val TextBlue = Color(0xFF0061A4)
 val KeywordPurple = Color(0xFF7B1FA2)
+val BoardOrange = Color(0xFFE65100)
 
 val primaryLight = Color(0xFF63568F)
 val onPrimaryLight = Color(0xFFFFFFFF)

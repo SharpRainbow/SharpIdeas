@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 data class CreateNoteRequest(
     @SerialName("title")
     val title: String,
-    @SerialName("audioNote")
-    val audioNote: Boolean
+    @SerialName("noteType")
+    val noteType: String
 )

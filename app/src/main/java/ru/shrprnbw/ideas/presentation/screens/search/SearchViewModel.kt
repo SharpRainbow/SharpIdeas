@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
+import ru.shrprnbw.ideas.domain.entity.NoteType
 import ru.shrprnbw.ideas.domain.entity.Tag
 import ru.shrprnbw.ideas.domain.usecase.GetUserTagsUseCase
 import ru.shrprnbw.ideas.domain.usecase.SearchNotesUseCase
@@ -44,7 +45,7 @@ class SearchViewModel @Inject constructor(
                     globalSearch = false,
                     query = query,
                     tagIds = selectedTagIds.toList(),
-                    audioNote = screenState.noteTypeFilter.toApiParameter()
+                    noteType = screenState.noteTypeFilter.toApiParameter()
                 )
             }
         }.cachedIn(viewModelScope)
@@ -130,11 +131,11 @@ data class SearchScreenState(
 enum class NoteTypeFilter {
     ALL,
     AUDIO,
-    TEXT;
+    TEXT,
+    BOARD;
 
-    fun toApiParameter(): Boolean? = when (this) {
+    fun toApiParameter(): NoteType? = when (this) {
         ALL -> null
-        AUDIO -> true
-        TEXT -> false
+        else -> NoteType.valueOf(this.name)
     }
 }

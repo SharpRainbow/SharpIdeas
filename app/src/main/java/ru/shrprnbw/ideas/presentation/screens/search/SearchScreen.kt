@@ -53,11 +53,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.domain.entity.NoteType
 import ru.shrprnbw.ideas.domain.entity.Tag
 import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_DUR
 import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_KEY
 import ru.shrprnbw.ideas.presentation.screens.NoteItem
-import ru.shrprnbw.ideas.presentation.screens.NoteType
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
 import ru.shrprnbw.ideas.utils.DateFormatter
 import ru.shrprnbw.ideas.utils.Utils
@@ -68,6 +68,8 @@ fun SearchScreen(
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel(),
     onBackClicked: () -> Unit,
+    onNoteClicked: (noteId: String) -> Unit = {},
+    onBoardClicked: (noteId: String) -> Unit = {},
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?
 ) {
@@ -181,12 +183,16 @@ fun SearchScreen(
             ) { item ->
                 NoteItem(
                     title = item.title,
-                    preview = if (item.audioNote) Utils.extractFileName(item.preview) else item.preview,
+                    preview = if (item.noteType == NoteType.AUDIO) Utils.extractFileName(item.preview) else item.preview,
                     time = DateFormatter.formatDateToString(item.updatedAt),
-                    type = if (item.audioNote) NoteType.Audio else NoteType.Text,
+                    type = item.noteType,
                     tags = item.tags,
                     onNoteClicked = {
-
+                        if (item.noteType == NoteType.BOARD) {
+                            onBoardClicked(item.id)
+                        } else {
+                            onNoteClicked(item.id)
+                        }
                     }
                 )
             }
@@ -286,6 +292,13 @@ fun NoteTypeFilterChips(
                 label = stringResource(R.string.search_filter_text),
                 isSelected = selectedFilter == NoteTypeFilter.TEXT,
                 onClick = { onFilterSelected(NoteTypeFilter.TEXT) }
+            )
+        }
+        item {
+            NoteFilterChip(
+                label = stringResource(R.string.search_filter_board),
+                isSelected = selectedFilter == NoteTypeFilter.BOARD,
+                onClick = { onFilterSelected(NoteTypeFilter.BOARD) }
             )
         }
     }

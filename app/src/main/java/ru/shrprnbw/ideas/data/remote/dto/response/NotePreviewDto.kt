@@ -12,13 +12,13 @@ data class NotePreviewDto(
     @SerialName("title")
     val title: String,
     @SerialName("preview")
-    val preview: String,
+    val preview: String = "",
     @SerialName("noteTags")
     val tags: List<String>,
     @SerialName("accessType")
     val accessType: String,
     @SerialName("updatedAt")
     val updatedAt: Long,
-    @SerialName("audioNote")
-    val audioNote: Boolean
+    @SerialName("noteType")
+    val noteType: String = "TEXT"
 )

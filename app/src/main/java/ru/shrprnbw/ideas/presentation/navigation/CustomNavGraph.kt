@@ -18,11 +18,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.presentation.screens.NavigationScreen
+import ru.shrprnbw.ideas.presentation.screens.board.BoardScreen
 import ru.shrprnbw.ideas.presentation.screens.group_management.GroupManagementScreen
 import ru.shrprnbw.ideas.presentation.screens.group_notes.GroupNotesScreen
 import ru.shrprnbw.ideas.presentation.screens.keywords.KeywordsScreen
 import ru.shrprnbw.ideas.presentation.screens.login.LoginScreen
 import ru.shrprnbw.ideas.presentation.screens.main.MainScreenWithDrawer
+import ru.shrprnbw.ideas.presentation.screens.my_tasks.MyTasksScreen
 import ru.shrprnbw.ideas.presentation.screens.note_editor.NoteEditorScreen
 import ru.shrprnbw.ideas.presentation.screens.notes_list.NoteListScreen
 import ru.shrprnbw.ideas.presentation.screens.profile.ProfileScreen
@@ -141,6 +143,9 @@ fun NavGraph() {
                             },
                             onNoteClicked = { noteId ->
                                 navController.navigate(Screen.EditNote.createRoute(noteId))
+                            },
+                            onBoardClicked = { noteId ->
+                                navController.navigate(Screen.Board.createRoute(noteId))
                             }
                         )
                     }
@@ -152,6 +157,12 @@ fun NavGraph() {
                         sharedTransitionScope = this@SharedTransitionLayout,
                         onBackClicked = {
                             navController.popBackStack()
+                        },
+                        onNoteClicked = { noteId ->
+                            navController.navigate(Screen.EditNote.createRoute(noteId))
+                        },
+                        onBoardClicked = { noteId ->
+                            navController.navigate(Screen.Board.createRoute(noteId))
                         }
                     )
                 }
@@ -249,6 +260,26 @@ fun NavGraph() {
                                     hasAccess = hasAccess
                                 )
                             )
+                        }
+                    )
+                }
+
+                composable(
+                    route = Screen.Board.route,
+                    arguments = Screen.Board.arguments
+                ) { navBackStackEntry ->
+                    val noteId = Screen.Board.getNoteId(navBackStackEntry.arguments)
+                    BoardScreen(
+                        noteId = noteId,
+                        onBackClicked = {
+                            navController.popBackStack()
+                        },
+                        onNavigateToNote = { refNoteId, noteType ->
+                            if (noteType == "BOARD") {
+                                navController.navigate(Screen.Board.createRoute(refNoteId))
+                            } else {
+                                navController.navigate(Screen.EditNote.createRoute(refNoteId))
+                            }
                         }
                     )
                 }
@@ -354,6 +385,9 @@ fun NavGraph() {
                             },
                             onNoteClicked = { noteId ->
                                 navController.navigate(Screen.EditNote.createRoute(noteId))
+                            },
+                            onBoardClicked = { noteId ->
+                                navController.navigate(Screen.Board.createRoute(noteId))
                             }
                         )
                     }
@@ -374,6 +408,29 @@ fun NavGraph() {
                             },
                             onNoteClicked = { noteId ->
                                 navController.navigate(Screen.EditNote.createRoute(noteId))
+                            },
+                            onBoardClicked = { noteId ->
+                                navController.navigate(Screen.Board.createRoute(noteId))
+                            }
+                        )
+                    }
+                }
+
+                composable(
+                    route = Screen.MyTasks.route
+                ) {
+                    MainScreenWithDrawer(
+                        selectedScreen = NavigationScreen.MyTasks,
+                        currentRoute = Screen.MyTasks,
+                        navController = navController,
+                        gesturesEnabled = true
+                    ) { drawerState, scope ->
+                        MyTasksScreen(
+                            onMenuClicked = {
+                                scope.launch { drawerState.open() }
+                            },
+                            onBoardClicked = { noteId ->
+                                navController.navigate(Screen.Board.createRoute(noteId))
                             }
                         )
                     }
@@ -390,6 +447,9 @@ fun NavGraph() {
                         screenTitle = groupName,
                         onNoteClicked = { noteId ->
                             navController.navigate(Screen.EditNote.createRoute(noteId))
+                        },
+                        onBoardClicked = { noteId ->
+                            navController.navigate(Screen.Board.createRoute(noteId))
                         },
                         onBackClicked = {
                             navController.popBackStack()
@@ -411,6 +471,7 @@ sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object Notes : Screen("notes")
     data object SharedNotes : Screen("shared_notes")
+    data object MyTasks : Screen("my_tasks")
     data object Search : Screen("search")
     data object Tags : Screen("tags")
     data object Groups : Screen("groups")
@@ -425,6 +486,21 @@ sealed class Screen(val route: String) {
 
         fun createRoute(noteId: String): String {
             return "edit_note/$noteId"
+        }
+
+        fun getNoteId(arguments: Bundle?): String {
+            return arguments?.getString(noteIdArg) ?: ""
+        }
+    }
+
+    data object Board : Screen("board/{note_id}") {
+        private const val noteIdArg = "note_id"
+        val arguments = listOf(
+            navArgument(noteIdArg) { type = NavType.StringType }
+        )
+
+        fun createRoute(noteId: String): String {
+            return "board/$noteId"
         }
 
         fun getNoteId(arguments: Bundle?): String {

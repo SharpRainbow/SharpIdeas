@@ -33,6 +33,7 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.AudioFile
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.ViewKanban
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -90,10 +91,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.domain.entity.NoteType
 import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_DUR
 import ru.shrprnbw.ideas.presentation.navigation.SEARCH_ANIMATION_KEY
 import ru.shrprnbw.ideas.presentation.screens.NoteItem
-import ru.shrprnbw.ideas.presentation.screens.NoteType
 import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
 import ru.shrprnbw.ideas.presentation.ui.theme.SharpIdeasTheme
 import ru.shrprnbw.ideas.utils.DateFormatter
@@ -104,6 +105,7 @@ fun NoteListScreen(
     modifier: Modifier = Modifier,
     viewModel: NoteListViewModel = hiltViewModel(),
     onNoteClicked: (String) -> Unit = {},
+    onBoardClicked: (String) -> Unit = {},
     onSearchTriggered: () -> Unit = {},
     onProfileClicked: () -> Unit = {},
     onMenuClicked: () -> Unit = {},
@@ -161,12 +163,16 @@ fun NoteListScreen(
                 ) { item ->
                     NoteItem(
                         title = item.title,
-                        preview = if (item.audioNote) Utils.extractFileName(item.preview) else item.preview,
+                        preview = if (item.noteType == NoteType.AUDIO) Utils.extractFileName(item.preview) else item.preview,
                         time = DateFormatter.formatDateToString(item.updatedAt),
-                        type = if (item.audioNote) NoteType.Audio else NoteType.Text,
+                        type = item.noteType,
                         tags = item.tags,
                         onNoteClicked = {
-                            onNoteClicked(item.id)
+                            if (item.noteType == NoteType.BOARD) {
+                                onBoardClicked(item.id)
+                            } else {
+                                onNoteClicked(item.id)
+                            }
                         }
                     )
                 }
@@ -182,42 +188,51 @@ fun NoteListScreen(
                     viewModel.processCommand(
                         NoteListCommand.ShowAddAudioNoteDialog(true)
                     )
+                },
+                onBoardClicked = {
+                    viewModel.processCommand(
+                        NoteListCommand.ShowAddBoardDialog(true)
+                    )
                 }
             )
         }
-        if (state.value.showAddTextNoteDialog || state.value.showAddAudioNoteDialog) {
+        val showingDialog = state.value.showAddTextNoteDialog
+                || state.value.showAddAudioNoteDialog
+                || state.value.showAddBoardDialog
+        if (showingDialog) {
+            val icon = when {
+                state.value.showAddTextNoteDialog -> Icons.Filled.TextFields
+                state.value.showAddAudioNoteDialog -> Icons.Rounded.AudioFile
+                else -> Icons.Rounded.ViewKanban
+            }
+            val title = when {
+                state.value.showAddTextNoteDialog -> stringResource(R.string.note_list_add_note)
+                state.value.showAddAudioNoteDialog -> stringResource(R.string.note_list_add_audio)
+                else -> stringResource(R.string.note_list_add_board)
+            }
             CreateNoteDialog(
-                icon = {
-                    Icon(
-                        imageVector =
-                            if (state.value.showAddTextNoteDialog) Icons.Filled.TextFields
-                            else Icons.Rounded.AudioFile,
-                        contentDescription = null
-                    )
-                },
-                dialogTitle = if (state.value.showAddTextNoteDialog) stringResource(R.string.note_list_add_note) else stringResource(
-                    R.string.note_list_add_audio
-                ),
+                icon = { Icon(imageVector = icon, contentDescription = null) },
+                dialogTitle = title,
                 noteName = state.value.newNoteTitle,
-                onNoteNameChange = { title ->
-                    viewModel.processCommand(
-                        NoteListCommand.InputNewNoteTitle(title)
-                    )
+                onNoteNameChange = { name ->
+                    viewModel.processCommand(NoteListCommand.InputNewNoteTitle(name))
                 },
                 onDismissRequest = {
                     viewModel.processCommand(
-                        if (state.value.showAddTextNoteDialog)
-                            NoteListCommand.ShowAddTextNoteDialog(false)
-                        else
-                            NoteListCommand.ShowAddAudioNoteDialog(false)
+                        when {
+                            state.value.showAddTextNoteDialog -> NoteListCommand.ShowAddTextNoteDialog(false)
+                            state.value.showAddAudioNoteDialog -> NoteListCommand.ShowAddAudioNoteDialog(false)
+                            else -> NoteListCommand.ShowAddBoardDialog(false)
+                        }
                     )
                 },
                 onCreateNoteRequest = {
                     viewModel.processCommand(
-                        if (state.value.showAddTextNoteDialog)
-                            NoteListCommand.CreateTextNote(state.value.newNoteTitle)
-                        else
-                            NoteListCommand.CreateAudioNote(state.value.newNoteTitle)
+                        when {
+                            state.value.showAddTextNoteDialog -> NoteListCommand.CreateTextNote(state.value.newNoteTitle)
+                            state.value.showAddAudioNoteDialog -> NoteListCommand.CreateAudioNote(state.value.newNoteTitle)
+                            else -> NoteListCommand.CreateBoard(state.value.newNoteTitle)
+                        }
                     )
                 }
             )
@@ -310,6 +325,7 @@ fun BoxScope.FloatingActionButtonWithMenu(
     modifier: Modifier = Modifier,
     onTextNoteClicked: () -> Unit = {},
     onAudioNoteClicked: () -> Unit = {},
+    onBoardClicked: () -> Unit = {},
     listState: LazyListState = rememberLazyListState()
 ) {
     val context = LocalContext.current
@@ -322,7 +338,8 @@ fun BoxScope.FloatingActionButtonWithMenu(
     val items =
         listOf(
             Icons.Filled.TextFields to stringResource(R.string.text_note_label),
-            Icons.Rounded.AudioFile to stringResource(R.string.audio_note_label)
+            Icons.Rounded.AudioFile to stringResource(R.string.audio_note_label),
+            Icons.Rounded.ViewKanban to stringResource(R.string.board_note_label)
         )
     var fabMenuExpanded by rememberSaveable { mutableStateOf(false) }
     BackHandler(fabMenuExpanded) { fabMenuExpanded = false }
@@ -400,10 +417,10 @@ fun BoxScope.FloatingActionButtonWithMenu(
                             }
                         ),
                 onClick = {
-                    if (item.first == Icons.Filled.TextFields) {
-                        onTextNoteClicked()
-                    } else if (item.first == Icons.Rounded.AudioFile) {
-                        onAudioNoteClicked()
+                    when (item.first) {
+                        Icons.Filled.TextFields -> onTextNoteClicked()
+                        Icons.Rounded.AudioFile -> onAudioNoteClicked()
+                        Icons.Rounded.ViewKanban -> onBoardClicked()
                     }
                     fabMenuExpanded = false
                 },

@@ -33,6 +33,8 @@ import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
 import ru.shrprnbw.ideas.domain.entity.Group
 import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.entity.NoteContent
+import ru.shrprnbw.ideas.domain.entity.textContents
 import ru.shrprnbw.ideas.domain.usecase.AddNoteCollaboratorUseCase
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTagUseCase
 import ru.shrprnbw.ideas.domain.usecase.AddNoteTextBlockUseCase
@@ -104,7 +106,7 @@ class NoteEditorViewModel @AssistedInject constructor(
                 viewModelScope.launch {
                     _state.update { previousState ->
                         if (previousState is NoteEditorState.Editing) {
-                            val newContents = previousState.note.contents.toMutableList()
+                            val newContents = previousState.note.textContents.toMutableList()
                             val editedId = newContents[command.index].id
                             if (newContents[command.index].data == command.content) {
                                 return@update previousState
@@ -115,7 +117,7 @@ class NoteEditorViewModel @AssistedInject constructor(
                             )
                             previousState.copy(
                                 note = previousState.note.copy(
-                                    contents = newContents
+                                    content = NoteContent.Items(items = newContents)
                                 )
                             ).also {
                                 mutex.withLock {
@@ -420,7 +422,7 @@ class NoteEditorViewModel @AssistedInject constructor(
                 if (currentState is NoteEditorState.Editing && currentState.focusedContentIndex != -1) {
                     val start = currentState.selection.start
                     val end = currentState.selection.end
-                    val contentItem = currentState.note.contents[currentState.focusedContentIndex]
+                    val contentItem = currentState.note.textContents[currentState.focusedContentIndex]
                     if (contentItem.type != ContentType.TEXT) {
                         return
                     }
@@ -741,14 +743,14 @@ class NoteEditorViewModel @AssistedInject constructor(
         _state.update { previousState ->
             try {
                 val note = getNoteInfoUseCase(noteId)
-                val contentItems = note.contents.toMutableList()
+                val contentItems = note.textContents.toMutableList()
                 if (previousState is NoteEditorState.Editing) {
                     previousState.copy(
-                        note = note.copy(contents = contentItems)
+                        note = note.copy(content = NoteContent.Items(items = contentItems))
                     )
                 } else {
                     NoteEditorState.Editing(
-                        note = note.copy(contents = contentItems)
+                        note = note.copy(content = NoteContent.Items(items = contentItems))
                     )
                 }
             } catch (e: Exception) {
@@ -967,19 +969,7 @@ sealed interface NoteEditorState {
         val availableGroups: List<Group> = emptyList(),
         val shareError: Int? = null,
         val isShareLoading: Boolean = false
-    ) : NoteEditorState {
-        val isSaveEnabled: Boolean
-            get() {
-                return when {
-                    note.title.isBlank() && note.contents.isEmpty() -> false
-                    else -> {
-                        note.contents.any {
-                            it.data.isNotBlank()
-                        }
-                    }
-                }
-            }
-    }
+    ) : NoteEditorState
 
     data object Finished : NoteEditorState
 

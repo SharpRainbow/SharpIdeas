@@ -12,15 +12,13 @@ data class NoteDto(
     @SerialName("owner")
     val owner: UserDto,
     @SerialName("contents")
-    val contents: List<ContentItemDto>,
+    val contents: NoteContentsDto? = null,
     @SerialName("tags")
     val tags: List<String>,
     @SerialName("groups")
     val groups: List<GroupDto>,
     @SerialName("collaborators")
     val collaborators: List<UserDto>,
-    @SerialName("audioNote")
-    val audioNote: Boolean,
     @SerialName("updatedAt")
     val updatedAt: Long,
     @SerialName("createdAt")

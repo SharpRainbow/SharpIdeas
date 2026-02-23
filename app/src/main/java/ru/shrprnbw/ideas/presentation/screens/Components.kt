@@ -24,30 +24,42 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Label
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FolderShared
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.GroupAdd
+import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.rounded.AudioFile
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.TextFields
+import androidx.compose.material.icons.rounded.ViewKanban
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
@@ -55,6 +67,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -82,7 +95,11 @@ import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import ru.shrprnbw.ideas.R
+import ru.shrprnbw.ideas.domain.entity.Group
+import ru.shrprnbw.ideas.domain.entity.NoteType
+import ru.shrprnbw.ideas.domain.entity.User
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
+import ru.shrprnbw.ideas.presentation.ui.theme.BoardOrange
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
 import ru.shrprnbw.ideas.utils.Utils
 
@@ -329,8 +346,6 @@ fun <T : Any> PagedItemsTemplate(
     }
 }
 
-enum class NoteType { Text, Audio }
-
 @Composable
 fun NoteItem(
     modifier: Modifier = Modifier,
@@ -377,17 +392,21 @@ fun NoteItem(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        if (type == NoteType.Text) {
-                            NoteLabel(
+                        when (type) {
+                            NoteType.TEXT -> NoteLabel(
                                 label = stringResource(R.string.search_filter_text),
                                 color = TextBlue,
                                 imageVector = Icons.Rounded.TextFields
                             )
-                        } else {
-                            NoteLabel(
+                            NoteType.AUDIO -> NoteLabel(
                                 label = stringResource(R.string.search_filter_audio),
                                 color = AudioGreen,
                                 imageVector = Icons.Rounded.AudioFile
+                            )
+                            NoteType.BOARD -> NoteLabel(
+                                label = stringResource(R.string.search_filter_board),
+                                color = BoardOrange,
+                                imageVector = Icons.Rounded.ViewKanban
                             )
                         }
                         for (t in tags) {
@@ -447,7 +466,8 @@ fun NavigationDrawerContent(
     onHomeClicked: () -> Unit = {},
     onTagManagementClicked: () -> Unit = {},
     onGroupManagementClicked: () -> Unit = {},
-    onSharedNotesClicked: () -> Unit = {}
+    onSharedNotesClicked: () -> Unit = {},
+    onMyTasksClicked: () -> Unit = {}
 ) {
     ModalDrawerSheet(modifier = modifier) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -464,6 +484,14 @@ fun NavigationDrawerContent(
             label = { Text(stringResource(R.string.drawer_home)) },
             selected = selectedScreen == NavigationScreen.Home,
             onClick = onHomeClicked,
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+        )
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Rounded.ViewKanban, contentDescription = null) },
+            label = { Text(stringResource(R.string.drawer_my_tasks)) },
+            selected = selectedScreen == NavigationScreen.MyTasks,
+            onClick = onMyTasksClicked,
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
 
@@ -495,7 +523,218 @@ fun NavigationDrawerContent(
 
 enum class NavigationScreen {
     Home,
+    MyTasks,
     TagManagement,
     GroupManagement,
     SharedNotes
+}
+
+@Composable
+fun ShareBottomSheet(
+    collaborators: List<User>,
+    noteGroups: List<Group>,
+    availableGroups: List<Group>,
+    collaboratorEmail: String,
+    shareError: Int?,
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onEmailChange: (String) -> Unit,
+    onAddCollaborator: (String) -> Unit,
+    onRemoveCollaborator: (String) -> Unit,
+    onAddToGroup: (Long) -> Unit,
+    onRemoveFromGroup: (Long) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val noteGroupIds = remember(noteGroups) { noteGroups.map { it.id }.toSet() }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.share_note_title),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.GroupAdd,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.share_with_group),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (noteGroups.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(noteGroups) { group ->
+                        FilterChip(
+                            selected = true,
+                            onClick = { onRemoveFromGroup(group.id) },
+                            label = { Text(group.name) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.share_remove_from_group),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            enabled = !isLoading
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            val groupsToAdd = availableGroups.filter { it.id !in noteGroupIds }
+            if (groupsToAdd.isEmpty()) {
+                if (noteGroups.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.share_no_groups),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
+                    )
+                }
+            } else {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(groupsToAdd) { group ->
+                        AssistChip(
+                            onClick = { onAddToGroup(group.id) },
+                            label = { Text(group.name) },
+                            enabled = !isLoading
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PersonAdd,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.share_with_users),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = collaboratorEmail,
+                onValueChange = onEmailChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(stringResource(R.string.share_email_hint))
+                },
+                trailingIcon = {
+                    if (collaboratorEmail.isNotBlank()) {
+                        IconButton(
+                            onClick = { onAddCollaborator(collaboratorEmail) },
+                            enabled = !isLoading
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = stringResource(R.string.share_add_collaborator)
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                isError = shareError != null,
+                supportingText = {
+                    if (shareError != null) {
+                        Text(text = stringResource(shareError))
+                    }
+                },
+                enabled = !isLoading
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (collaborators.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.share_collaborators),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                collaborators.forEach { collaborator ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "${collaborator.firstName} ${collaborator.lastName}",
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = collaborator.email,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(
+                            onClick = { onRemoveCollaborator(collaborator.id) },
+                            enabled = !isLoading
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.share_remove_collaborator),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (isLoading) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ContainedLoadingIndicator()
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
 }

@@ -8,5 +8,5 @@ data class NotePreview(
     val tags: List<String>,
     val accessType: String,
     val updatedAt: Long,
-    val audioNote: Boolean
-) // TODO: Add summaryAvailable, keywordsAvailable, transcriptAvailable
+    val noteType: NoteType
+)

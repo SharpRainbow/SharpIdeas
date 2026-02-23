@@ -47,6 +47,7 @@ import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
+import ru.shrprnbw.ideas.domain.entity.NoteType
 import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.domain.entity.Transcription
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
@@ -128,7 +129,7 @@ class NoteRepositoryImpl @Inject constructor(
         title: String,
         content: String,
         tagIds: List<Long>,
-        audioNote: Boolean?
+        noteType: NoteType?
     ): Flow<PagingData<NotePreview>> {
         return Pager(
             config = PagingConfig(
@@ -144,7 +145,7 @@ class NoteRepositoryImpl @Inject constructor(
                         title,
                         content,
                         tagIds,
-                        audioNote
+                        noteType
                     )
                 )
             }
@@ -256,25 +257,13 @@ class NoteRepositoryImpl @Inject constructor(
         notesRefreshTrigger.emit(Unit)
     }
 
-    override suspend fun createTextNote(title: String) {
+    override suspend fun createNote(title: String, noteType: NoteType) {
         val token = authRepository.getValidToken()
         apiService.createNote(
             token,
             CreateNoteRequest(
                 title = title,
-                audioNote = false
-            )
-        )
-        notesRefreshTrigger.emit(Unit)
-    }
-
-    override suspend fun createAudioNote(title: String) {
-        val token = authRepository.getValidToken()
-        apiService.createNote(
-            token,
-            CreateNoteRequest(
-                title = title,
-                audioNote = true
+                noteType = noteType.name
             )
         )
         notesRefreshTrigger.emit(Unit)
@@ -429,6 +418,12 @@ class NoteRepositoryImpl @Inject constructor(
         val token = authRepository.getValidToken()
         apiService.removeNoteFromGroup(token, noteId, RemoveNoteFromGroupRequest(groupId))
         notesRefreshTrigger.emit(Unit)
+    }
+
+    override suspend fun getGroupNotesSimple(groupId: Long): List<NotePreview> {
+        val token = authRepository.getValidToken()
+        return apiService.getGroupNotes(token, groupId, page = 0, limit = 100)
+            .content.map { it.toEntity() }
     }
 
     private fun getMimeTypeFromUri(uri: Uri): String? {

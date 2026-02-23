@@ -74,6 +74,16 @@ fun MainScreenWithDrawer(
                     } else {
                         scope.launch { drawerState.close() }
                     }
+                },
+                onMyTasksClicked = {
+                    if (currentRoute != Screen.MyTasks) {
+                        scope.launch {
+                            drawerState.close()
+                            navController.navigate(Screen.MyTasks.route)
+                        }
+                    } else {
+                        scope.launch { drawerState.close() }
+                    }
                 }
             )
         }

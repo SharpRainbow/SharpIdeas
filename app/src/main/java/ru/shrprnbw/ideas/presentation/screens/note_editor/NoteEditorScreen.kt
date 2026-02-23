@@ -54,8 +54,6 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FormatBold
 import androidx.compose.material.icons.outlined.FormatItalic
 import androidx.compose.material.icons.outlined.FormatStrikethrough
-import androidx.compose.material.icons.outlined.GroupAdd
-import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.TextFields
@@ -64,10 +62,12 @@ import androidx.compose.material.icons.rounded.Discount
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AppBarRow
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
@@ -92,7 +92,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -131,6 +130,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -141,11 +141,12 @@ import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.AccessType
 import ru.shrprnbw.ideas.domain.entity.ContentItem
 import ru.shrprnbw.ideas.domain.entity.ContentType
-import ru.shrprnbw.ideas.domain.entity.Group
 import ru.shrprnbw.ideas.domain.entity.Note
+import ru.shrprnbw.ideas.domain.entity.NoteType
 import ru.shrprnbw.ideas.domain.entity.Tag
-import ru.shrprnbw.ideas.domain.entity.User
+import ru.shrprnbw.ideas.domain.entity.textContents
 import ru.shrprnbw.ideas.presentation.components.AudioNotePlayer
+import ru.shrprnbw.ideas.presentation.screens.ShareBottomSheet
 import ru.shrprnbw.ideas.presentation.ui.theme.AudioGreen
 import ru.shrprnbw.ideas.presentation.ui.theme.KeywordPurple
 import ru.shrprnbw.ideas.presentation.ui.theme.TextBlue
@@ -182,7 +183,7 @@ fun NoteEditorScreen(
         }
     }
 
-    val state = viewModel.state.collectAsState()
+    val state = viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     when (val currentState = state.value) {
@@ -215,7 +216,7 @@ fun NoteEditorScreen(
                     SnackbarHost(hostState = snackbarHostState)
                 },
                 bottomBar = {
-                    if (!currentState.note.audioNote && !currentState.isPreviewMode) {
+                    if (currentState.note.noteType == NoteType.TEXT && !currentState.isPreviewMode) {
                         FormattingToolbar(
                             modifier = Modifier
                                 .background(MaterialTheme.colorScheme.surface)
@@ -413,7 +414,7 @@ fun Content(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (note.audioNote) {
+                if (note.noteType == NoteType.AUDIO) {
                     NoteTransformation(
                         modifier = Modifier.weight(1f),
                         actionName = stringResource(R.string.transcriptions_action),
@@ -480,7 +481,7 @@ fun Content(
             )
             Spacer(modifier = Modifier.height(4.dp))
 
-            note.contents.forEachIndexed { itemIndex, contentItem ->
+            note.textContents.forEachIndexed { itemIndex, contentItem ->
                 when (contentItem.type) {
                     ContentType.AUDIO -> {
                         AudioNotePlayer(
@@ -507,9 +508,9 @@ fun Content(
                     }
 
                     ContentType.IMAGE -> {
-                        val previousItem = note.contents.getOrNull(itemIndex - 1)
+                        val previousItem = note.textContents.getOrNull(itemIndex - 1)
                         if (previousItem?.type != ContentType.IMAGE) {
-                            note.contents.drop(itemIndex).takeWhile { item ->
+                            note.textContents.drop(itemIndex).takeWhile { item ->
                                 item.type == ContentType.IMAGE
                             }.let { images ->
                                 ImageGroup(
@@ -1233,218 +1234,6 @@ fun DeleteConfirmationDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ShareBottomSheet(
-    collaborators: List<User>,
-    noteGroups: List<Group>,
-    availableGroups: List<Group>,
-    collaboratorEmail: String,
-    shareError: Int?,
-    isLoading: Boolean,
-    onDismiss: () -> Unit,
-    onEmailChange: (String) -> Unit,
-    onAddCollaborator: (String) -> Unit,
-    onRemoveCollaborator: (String) -> Unit,
-    onAddToGroup: (Long) -> Unit,
-    onRemoveFromGroup: (Long) -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val noteGroupIds = remember(noteGroups) { noteGroups.map { it.id }.toSet() }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.share_note_title),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.GroupAdd,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.share_with_group),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (noteGroups.isNotEmpty()) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(noteGroups) { group ->
-                        FilterChip(
-                            selected = true,
-                            onClick = { onRemoveFromGroup(group.id) },
-                            label = { Text(group.name) },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = stringResource(R.string.share_remove_from_group),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                            enabled = !isLoading
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            val groupsToAdd = availableGroups.filter { it.id !in noteGroupIds }
-            if (groupsToAdd.isEmpty()) {
-                if (noteGroups.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.share_no_groups),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp
-                    )
-                }
-            } else {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(groupsToAdd) { group ->
-                        AssistChip(
-                            onClick = { onAddToGroup(group.id) },
-                            label = { Text(group.name) },
-                            enabled = !isLoading
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.PersonAdd,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.share_with_users),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = collaboratorEmail,
-                onValueChange = onEmailChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    Text(stringResource(R.string.share_email_hint))
-                },
-                trailingIcon = {
-                    if (collaboratorEmail.isNotBlank()) {
-                        IconButton(
-                            onClick = { onAddCollaborator(collaboratorEmail) },
-                            enabled = !isLoading
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(R.string.share_add_collaborator)
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                isError = shareError != null,
-                supportingText = {
-                    if (shareError != null) {
-                        Text(text = stringResource(shareError))
-                    }
-                },
-                enabled = !isLoading
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (collaborators.isNotEmpty()) {
-                Text(
-                    text = stringResource(R.string.share_collaborators),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                collaborators.forEach { collaborator ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                text = "${collaborator.firstName} ${collaborator.lastName}",
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                text = collaborator.email,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        IconButton(
-                            onClick = { onRemoveCollaborator(collaborator.id) },
-                            enabled = !isLoading
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.share_remove_collaborator),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (isLoading) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ContainedLoadingIndicator()
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-    }
-}
-
 @Composable
 private fun NoteEditorTopAppBar(
     modifier: Modifier = Modifier,
@@ -1483,76 +1272,121 @@ private fun NoteEditorTopAppBar(
                 if (currentState.note.accessType == AccessType.VIEWER) {
                     return@TopAppBar
                 }
-                if (currentState.note.audioNote && currentState.note.contents.isEmpty()) {
-                    Icon(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .clickable(
-                                onClick = {
+
+                val addAudioLabel = stringResource(R.string.add_audio)
+                val editModeLabel = stringResource(R.string.edit_mode)
+                val previewModeLabel = stringResource(R.string.preview_mode)
+                val shareLabel = stringResource(R.string.share_note)
+                val deleteLabel = stringResource(R.string.delete_note)
+                val errorColor = MaterialTheme.colorScheme.error
+
+                AppBarRow(maxItemCount = 2) {
+                    if (currentState.note.noteType == NoteType.AUDIO
+                        && currentState.note.textContents.isEmpty()
+                    ) {
+                        customItem(
+                            appbarContent = {
+                                IconButton(onClick = {
                                     audioPicker.launch(
-                                        arrayOf(
-                                            "audio/mpeg",
-                                            "audio/wav",
-                                            "audio/m4a"
-                                        )
+                                        arrayOf("audio/mpeg", "audio/wav", "audio/m4a")
+                                    )
+                                }) {
+                                    Icon(
+                                        Icons.Outlined.AudioFile,
+                                        contentDescription = addAudioLabel,
+                                        tint = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
-                            ),
-                        imageVector = Icons.Outlined.AudioFile,
-                        contentDescription = stringResource(R.string.add_audio),
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                } else if (!currentState.note.audioNote) {
-                    IconButton(
-                        onClick = {
-                            viewModel.processCommand(
-                                NoteEditorCommand.TogglePreviewMode
-                            )
-                        },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (currentState.isPreviewMode)
-                                Icons.Rounded.Edit
-                            else
-                                Icons.Outlined.RemoveRedEye,
-                            contentDescription = if (currentState.isPreviewMode)
-                                stringResource(R.string.edit_mode)
-                            else
-                                stringResource(R.string.preview_mode),
-                            tint = MaterialTheme.colorScheme.onSurface
+                            },
+                            menuContent = { menuState ->
+                                DropdownMenuItem(
+                                    text = { Text(addAudioLabel) },
+                                    trailingIcon = { Icon(Icons.Outlined.AudioFile, contentDescription = null) },
+                                    onClick = {
+                                        menuState.dismiss()
+                                        audioPicker.launch(
+                                            arrayOf("audio/mpeg", "audio/wav", "audio/m4a")
+                                        )
+                                    }
+                                )
+                            }
+                        )
+                    } else if (currentState.note.noteType == NoteType.TEXT) {
+                        val toggleIcon = if (currentState.isPreviewMode)
+                            Icons.Rounded.Edit else Icons.Outlined.RemoveRedEye
+                        val toggleLabel = if (currentState.isPreviewMode)
+                            editModeLabel else previewModeLabel
+                        customItem(
+                            appbarContent = {
+                                IconButton(onClick = {
+                                    viewModel.processCommand(NoteEditorCommand.TogglePreviewMode)
+                                }) {
+                                    Icon(
+                                        imageVector = toggleIcon,
+                                        contentDescription = toggleLabel,
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            },
+                            menuContent = { menuState ->
+                                DropdownMenuItem(
+                                    text = { Text(toggleLabel) },
+                                    trailingIcon = { Icon(toggleIcon, contentDescription = null) },
+                                    onClick = {
+                                        menuState.dismiss()
+                                        viewModel.processCommand(NoteEditorCommand.TogglePreviewMode)
+                                    }
+                                )
+                            }
                         )
                     }
-                }
-                AnimatedVisibility(!currentState.isPreviewMode) {
-                    IconButton(
-                        onClick = {
-                            viewModel.processCommand(
-                                NoteEditorCommand.OpenShareSheet
-                            )
-                        },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = stringResource(R.string.share_note),
-                            tint = MaterialTheme.colorScheme.onSurface
+
+                    if (!currentState.isPreviewMode) {
+                        customItem(
+                            appbarContent = {
+                                IconButton(onClick = {
+                                    viewModel.processCommand(NoteEditorCommand.OpenShareSheet)
+                                }) {
+                                    Icon(
+                                        Icons.Outlined.Share,
+                                        contentDescription = shareLabel,
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            },
+                            menuContent = { menuState ->
+                                DropdownMenuItem(
+                                    text = { Text(shareLabel) },
+                                    trailingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
+                                    onClick = {
+                                        menuState.dismiss()
+                                        viewModel.processCommand(NoteEditorCommand.OpenShareSheet)
+                                    }
+                                )
+                            }
                         )
-                    }
-                }
-                AnimatedVisibility(!currentState.isPreviewMode) {
-                    IconButton(
-                        onClick = {
-                            viewModel.processCommand(
-                                NoteEditorCommand.ShowDeletionDialog
-                            )
-                        },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.DeleteOutline,
-                            contentDescription = stringResource(R.string.delete_note),
-                            tint = MaterialTheme.colorScheme.onSurface
+                        customItem(
+                            appbarContent = {
+                                IconButton(onClick = {
+                                    viewModel.processCommand(NoteEditorCommand.ShowDeletionDialog)
+                                }) {
+                                    Icon(
+                                        Icons.Outlined.DeleteOutline,
+                                        contentDescription = deleteLabel,
+                                        tint = errorColor
+                                    )
+                                }
+                            },
+                            menuContent = { menuState ->
+                                DropdownMenuItem(
+                                    text = { Text(deleteLabel, color = errorColor) },
+                                    trailingIcon = { Icon(Icons.Outlined.DeleteOutline, contentDescription = null, tint = errorColor) },
+                                    onClick = {
+                                        menuState.dismiss()
+                                        viewModel.processCommand(NoteEditorCommand.ShowDeletionDialog)
+                                    }
+                                )
+                            }
                         )
                     }
                 }

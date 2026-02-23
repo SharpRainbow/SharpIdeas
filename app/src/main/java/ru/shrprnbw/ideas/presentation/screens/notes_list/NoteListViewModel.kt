@@ -11,16 +11,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.domain.entity.NotePreview
-import ru.shrprnbw.ideas.domain.usecase.CreateAudioNoteUseCase
-import ru.shrprnbw.ideas.domain.usecase.CreateTextNoteUseCase
+import ru.shrprnbw.ideas.domain.entity.NoteType
+import ru.shrprnbw.ideas.domain.usecase.CreateNoteUseCase
 import ru.shrprnbw.ideas.domain.usecase.LoadPersonalNotesUseCase
 import javax.inject.Inject
 
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
     private val getPersonalNotesUseCase: LoadPersonalNotesUseCase,
-    private val createTextNoteUseCase: CreateTextNoteUseCase,
-    private val createAudioNoteUseCase: CreateAudioNoteUseCase
+    private val createNoteUseCase: CreateNoteUseCase
 ): ViewModel() {
 
     private val _state = MutableStateFlow(NoteListState())
@@ -39,9 +38,9 @@ class NoteListViewModel @Inject constructor(
                 }
                 viewModelScope.launch {
                     try {
-                        createTextNoteUseCase(command.title)
-                    } catch (e: Exception) {
-
+                        createNoteUseCase(command.title, NoteType.TEXT)
+                    } catch (_: Exception) {
+                        //TODO: Handle
                     }
                 }
             }
@@ -55,9 +54,24 @@ class NoteListViewModel @Inject constructor(
                 }
                 viewModelScope.launch {
                     try {
-                        createAudioNoteUseCase(command.title)
-                    } catch (e: Exception) {
+                        createNoteUseCase(command.title, NoteType.AUDIO)
+                    } catch (_: Exception) {
+                        //TODO: Handle
+                    }
+                }
+            }
 
+            is NoteListCommand.CreateBoard -> {
+                _state.update { previousState ->
+                    previousState.copy(
+                        showAddBoardDialog = false,
+                        newNoteTitle = ""
+                    )
+                }
+                viewModelScope.launch {
+                    try {
+                        createNoteUseCase(command.title, NoteType.BOARD)
+                    } catch (_: Exception) {
                     }
                 }
             }
@@ -87,6 +101,15 @@ class NoteListViewModel @Inject constructor(
                     )
                 }
             }
+
+            is NoteListCommand.ShowAddBoardDialog -> {
+                _state.update { previousState ->
+                    previousState.copy(
+                        showAddBoardDialog = command.show,
+                        newNoteTitle = ""
+                    )
+                }
+            }
         }
     }
 
@@ -98,9 +121,13 @@ sealed interface NoteListCommand {
 
     data class CreateAudioNote(val title: String): NoteListCommand
 
+    data class CreateBoard(val title: String): NoteListCommand
+
     data class ShowAddTextNoteDialog(val show: Boolean): NoteListCommand
 
     data class ShowAddAudioNoteDialog(val show: Boolean): NoteListCommand
+
+    data class ShowAddBoardDialog(val show: Boolean): NoteListCommand
 
     data class InputNewNoteTitle(val title: String): NoteListCommand
 
@@ -109,5 +136,6 @@ sealed interface NoteListCommand {
 data class NoteListState(
     val showAddTextNoteDialog: Boolean = false,
     val showAddAudioNoteDialog: Boolean = false,
+    val showAddBoardDialog: Boolean = false,
     val newNoteTitle: String = ""
 )
