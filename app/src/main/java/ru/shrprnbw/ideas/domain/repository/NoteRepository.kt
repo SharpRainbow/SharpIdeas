@@ -4,12 +4,9 @@ import android.net.Uri
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.domain.entity.ContentItem
-import ru.shrprnbw.ideas.domain.entity.Keyword
 import ru.shrprnbw.ideas.domain.entity.Note
 import ru.shrprnbw.ideas.domain.entity.NotePreview
 import ru.shrprnbw.ideas.domain.entity.NoteType
-import ru.shrprnbw.ideas.domain.entity.Summary
-import ru.shrprnbw.ideas.domain.entity.Transcription
 
 interface NoteRepository {
 
@@ -44,28 +41,6 @@ interface NoteRepository {
     suspend fun createNote(title: String, noteType: NoteType)
 
     suspend fun deleteNote(noteId: String)
-
-    fun getTranscriptions(noteId: String): Flow<PagingData<Transcription>>
-
-    suspend fun getTranscription(noteId: String, transcriptionId: String): Transcription
-
-    suspend fun requestTranscription(noteId: String)
-
-    suspend fun deleteTranscription(noteId: String, transcriptionId: Long)
-
-    fun getKeywords(noteId: String): Flow<PagingData<Keyword>>
-
-    suspend fun requestKeywords(noteId: String)
-
-    suspend fun deleteKeywords(noteId: String, keywordId: Long)
-
-    fun getSummaries(noteId: String): Flow<PagingData<Summary>>
-
-    suspend fun getSummary(noteId: String, summaryId: String): Summary
-
-    suspend fun requestSummary(noteId: String)
-
-    suspend fun deleteSummary(noteId: String, summaryId: Long)
 
     suspend fun addNoteTag(noteId: String, tag: String)
 

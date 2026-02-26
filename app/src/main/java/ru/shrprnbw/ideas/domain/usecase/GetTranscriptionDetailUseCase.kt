@@ -1,13 +1,13 @@
 package ru.shrprnbw.ideas.domain.usecase
 
-import ru.shrprnbw.ideas.domain.repository.NoteRepository
+import ru.shrprnbw.ideas.domain.repository.TranscriptionsRepository
 import javax.inject.Inject
 
 class GetTranscriptionDetailUseCase @Inject constructor(
-    private val noteRepository: NoteRepository
+    private val transcriptionsRepository: TranscriptionsRepository
 ) {
 
     suspend operator fun invoke(noteId: String, transcriptionId: String) =
-        noteRepository.getTranscription(noteId, transcriptionId)
+        transcriptionsRepository.getTranscription(noteId, transcriptionId)
 
 }

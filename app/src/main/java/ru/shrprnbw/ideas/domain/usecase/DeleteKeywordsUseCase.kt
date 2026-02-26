@@ -1,13 +1,13 @@
 package ru.shrprnbw.ideas.domain.usecase
 
-import ru.shrprnbw.ideas.domain.repository.NoteRepository
+import ru.shrprnbw.ideas.domain.repository.KeywordRepository
 import javax.inject.Inject
 
 class DeleteKeywordsUseCase @Inject constructor(
-    private val noteRepository: NoteRepository
+    private val keywordRepository: KeywordRepository
 ) {
 
     suspend operator fun invoke(noteId: String, keywordId: Long) =
-        noteRepository.deleteKeywords(noteId, keywordId)
+        keywordRepository.deleteKeywords(noteId, keywordId)
 
 }

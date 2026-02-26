@@ -6,9 +6,10 @@ import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.data.mapper.toEntity
+import ru.shrprnbw.ideas.data.remote.GenericPagingSource
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdatePersonalInfoRequest
-import ru.shrprnbw.ideas.data.remote.paging.GroupUserPagingSource
+import ru.shrprnbw.ideas.data.remote.dto.response.UserDto
 import ru.shrprnbw.ideas.domain.entity.User
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.UserRepository
@@ -49,10 +50,17 @@ class UserRepositoryImpl @Inject constructor(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
-                GroupUserPagingSource(
-                    apiService,
-                    authRepository,
-                    groupId
+                GenericPagingSource(
+                    fetch = { page, size ->
+                        val token = authRepository.getValidToken()
+                        apiService.getGroupUsers(
+                            token = token,
+                            groupId = groupId,
+                            page = page,
+                            limit = size
+                        )
+                    },
+                    mapper = UserDto::toEntity
                 ).also { currentGroupPagingSource = it }
             }
         ).flow

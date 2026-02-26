@@ -381,7 +381,7 @@ class NoteEditorViewModel @AssistedInject constructor(
                                 deleteNoteUseCase(noteId)
                                 NoteEditorState.Finished
                             } catch (e: Exception) {
-                                Log.d("NoteEditorViewModel", "Note delete error: ${e.message}")
+                                Log.d("NoteEditorViewModel", "Note delete error: ${e.stackTraceToString()}")
                                 previousState.copy(
                                     showDeleteDialog = false,
                                     error = R.string.edit_note_delete_error

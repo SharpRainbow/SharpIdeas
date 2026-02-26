@@ -5,6 +5,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -358,7 +359,7 @@ interface IdeasApiService {
         @Body request: AddUserToGroupRequest
     )
 
-    @DELETE("$VERSION_1/groups/{groupId}/users")
+    @HTTP(method = "DELETE", path = "$VERSION_1/groups/{groupId}/users", hasBody = true)
     suspend fun removeUserFromGroup(
         @Header("Authorization") token: String,
         @Path("groupId") groupId: Long,
@@ -388,7 +389,7 @@ interface IdeasApiService {
         @Body request: AddNoteToGroupRequest
     )
 
-    @DELETE("$VERSION_1/notes/{noteId}/groups")
+    @HTTP(method = "DELETE", path = "$VERSION_1/notes/{noteId}/groups", hasBody = true)
     suspend fun removeNoteFromGroup(
         @Header("Authorization") token: String,
         @Path("noteId") noteId: String,

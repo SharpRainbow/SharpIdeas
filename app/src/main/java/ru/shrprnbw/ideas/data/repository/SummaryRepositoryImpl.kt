@@ -1,32 +1,27 @@
-@file:OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-
 package ru.shrprnbw.ideas.data.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.data.mapper.toEntity
 import ru.shrprnbw.ideas.data.remote.GenericPagingSource
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
-import ru.shrprnbw.ideas.data.remote.dto.request.CreateTagRequest
-import ru.shrprnbw.ideas.data.remote.dto.response.TagDto
-import ru.shrprnbw.ideas.domain.entity.Tag
+import ru.shrprnbw.ideas.data.remote.dto.response.NoteSummaryDto
+import ru.shrprnbw.ideas.domain.entity.Summary
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
-import ru.shrprnbw.ideas.domain.repository.TagRepository
-import javax.inject.Inject
+import ru.shrprnbw.ideas.domain.repository.SummaryRepository
 
-class TagRepositoryImpl @Inject constructor(
+class SummaryRepositoryImpl @Inject constructor(
     private val apiService: IdeasApiService,
     private val authRepository: AuthRepository
-) : TagRepository {
+) : SummaryRepository {
 
-    private var currentTagSource: PagingSource<Int, Tag>? = null
+    private var currentSummarySource: PagingSource<Int, Summary>? = null
 
-    override fun getUserTags(): Flow<PagingData<Tag>> {
+    override fun getSummaries(noteId: String): Flow<PagingData<Summary>> {
         return Pager(
             config = PagingConfig(
                 pageSize = 10,
@@ -36,33 +31,34 @@ class TagRepositoryImpl @Inject constructor(
                 GenericPagingSource(
                     fetch = { page, size ->
                         val token = authRepository.getValidToken()
-                        apiService.getUserCreatedTags(
+                        apiService.getSummaries(
                             token = token,
+                            noteId = noteId,
                             page = page,
                             limit = size
                         )
                     },
-                    mapper = TagDto::toEntity
-                ).also { currentTagSource = it }
+                    mapper = NoteSummaryDto::toEntity
+                ).also { currentSummarySource = it }
             }
         ).flow
     }
 
-    override suspend fun createTag(name: String) {
+    override suspend fun getSummary(noteId: String, summaryId: String): Summary {
         val token = authRepository.getValidToken()
-        apiService.createTag(token, CreateTagRequest(name))
-        currentTagSource?.invalidate()
+        return apiService.getSummary(token, noteId, summaryId).toEntity()
     }
 
-    override suspend fun updateTag(tagId: Long, name: String) {
+    override suspend fun requestSummary(noteId: String) {
         val token = authRepository.getValidToken()
-        apiService.updateTag(token, tagId, CreateTagRequest(name))
-        currentTagSource?.invalidate()
+        apiService.generateNoteSummary(token, noteId)
+        currentSummarySource?.invalidate()
     }
 
-    override suspend fun deleteTag(tagId: Long) {
+    override suspend fun deleteSummary(noteId: String, summaryId: Long) {
         val token = authRepository.getValidToken()
-        apiService.deleteTag(token, tagId)
-        currentTagSource?.invalidate()
+        apiService.deleteSummary(token, noteId, summaryId)
+        currentSummarySource?.invalidate()
     }
+
 }
