@@ -11,13 +11,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import ru.shrprnbw.ideas.data.mapper.toEntity
-import ru.shrprnbw.ideas.data.mapper.toGroupUser
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.dto.request.AddUserToGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.CreateGroupRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateGroupRequest
 import ru.shrprnbw.ideas.domain.entity.Group
-import ru.shrprnbw.ideas.domain.entity.GroupUser
 import ru.shrprnbw.ideas.domain.repository.AuthRepository
 import ru.shrprnbw.ideas.domain.repository.GroupRepository
 import javax.inject.Inject
@@ -59,11 +57,6 @@ class GroupRepositoryImpl @Inject constructor(
         val token = authRepository.getValidToken()
         apiService.deleteGroup(token, groupId)
         groupsRefreshTrigger.emit(Unit)
-    }
-
-    override suspend fun getGroupUsers(groupId: Long): List<GroupUser> { // TODO: Add flow
-        val token = authRepository.getValidToken()
-        return apiService.getGroupUsers(token, groupId).map { it.toGroupUser() }
     }
 
     override suspend fun addUserToGroup(groupId: Long, userData: List<String>, byEmail: Boolean) {

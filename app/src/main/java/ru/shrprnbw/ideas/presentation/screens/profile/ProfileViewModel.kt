@@ -66,8 +66,8 @@ class ProfileViewModel @Inject constructor(
             _state.update {
                 ProfileScreenState.Displaying(
                     username = userInfo.username,
-                    firstName = userInfo.name,
-                    lastName = userInfo.surname,
+                    firstName = userInfo.firstName,
+                    lastName = userInfo.lastName,
                     email = userInfo.email
                 )
             }

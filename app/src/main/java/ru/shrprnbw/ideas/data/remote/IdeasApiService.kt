@@ -5,7 +5,6 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.HTTP
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -57,7 +56,6 @@ import ru.shrprnbw.ideas.data.remote.dto.response.TaskSummaryResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TokenResponseDto
 import ru.shrprnbw.ideas.data.remote.dto.response.TranscriptionDto
 import ru.shrprnbw.ideas.data.remote.dto.response.UserDto
-import ru.shrprnbw.ideas.data.remote.dto.response.UserInfoDto
 import ru.shrprnbw.ideas.domain.entity.NoteType
 
 interface IdeasApiService {
@@ -84,7 +82,7 @@ interface IdeasApiService {
     @GET("$VERSION_1/users/personal_info")
     suspend fun getUserInfo(
         @Header("Authorization") token: String,
-    ): UserInfoDto
+    ): UserDto
 
     @PATCH("$VERSION_1/users/personal_info")
     suspend fun updateUserInfo(
@@ -348,8 +346,10 @@ interface IdeasApiService {
     @GET("$VERSION_1/groups/{groupId}/users")
     suspend fun getGroupUsers(
         @Header("Authorization") token: String,
-        @Path("groupId") groupId: Long
-    ): List<UserDto>
+        @Path("groupId") groupId: Long,
+        @Query("page") page: Int,
+        @Query("size") limit: Int
+    ): PagedResponse<UserDto>
 
     @POST("$VERSION_1/groups/{groupId}/users")
     suspend fun addUserToGroup(
@@ -358,7 +358,7 @@ interface IdeasApiService {
         @Body request: AddUserToGroupRequest
     )
 
-    @HTTP(method = "DELETE", path = "$VERSION_1/groups/{groupId}/users", hasBody = true)
+    @DELETE("$VERSION_1/groups/{groupId}/users")
     suspend fun removeUserFromGroup(
         @Header("Authorization") token: String,
         @Path("groupId") groupId: Long,
@@ -388,7 +388,7 @@ interface IdeasApiService {
         @Body request: AddNoteToGroupRequest
     )
 
-    @HTTP(method = "DELETE", path = "$VERSION_1/notes/{noteId}/groups", hasBody = true)
+    @DELETE("$VERSION_1/notes/{noteId}/groups")
     suspend fun removeNoteFromGroup(
         @Header("Authorization") token: String,
         @Path("noteId") noteId: String,

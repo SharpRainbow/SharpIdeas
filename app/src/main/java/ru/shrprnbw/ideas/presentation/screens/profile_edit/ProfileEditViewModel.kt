@@ -96,8 +96,8 @@ class ProfileEditViewModel @Inject constructor(
                     it.copy(
                         email = profileInfo.email,
                         username = profileInfo.username,
-                        firstName = profileInfo.name,
-                        lastName = profileInfo.surname
+                        firstName = profileInfo.firstName,
+                        lastName = profileInfo.lastName
                     )
                 } else {
                     it

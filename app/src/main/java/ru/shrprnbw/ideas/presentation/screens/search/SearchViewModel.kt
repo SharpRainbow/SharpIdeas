@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -34,6 +35,7 @@ class SearchViewModel @Inject constructor(
     val tagsFlow: Flow<PagingData<Tag>> = getUserTagsUseCase().cachedIn(viewModelScope)
 
     val pagedNoteList = _state
+        .filter { it.error == null }
         .debounce(500)
         .flatMapLatest { screenState ->
             val query = screenState.query

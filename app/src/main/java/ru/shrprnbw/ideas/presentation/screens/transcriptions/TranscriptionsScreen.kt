@@ -157,7 +157,6 @@ fun TranscriptionsScreen(
                 paddingValues = PaddingValues(),
                 errorText = stringResource(R.string.error_network),
                 keyProducer = { index -> transcriptions[index]?.id ?: index },
-                screenContent = {},
                 emptyListPlaceholder = {
                     Text(
                         text = stringResource(R.string.transcriptions_list_placeholder),

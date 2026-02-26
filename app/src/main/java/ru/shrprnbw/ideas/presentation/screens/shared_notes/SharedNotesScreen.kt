@@ -65,7 +65,6 @@ fun SharedNotesScreen(
             paddingValues = paddingValues,
             errorText = stringResource(R.string.note_list_error_load),
             keyProducer = { index -> noteItems[index]?.id ?: index },
-            screenContent = {},
             emptyListPlaceholder = {
                 Text(
                     text = stringResource(R.string.shared_notes_placeholder),

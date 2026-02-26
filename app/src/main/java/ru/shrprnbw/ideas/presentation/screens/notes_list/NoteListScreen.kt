@@ -150,7 +150,6 @@ fun NoteListScreen(
                     errorText = stringResource(R.string.note_list_error_load),
                     keyProducer = { index -> noteItems[index]?.id ?: index },
                     listState = listState,
-                    screenContent = {},
                     emptyListPlaceholder = {
                         Text(
                             text = stringResource(R.string.create_your_first_note),

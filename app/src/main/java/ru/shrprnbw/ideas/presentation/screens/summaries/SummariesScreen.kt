@@ -155,7 +155,6 @@ fun SummariesScreen(
                 paddingValues = PaddingValues(),
                 errorText = stringResource(R.string.error_network),
                 keyProducer = { index -> summaries[index]?.id ?: index },
-                screenContent = {},
                 emptyListPlaceholder = {
                     Text(
                         text = stringResource(R.string.summaries_list_placeholder),

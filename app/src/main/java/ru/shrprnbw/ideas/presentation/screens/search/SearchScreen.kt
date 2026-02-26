@@ -178,8 +178,7 @@ fun SearchScreen(
                 paddingValues = PaddingValues(),
                 errorText = stringResource(R.string.note_list_error_load),
                 keyProducer = { index -> notesList[index]?.id ?: index },
-                showLoading = false,
-                screenContent = {}
+                showLoading = false
             ) { item ->
                 NoteItem(
                     title = item.title,

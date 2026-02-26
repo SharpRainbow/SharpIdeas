@@ -167,7 +167,6 @@ fun KeywordsScreen(
                 paddingValues = PaddingValues(),
                 errorText = stringResource(R.string.error_network),
                 keyProducer = { index -> keywords[index]?.id ?: index },
-                screenContent = {},
                 emptyListPlaceholder = {
                     Text(
                         text = stringResource(R.string.keywords_list_placeholder),

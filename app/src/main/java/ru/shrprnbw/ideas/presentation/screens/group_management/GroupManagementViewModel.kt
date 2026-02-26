@@ -5,23 +5,31 @@ package ru.shrprnbw.ideas.presentation.screens.group_management
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Group
-import ru.shrprnbw.ideas.domain.entity.GroupUser
+import ru.shrprnbw.ideas.domain.entity.User
 import ru.shrprnbw.ideas.domain.usecase.AddUserToGroupUseCase
 import ru.shrprnbw.ideas.domain.usecase.CreateGroupUseCase
 import ru.shrprnbw.ideas.domain.usecase.DeleteGroupUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetGroupUsersUseCase
 import ru.shrprnbw.ideas.domain.usecase.GetOwnedGroupsUseCase
+import ru.shrprnbw.ideas.domain.usecase.InvalidateGroupUsersUseCase
 import ru.shrprnbw.ideas.domain.usecase.RemoveUserFromGroupUseCase
 import ru.shrprnbw.ideas.domain.usecase.UpdateGroupUseCase
 import javax.inject.Inject
@@ -34,11 +42,18 @@ class GroupManagementViewModel @Inject constructor(
     private val deleteGroupUseCase: DeleteGroupUseCase,
     private val getGroupUsersUseCase: GetGroupUsersUseCase,
     private val addUserToGroupUseCase: AddUserToGroupUseCase,
-    private val removeUserFromGroupUseCase: RemoveUserFromGroupUseCase
+    private val removeUserFromGroupUseCase: RemoveUserFromGroupUseCase,
+    private val invalidateGroupUsersUseCase: InvalidateGroupUsersUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GroupManagementState())
     val state = _state.asStateFlow()
+
+    val groupUsersFlow: Flow<PagingData<User>> = _state.map {
+        it.selectedGroup
+    }.filterNotNull().distinctUntilChanged().flatMapLatest {
+        getGroupUsersUseCase(it.id)
+    }.cachedIn(viewModelScope)
 
     val groupsList = getOwnedGroupsUseCase()
         .catch { e ->
@@ -117,7 +132,7 @@ class GroupManagementViewModel @Inject constructor(
                             _state.update {
                                 it.copy(
                                     selectedGroup = null,
-                                    groupUsers = emptyList()
+//                                    groupUsers = emptyList()
                                 )
                             }
                         }
@@ -132,18 +147,18 @@ class GroupManagementViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         selectedGroup = command.group,
-                        isLoadingUsers = true,
-                        groupUsers = emptyList()
+//                        isLoadingUsers = true,
+//                        groupUsers = emptyList()
                     )
                 }
-                loadGroupUsers(command.group.id)
+//                loadGroupUsers(command.group.id)
             }
 
             GroupManagementCommand.DeselectGroup -> {
                 _state.update {
                     it.copy(
                         selectedGroup = null,
-                        groupUsers = emptyList(),
+//                        groupUsers = emptyList(),
                         addUserInput = ""
                     )
                 }
@@ -165,7 +180,7 @@ class GroupManagementViewModel @Inject constructor(
                         try {
                             addUserToGroupUseCase(command.groupId, userData, byEmail)
                             _state.update { it.copy(addUserInput = "") }
-                            loadGroupUsers(command.groupId)
+                            invalidateGroupUsersUseCase()
                         } catch (e: Exception) {
                             Log.d("GroupManagementVM", "Add user error: ${e.message}")
                             val errorRes = when {
@@ -183,7 +198,7 @@ class GroupManagementViewModel @Inject constructor(
                 viewModelScope.launch {
                     try {
                         removeUserFromGroupUseCase(command.groupId, command.userId)
-                        loadGroupUsers(command.groupId)
+                        invalidateGroupUsersUseCase()
                     } catch (e: Exception) {
                         Log.d("GroupManagementVM", "Remove user error: ${e.message}")
                         _state.update { it.copy(error = R.string.group_management_error_remove_user) }
@@ -197,27 +212,27 @@ class GroupManagementViewModel @Inject constructor(
         }
     }
 
-    private fun loadGroupUsers(groupId: Long) {
-        viewModelScope.launch {
-            try {
-                val users = getGroupUsersUseCase(groupId)
-                _state.update {
-                    it.copy(
-                        groupUsers = users,
-                        isLoadingUsers = false
-                    )
-                }
-            } catch (e: Exception) {
-                Log.d("GroupManagementVM", "Load users error: ${e.message}")
-                _state.update {
-                    it.copy(
-                        isLoadingUsers = false,
-                        error = R.string.group_management_error_load_users
-                    )
-                }
-            }
-        }
-    }
+//    private fun loadGroupUsers(groupId: Long) {
+//        viewModelScope.launch {
+//            try {
+//                val users = getGroupUsersUseCase(groupId)
+//                _state.update {
+//                    it.copy(
+//                        groupUsers = users,
+//                        isLoadingUsers = false
+//                    )
+//                }
+//            } catch (e: Exception) {
+//                Log.d("GroupManagementVM", "Load users error: ${e.message}")
+//                _state.update {
+//                    it.copy(
+//                        isLoadingUsers = false,
+//                        error = R.string.group_management_error_load_users
+//                    )
+//                }
+//            }
+//        }
+//    }
 
 }
 
@@ -243,9 +258,9 @@ data class GroupManagementState(
     val editingGroupId: Long? = null,
     val editingGroupText: String = "",
     val selectedGroup: Group? = null,
-    val groupUsers: List<GroupUser> = emptyList(),
+//    val groupUsers: List<GroupUser> = emptyList(),
     val addUserInput: String = "",
     val addUserByEmail: Boolean = true,
-    val isLoadingUsers: Boolean = false,
+//    val isLoadingUsers: Boolean = false,
     val error: Int? = null
 )

@@ -260,7 +260,7 @@ fun <T : Any> PagedItemsTemplate(
     keyProducer: ((Int) -> Any)? = null,
     listState: LazyListState = rememberLazyListState(),
     emptyListPlaceholder: @Composable (() -> Unit)? = null,
-    screenContent: @Composable () -> Unit,
+    screenContent: @Composable () -> Unit = {},
     itemContent: @Composable (item: T) -> Unit
 ) {
     when {

@@ -5,8 +5,8 @@ package ru.shrprnbw.ideas.presentation.screens.group_management
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +28,6 @@ import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
@@ -66,9 +65,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.Group
-import ru.shrprnbw.ideas.domain.entity.GroupUser
+import ru.shrprnbw.ideas.domain.entity.User
+import ru.shrprnbw.ideas.presentation.screens.PagedItemsTemplate
 
 @Composable
 fun GroupManagementScreen(
@@ -79,6 +81,7 @@ fun GroupManagementScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val groupsList by viewModel.groupsList.collectAsStateWithLifecycle()
+    val groupUsers = viewModel.groupUsersFlow.collectAsLazyPagingItems()
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -232,8 +235,7 @@ fun GroupManagementScreen(
             ) {
                 GroupUsersBottomSheet(
                     group = state.selectedGroup!!,
-                    users = state.groupUsers,
-                    isLoading = state.isLoadingUsers,
+                    users = groupUsers,
                     addUserInput = state.addUserInput,
                     addUserByEmail = state.addUserByEmail,
                     onAddUserInputChange = {
@@ -374,8 +376,7 @@ private fun GroupListItem(
 @Composable
 private fun GroupUsersBottomSheet(
     group: Group,
-    users: List<GroupUser>,
-    isLoading: Boolean,
+    users: LazyPagingItems<User>,
     addUserInput: String,
     addUserByEmail: Boolean,
     onAddUserInputChange: (String) -> Unit,
@@ -464,50 +465,48 @@ private fun GroupUsersBottomSheet(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (isLoading) {
-            Box(
+        PagedItemsTemplate(
+            items = users,
+            paddingValues = PaddingValues(0.dp),
+            errorText = stringResource(R.string.group_management_error_load_users),
+            listPadding = 0.dp,
+            listContentPadding = PaddingValues(0.dp),
+            listVerticalArrangement = Arrangement.Top,
+            keyProducer = { index -> users[index]?.id ?: index },
+            emptyListPlaceholder = {
+                Text(
+                    text = stringResource(R.string.group_management_no_members),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
+            }
+        ) { user ->
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                ContainedLoadingIndicator()
-            }
-        } else if (users.isEmpty()) {
-            Text(
-                text = stringResource(R.string.group_management_no_members),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
-        } else {
-            users.forEach { user ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "${user.firstName} ${user.lastName}",
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = user.email,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(onClick = { onRemoveUser(user.id) }) {
-                        Icon(
-                            imageVector = Icons.Outlined.PersonRemove,
-                            contentDescription = stringResource(R.string.remove_user_icon_description),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "${user.firstName} ${user.lastName}",
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = user.email,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                HorizontalDivider()
+                IconButton(onClick = { onRemoveUser(user.id) }) {
+                    Icon(
+                        imageVector = Icons.Outlined.PersonRemove,
+                        contentDescription = stringResource(R.string.remove_user_icon_description),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
+            HorizontalDivider()
         }
     }
 }
