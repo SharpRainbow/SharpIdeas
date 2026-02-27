@@ -102,6 +102,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import ru.shrprnbw.ideas.R
 import ru.shrprnbw.ideas.domain.entity.AccessType
 import ru.shrprnbw.ideas.domain.entity.BoardColumn
@@ -110,6 +113,7 @@ import ru.shrprnbw.ideas.domain.entity.NoteType
 import ru.shrprnbw.ideas.domain.entity.TaskAttachment
 import ru.shrprnbw.ideas.domain.entity.TaskLabel
 import ru.shrprnbw.ideas.domain.entity.TaskPriority
+import ru.shrprnbw.ideas.domain.entity.User
 import ru.shrprnbw.ideas.domain.entity.boardColumns
 import ru.shrprnbw.ideas.presentation.screens.NoteLabel
 import ru.shrprnbw.ideas.presentation.screens.ShareBottomSheet
@@ -126,10 +130,11 @@ fun BoardScreen(
     onNavigateToNote: (noteId: String, noteType: String) -> Unit = { _, _ -> }
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val availableAssignees = viewModel.availableAssignees.collectAsLazyPagingItems()
     val taskDetailState by viewModel.taskDetailState.collectAsStateWithLifecycle()
     val createTaskState by viewModel.createTaskState.collectAsStateWithLifecycle()
     val addAttachmentState by viewModel.addAttachmentState.collectAsStateWithLifecycle()
-    val addAssigneeState by viewModel.addAssigneeState.collectAsStateWithLifecycle()
+//    val addAssigneeState by viewModel.addAssigneeState.collectAsStateWithLifecycle()
     val labelManagementState by viewModel.labelManagementState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -287,13 +292,14 @@ fun BoardScreen(
                 }
                 BoardContent(
                     state = currentState,
+                    availableAssignees = availableAssignees,
                     paddingValues = paddingValues,
                     onCommand = viewModel::processCommand,
                     onNavigateToNote = onNavigateToNote,
                     taskDetailState = taskDetailState,
                     createTaskState = createTaskState,
                     addAttachmentState = addAttachmentState,
-                    addAssigneeState = addAssigneeState,
+//                    addAssigneeState = addAssigneeState,
                     labelManagementState = labelManagementState,
                     onTaskDetailAction = viewModel::onTaskDetailAction,
                     onCreateTaskAction = viewModel::onCreateTaskAction,
@@ -315,13 +321,14 @@ fun BoardScreen(
 @Composable
 private fun BoardContent(
     state: BoardState.Editing,
+    availableAssignees: LazyPagingItems<User>,
     paddingValues: PaddingValues,
     onCommand: (BoardCommand) -> Unit,
     onNavigateToNote: (noteId: String, noteType: String) -> Unit,
     taskDetailState: TaskDetailState?,
     createTaskState: CreateTaskState?,
     addAttachmentState: AddAttachmentState?,
-    addAssigneeState: AddAssigneeState?,
+//    addAssigneeState: AddAssigneeState?,
     labelManagementState: LabelManagementState?,
     onTaskDetailAction: (TaskDetailAction) -> Unit,
     onCreateTaskAction: (CreateTaskAction) -> Unit,
@@ -514,8 +521,8 @@ private fun BoardContent(
     }
 
     // Add assignee dialog
-    addAssigneeState?.let {
-        AddAssigneeDialog(state = it, onAction = onAddAssigneeAction)
+    if (state.showAddAssignee) {
+        AddAssigneeDialog(availableAssignees = availableAssignees, onAction = onAddAssigneeAction)
     }
 
     // Task detail bottom sheet
@@ -878,7 +885,7 @@ private fun TaskCard(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = (assignee.username.firstOrNull() ?: '?')
+                                        text = (assignee.firstName.first())
                                             .uppercase(),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontSize = 10.sp,
@@ -1117,16 +1124,18 @@ private fun TaskDetailBottomSheet(// TODO: Use on my tasks screen
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = (user.username.firstOrNull() ?: '?').uppercase(),
+                                            text = user.firstName.first().uppercase(),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = user.username,
+                                        text = "${user.firstName} ${user.lastName}(@${user.username})",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.weight(1f)
+                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     IconButton(
                                         onClick = { onAction(TaskDetailAction.RemoveAssignee(user.id)) },
@@ -1600,14 +1609,14 @@ private fun AddAttachmentDialog(
 
 @Composable
 private fun AddAssigneeDialog(
-    state: AddAssigneeState,
+    availableAssignees: LazyPagingItems<User>,
     onAction: (AddAssigneeAction) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = { onAction(AddAssigneeAction.Dismiss) },
         title = { Text(stringResource(R.string.board_add_assignee)) },
         text = {
-            if (state.isLoading) {
+            if (availableAssignees.loadState == LoadState.Loading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1616,20 +1625,21 @@ private fun AddAssigneeDialog(
                 ) {
                     ContainedLoadingIndicator()
                 }
-            } else if (state.unassignedUsers.isEmpty()) {
+            } else if (availableAssignees.itemCount <= 0) {
                 Text(
                     text = stringResource(R.string.board_no_assignees),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    state.unassignedUsers.forEach { user ->
+                    items(availableAssignees.itemCount, key = {
+                        availableAssignees[it]?.id ?: it
+                    }) { index ->
+                        val user = availableAssignees[index] ?: return@items
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1646,16 +1656,18 @@ private fun AddAssigneeDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = (user.username.firstOrNull() ?: '?').uppercase(),
+                                    text = user.firstName.first().uppercase(),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = user.username,
+                                text = "${user.firstName} ${user.lastName}(@${user.username})",
                                 style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Icon(
                                 Icons.Default.Add,

@@ -426,7 +426,7 @@ private fun GroupUsersBottomSheet(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextField(
+            TextField( // TODO: Show error here
                 value = addUserInput,
                 onValueChange = onAddUserInputChange,
                 modifier = Modifier.weight(1f),

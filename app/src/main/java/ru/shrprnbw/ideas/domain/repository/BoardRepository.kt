@@ -1,5 +1,7 @@
 package ru.shrprnbw.ideas.domain.repository
 
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.domain.entity.BoardColumn
 import ru.shrprnbw.ideas.domain.entity.BoardTask
 import ru.shrprnbw.ideas.domain.entity.TaskAttachment
@@ -68,7 +70,7 @@ interface BoardRepository {
 
     suspend fun removeLabelFromTask(noteId: String, taskId: String, labelId: Long)
 
-    suspend fun getBoardAssignees(noteId: String): List<User>
+    fun getBoardAssignees(noteId: String, taskId: String): Flow<PagingData<User>>
 
     suspend fun addTaskAssignee(noteId: String, taskId: String, userId: String)
 

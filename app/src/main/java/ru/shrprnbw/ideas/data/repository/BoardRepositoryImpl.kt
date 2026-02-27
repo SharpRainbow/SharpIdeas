@@ -1,7 +1,13 @@
 package ru.shrprnbw.ideas.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.PagingSource
 import jakarta.inject.Inject
+import kotlinx.coroutines.flow.Flow
 import ru.shrprnbw.ideas.data.mapper.toEntity
+import ru.shrprnbw.ideas.data.remote.GenericPagingSource
 import ru.shrprnbw.ideas.data.remote.IdeasApiService
 import ru.shrprnbw.ideas.data.remote.dto.request.AddAttachmentRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.AddTaskAssigneeRequest
@@ -13,6 +19,7 @@ import ru.shrprnbw.ideas.data.remote.dto.request.ReorderColumnsRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.ReorderTasksRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateColumnRequest
 import ru.shrprnbw.ideas.data.remote.dto.request.UpdateTaskRequest
+import ru.shrprnbw.ideas.data.remote.dto.response.UserDto
 import ru.shrprnbw.ideas.domain.entity.BoardColumn
 import ru.shrprnbw.ideas.domain.entity.BoardTask
 import ru.shrprnbw.ideas.domain.entity.TaskAttachment
@@ -27,6 +34,8 @@ class BoardRepositoryImpl @Inject constructor(
     private val apiService: IdeasApiService,
     private val authRepository: AuthRepository
 ) : BoardRepository {
+
+    private var currentTaskAssigneeSource: PagingSource<Int, User>? = null
 
     override suspend fun getMyTasks(): List<TaskSummary> {
         val token = authRepository.getValidToken()
@@ -157,19 +166,34 @@ class BoardRepositoryImpl @Inject constructor(
         apiService.removeLabelFromTask(token, noteId, taskId, labelId)
     }
 
-    override suspend fun getBoardAssignees(noteId: String): List<User> {
-        val token = authRepository.getValidToken()
-        return apiService.getBoardAssignees(token, noteId).map { it.toEntity() }
+    override fun getBoardAssignees(noteId: String, taskId: String): Flow<PagingData<User>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                GenericPagingSource(
+                    fetch = { page, size ->
+                        val token = authRepository.getValidToken()
+                        apiService.getBoardAssignees(token, noteId, taskId, page, size)
+                    },
+                    mapper = UserDto::toEntity
+                ).also { currentTaskAssigneeSource = it }
+            }
+        ).flow
     }
 
     override suspend fun addTaskAssignee(noteId: String, taskId: String, userId: String) {
         val token = authRepository.getValidToken()
         apiService.addTaskAssignee(token, noteId, taskId, AddTaskAssigneeRequest(userId))
+        currentTaskAssigneeSource?.invalidate()
     }
 
     override suspend fun removeTaskAssignee(noteId: String, taskId: String, userId: String) {
         val token = authRepository.getValidToken()
         apiService.removeTaskAssignee(token, noteId, taskId, userId)
+        currentTaskAssigneeSource?.invalidate()
     }
 
     override suspend fun addTaskAttachment(

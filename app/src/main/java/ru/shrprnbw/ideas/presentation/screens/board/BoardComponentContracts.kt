@@ -81,8 +81,7 @@ sealed interface AddAttachmentAction {
 }
 
 data class AddAssigneeState(
-    val unassignedUsers: List<User>,
-    val isLoading: Boolean
+    val unassignedUsers: List<User>
 )
 
 sealed interface AddAssigneeAction {

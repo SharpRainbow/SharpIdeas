@@ -3,6 +3,7 @@ package ru.shrprnbw.ideas.presentation.screens.board
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -10,6 +11,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.shrprnbw.ideas.R
@@ -95,6 +101,14 @@ class BoardViewModel @AssistedInject constructor(
     private val _state = MutableStateFlow<BoardState>(BoardState.Loading)
     val state = _state.asStateFlow()
 
+    val availableAssignees = _state.filterIsInstance(BoardState.Editing::class).filter {
+        it.showAddAssignee
+    }.distinctUntilChanged().mapNotNull {
+        it.taskDetail?.id
+    }.flatMapLatest { taskId ->
+        getBoardAssigneesUseCase(noteId, taskId)
+    }.cachedIn(viewModelScope)
+
     private val _taskDetailState = MutableStateFlow<TaskDetailState?>(null)
     val taskDetailState: StateFlow<TaskDetailState?> = _taskDetailState.asStateFlow()
 
@@ -103,9 +117,6 @@ class BoardViewModel @AssistedInject constructor(
 
     private val _addAttachmentState = MutableStateFlow<AddAttachmentState?>(null)
     val addAttachmentState: StateFlow<AddAttachmentState?> = _addAttachmentState.asStateFlow()
-
-    private val _addAssigneeState = MutableStateFlow<AddAssigneeState?>(null)
-    val addAssigneeState: StateFlow<AddAssigneeState?> = _addAssigneeState.asStateFlow()
 
     private val _labelManagementState = MutableStateFlow<LabelManagementState?>(null)
     val labelManagementState: StateFlow<LabelManagementState?> = _labelManagementState.asStateFlow()
@@ -292,11 +303,13 @@ class BoardViewModel @AssistedInject constructor(
             is TaskDetailAction.AddLabel -> addLabelToTask(action.labelId)
             is TaskDetailAction.RemoveLabel -> removeLabelFromTask(action.labelId)
             TaskDetailAction.ShowAddAssignee -> {
-                _addAssigneeState.value = AddAssigneeState(
-                    unassignedUsers = emptyList(),
-                    isLoading = true
-                )
-                loadAssignees()
+                _state.update {
+                    if (it is BoardState.Editing) {
+                        it.copy(showAddAssignee = true)
+                    } else {
+                        it
+                    }
+                }
             }
             is TaskDetailAction.RemoveAssignee -> removeAssigneeFromTask(action.userId)
             TaskDetailAction.ShowAddAttachment -> {
@@ -352,7 +365,13 @@ class BoardViewModel @AssistedInject constructor(
     fun onAddAssigneeAction(action: AddAssigneeAction) {
         when (action) {
             is AddAssigneeAction.Add -> addAssigneeToTask(action.userId)
-            AddAssigneeAction.Dismiss -> _addAssigneeState.value = null
+            AddAssigneeAction.Dismiss -> _state.update {
+                if (it is BoardState.Editing) {
+                    it.copy(showAddAssignee = false)
+                } else {
+                    it
+                }
+            }
         }
     }
 
@@ -374,25 +393,6 @@ class BoardViewModel @AssistedInject constructor(
                 _state.value = BoardState.Editing(note = note)
             } catch (e: Exception) {
                 _state.value = BoardState.Error(e.message ?: "Unknown error")
-            }
-        }
-    }
-
-    private fun loadAssignees() {
-        viewModelScope.launch {
-            try {
-                val assignees = getBoardAssigneesUseCase(noteId)
-                val assignedIds = (_state.value as? BoardState.Editing)
-                    ?.taskDetail?.assignees?.map { it.id }?.toSet() ?: emptySet()
-                _addAssigneeState.update {
-                    it?.copy(
-                        unassignedUsers = assignees.filter { user -> user.id !in assignedIds },
-                        isLoading = false
-                    )
-                }
-            } catch (e: Exception) {
-                Log.d("BoardViewModel", "Load assignees error: ${e.message}")
-                _addAssigneeState.update { it?.copy(isLoading = false) }
             }
         }
     }
@@ -800,9 +800,6 @@ class BoardViewModel @AssistedInject constructor(
         viewModelScope.launch {
             try {
                 addTaskAssigneeUseCase(noteId, taskId, userId)
-                _addAssigneeState.update { state ->
-                    state?.copy(unassignedUsers = state.unassignedUsers.filter { it.id != userId })
-                }
                 reloadBoard()
                 reloadTaskDetailIfOpen(taskId)
             } catch (e: Exception) {
@@ -1012,7 +1009,7 @@ sealed interface BoardState {
         val editColumnWipLimit: String = "",
         val inputText: String = "",
         val error: String? = null,
-
+        val showAddAssignee: Boolean = false,
         val showRenameBoardDialog: Boolean = false,
         val showDeleteNoteDialog: Boolean = false,
         val showShareSheet: Boolean = false,

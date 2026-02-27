@@ -539,8 +539,11 @@ interface IdeasApiService {
     @GET("$VERSION_3/notes/{noteId}/board/assignees")
     suspend fun getBoardAssignees(
         @Header("Authorization") token: String,
-        @Path("noteId") noteId: String
-    ): List<UserDto>
+        @Path("noteId") noteId: String,
+        @Query("taskId") taskId: String,
+        @Query("page") page: Int,
+        @Query("size") limit: Int,
+    ): PagedResponse<UserDto>
 
     @POST("$VERSION_3/notes/{noteId}/board/tasks/{taskId}/assignees")
     suspend fun addTaskAssignee(
